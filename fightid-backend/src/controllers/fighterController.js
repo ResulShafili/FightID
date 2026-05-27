@@ -11,7 +11,9 @@ const fighterInclude = {
 };
 
 export const listFighters = asyncHandler(async (req, res) => {
-  const { page, limit, weightClass, country, role, search } = req.query;
+  const { weightClass, country, role, search } = req.query;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   const isVerifiedPro = role === "PRO" ? true : role === "AMATEUR" ? false : undefined;
 

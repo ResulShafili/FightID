@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = (import.meta.env.VITE_API_URL || "https://fightid-production.up.railway.app/api").replace(/\/$/, "");
 
 let accessToken = null;
 
@@ -7,10 +7,11 @@ export const setAccessToken = (token) => {
 };
 
 export const apiRequest = async (path, options = {}) => {
+  const hasBody = options.body !== undefined;
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(hasBody ? { "Content-Type": "application/json" } : {}),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...options.headers,
     },
@@ -33,9 +34,9 @@ export const authApi = {
 };
 
 export const fighterApi = {
-  list: (params = {}) => apiRequest(`/fighters?${new URLSearchParams(params)}`),
+  list: (params = {}) => apiRequest(`/fighters${toQueryString(params)}`),
   get: (id) => apiRequest(`/fighters/${id}`),
-  leaderboard: (params = {}) => apiRequest(`/fighters/leaderboard?${new URLSearchParams(params)}`),
+  leaderboard: (params = {}) => apiRequest(`/fighters/leaderboard${toQueryString(params)}`),
   updateMe: (payload) => apiRequest("/fighters/me", { method: "PUT", body: JSON.stringify(payload) }),
 };
 
@@ -45,3 +46,9 @@ export const challengeApi = {
   accept: (id) => apiRequest(`/challenges/${id}/accept`, { method: "PUT" }),
   decline: (id) => apiRequest(`/challenges/${id}/decline`, { method: "PUT" }),
 };
+
+function toQueryString(params = {}) {
+  const filtered = Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== "");
+  const query = new URLSearchParams(filtered).toString();
+  return query ? `?${query}` : "";
+}

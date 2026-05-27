@@ -9,6 +9,10 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || "dev-access-secret-change-me",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || "dev-refresh-secret-change-me",
   clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
+  clientUrls: (process.env.CLIENT_URLS || process.env.CLIENT_URL || "http://localhost:3000")
+    .split(",")
+    .map((url) => url.trim())
+    .filter(Boolean),
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,
     apiKey: process.env.CLOUDINARY_API_KEY,

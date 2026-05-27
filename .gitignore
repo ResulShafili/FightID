@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+qa/
+coverage/
+fightid-backend/node_modules/
+fightid-backend/.env
+fightid-backend/dist/

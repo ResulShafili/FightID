@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  AMATEUR
+  PRO
+  FEDERATION_REP
+  ADMIN
+}
+
+enum WeightClass {
+  STRAWWEIGHT
+  FLYWEIGHT
+  BANTAMWEIGHT
+  FEATHERWEIGHT
+  LIGHTWEIGHT
+  WELTERWEIGHT
+  MIDDLEWEIGHT
+  LIGHT_HEAVYWEIGHT
+  HEAVYWEIGHT
+}
+
+enum FightResult {
+  WIN
+  LOSS
+  DRAW
+  NO_CONTEST
+}
+
+enum FightMethod {
+  KO_TKO
+  SUBMISSION
+  DECISION
+  DQ
+  OTHER
+}
+
+enum ChallengeStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COUNTERED
+  CANCELLED
+  COMPLETED
+}
+
+enum RuleSet {
+  MMA
+  GRAPPLING
+  BOXING
+  MUAY_THAI
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  CHALLENGE_RECEIVED
+  CHALLENGE_ACCEPTED
+  CHALLENGE_DECLINED
+  PRO_APPROVED
+  PRO_REJECTED
+  FIGHT_CONFIRMED
+  RANK_CHANGE
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  passwordHash String
+  role         UserRole  @default(AMATEUR)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  fighterProfile FighterProfile?
+  federation      Federation?
+  notifications   Notification[]
+  refreshTokens   RefreshToken[]
+
+  @@index([role])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  tokenHash String   @unique
+  userId    String   @db.Uuid
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model FighterProfile {
+  id                     String      @id @default(uuid()) @db.Uuid
+  userId                 String      @unique @db.Uuid
+  fullName               String
+  nickname               String?
+  dateOfBirth            DateTime
+  country                String
+  weightClass            WeightClass
+  gym                    String?
+  bio                    String?
+  profilePhotoUrl        String?
+  coverPhotoUrl          String?
+  instagramUrl           String?
+  youtubeUrl             String?
+  isVerifiedPro          Boolean     @default(false)
+  verifiedByFederationId String?     @db.Uuid
+  points                 Int         @default(0)
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  user                 User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verifiedByFederation Federation?              @relation("FederationVerifiedFighters", fields: [verifiedByFederationId], references: [id], onDelete: SetNull)
+  fights               Fight[]                  @relation("FighterFightRecords")
+  opponentFights       Fight[]                  @relation("OpponentPlatformFights")
+  sentChallenges       Challenge[]              @relation("SentChallenges")
+  receivedChallenges   Challenge[]              @relation("ReceivedChallenges")
+  resultSubmissions    Challenge[]              @relation("ChallengeResultSubmitter")
+  verificationRequests ProVerificationRequest[]
+
+  @@index([fullName])
+  @@index([country])
+  @@index([weightClass])
+  @@index([isVerifiedPro, weightClass, points])
+}
+
+model Federation {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  country   String
+  repUserId String   @unique @db.Uuid
+  createdAt DateTime @default(now())
+
+  repUser              User                     @relation(fields: [repUserId], references: [id], onDelete: Cascade)
+  verifiedFighters     FighterProfile[]         @relation("FederationVerifiedFighters")
+  verificationRequests ProVerificationRequest[]
+
+  @@index([country])
+}
+
+model Fight {
+  id                String      @id @default(uuid()) @db.Uuid
+  fighterId         String      @db.Uuid
+  opponentName      String
+  opponentProfileId String?     @db.Uuid
+  eventName         String
+  fightDate         DateTime
+  result            FightResult
+  method            FightMethod
+  round             Int
+  fightTime         String
+  isVerified        Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+
+  fighter         FighterProfile  @relation("FighterFightRecords", fields: [fighterId], references: [id], onDelete: Cascade)
+  opponentProfile FighterProfile? @relation("OpponentPlatformFights", fields: [opponentProfileId], references: [id], onDelete: SetNull)
+
+  @@index([fighterId])
+  @@index([opponentProfileId])
+  @@index([fightDate])
+  @@index([isVerified])
+}
+
+model Challenge {
+  id                String          @id @default(uuid()) @db.Uuid
+  senderId          String          @db.Uuid
+  receiverId        String          @db.Uuid
+  status            ChallengeStatus @default(PENDING)
+  proposedDateFrom  DateTime
+  proposedDateTo    DateTime
+  location          String
+  weightClass       WeightClass
+  ruleSet           RuleSet
+  senderMessage     String?
+  counterOffer      String?
+  resultSubmittedBy String?         @db.Uuid
+  resultConfirmed   Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  sender            FighterProfile  @relation("SentChallenges", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver          FighterProfile  @relation("ReceivedChallenges", fields: [receiverId], references: [id], onDelete: Cascade)
+  resultSubmitter   FighterProfile? @relation("ChallengeResultSubmitter", fields: [resultSubmittedBy], references: [id], onDelete: SetNull)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+model ProVerificationRequest {
+  id           String             @id @default(uuid()) @db.Uuid
+  fighterId    String             @db.Uuid
+  federationId String             @db.Uuid
+  status       VerificationStatus @default(PENDING)
+  documentUrl  String
+  adminNote    String?
+  reviewedAt   DateTime?
+  createdAt    DateTime           @default(now())
+
+  fighter    FighterProfile @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+  federation Federation      @relation(fields: [federationId], references: [id], onDelete: Cascade)
+
+  @@index([fighterId])
+  @@index([federationId])
+  @@index([status])
+}
+
+model Notification {
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String           @db.Uuid
+  type            NotificationType
+  message         String
+  isRead          Boolean          @default(false)
+  relatedEntityId String?
+  createdAt       DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([type])
+}

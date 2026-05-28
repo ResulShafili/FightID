@@ -19,11 +19,13 @@ import {
   Zap,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { fighterApi } from "./lib/api";
+import { authApi, fighterApi, setAccessToken } from "./lib/api";
 
 const navItems = ["Home", "Fighters", "Fighter Profile", "Rankings", "Challenges", "Federation"];
 const fallbackPortrait = "/assets/fighter-portrait.png";
 const fallbackCover = "/assets/hero-arena.png";
+const refreshTokenStorageKey = "fightidRefreshToken";
+const userStorageKey = "fightidUser";
 
 const countryNames = {
   AZ: "Azerbaijan",
@@ -138,7 +140,245 @@ function ErrorPanel({ message, action }) {
   );
 }
 
-function AppHeader({ page, setPage }) {
+function getUserDisplayName(user) {
+  return user?.fighterProfile?.fullName || user?.email || "Fighter";
+}
+
+function AuthModal({ initialTab = "login", onClose, onSuccess }) {
+  const [tab, setTab] = useState(initialTab);
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [registerForm, setRegisterForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    nickname: "",
+    dateOfBirth: "",
+    country: "",
+    weightClass: "",
+    gym: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setTab(initialTab);
+    setError("");
+  }, [initialTab]);
+
+  const handleAuthSuccess = (result) => {
+    setAccessToken(result.accessToken);
+    localStorage.setItem(refreshTokenStorageKey, result.refreshToken);
+    localStorage.setItem(userStorageKey, JSON.stringify(result.user));
+    onSuccess(result.user);
+    onClose();
+  };
+
+  const submitLogin = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await authApi.login(loginForm);
+      handleAuthSuccess(result);
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitRegister = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const payload = {
+      fullName: registerForm.fullName,
+      email: registerForm.email,
+      password: registerForm.password,
+      nickname: registerForm.nickname || undefined,
+      dateOfBirth: registerForm.dateOfBirth || "2000-01-01",
+      country: (registerForm.country || "AZ").toUpperCase(),
+      weightClass: registerForm.weightClass || "LIGHTWEIGHT",
+      gym: registerForm.gym || undefined,
+    };
+
+    try {
+      const result = await authApi.register(payload);
+      handleAuthSuccess(result);
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputClass = "w-full rounded border border-white/10 bg-[#111113] px-4 py-3 text-sm font-semibold text-white outline-none placeholder:text-zinc-500 focus:border-blood";
+
+  return (
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/75 px-4 py-8 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded border border-white/10 bg-[#111113] shadow-red">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+          <div>
+            <h2 className="font-display text-2xl font-black text-white">FightID Access</h2>
+            <p className="mt-1 text-sm text-zinc-400">Log in or register your fighter account.</p>
+          </div>
+          <button onClick={onClose} className="rounded border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Close auth modal">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 border-b border-white/10">
+          {["login", "register"].map((item) => (
+            <button
+              key={item}
+              onClick={() => {
+                setTab(item);
+                setError("");
+              }}
+              className={`px-4 py-4 text-sm font-black uppercase tracking-[0.16em] transition ${
+                tab === item ? "bg-blood text-white" : "bg-white/[0.03] text-zinc-400 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+
+        <div className="max-h-[75vh] overflow-y-auto p-5 sm:p-6">
+          {error && (
+            <div className="mb-5 rounded border border-blood/40 bg-blood/15 px-4 py-3 text-sm font-semibold text-red-100">
+              {error}
+            </div>
+          )}
+
+          {tab === "login" ? (
+            <form onSubmit={submitLogin} className="grid gap-4">
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Email
+                <input
+                  required
+                  type="email"
+                  value={loginForm.email}
+                  onChange={(event) => setLoginForm({ ...loginForm, email: event.target.value })}
+                  className={inputClass}
+                  placeholder="fighter@fightid.app"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Password
+                <input
+                  required
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(event) => setLoginForm({ ...loginForm, password: event.target.value })}
+                  className={inputClass}
+                  placeholder="Your password"
+                />
+              </label>
+              <button disabled={loading} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
+                {loading ? "Logging in..." : "Login"}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={submitRegister} className="grid gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-bold text-zinc-200 sm:col-span-2">
+                  Full name
+                  <input
+                    required
+                    value={registerForm.fullName}
+                    onChange={(event) => setRegisterForm({ ...registerForm, fullName: event.target.value })}
+                    className={inputClass}
+                    placeholder="Rəşad Məmmədov"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                  Email
+                  <input
+                    required
+                    type="email"
+                    value={registerForm.email}
+                    onChange={(event) => setRegisterForm({ ...registerForm, email: event.target.value })}
+                    className={inputClass}
+                    placeholder="fighter@fightid.app"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                  Password
+                  <input
+                    required
+                    type="password"
+                    value={registerForm.password}
+                    onChange={(event) => setRegisterForm({ ...registerForm, password: event.target.value })}
+                    className={inputClass}
+                    placeholder="At least 8 characters"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                  Nickname
+                  <input
+                    value={registerForm.nickname}
+                    onChange={(event) => setRegisterForm({ ...registerForm, nickname: event.target.value })}
+                    className={inputClass}
+                    placeholder="Optional"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                  Date of birth
+                  <input
+                    type="date"
+                    value={registerForm.dateOfBirth}
+                    onChange={(event) => setRegisterForm({ ...registerForm, dateOfBirth: event.target.value })}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                  Country
+                  <input
+                    value={registerForm.country}
+                    onChange={(event) => setRegisterForm({ ...registerForm, country: event.target.value })}
+                    className={inputClass}
+                    placeholder="AZ"
+                    maxLength={2}
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                  Weight class
+                  <select
+                    value={registerForm.weightClass}
+                    onChange={(event) => setRegisterForm({ ...registerForm, weightClass: event.target.value })}
+                    className={inputClass}
+                  >
+                    <option value="">Lightweight default</option>
+                    {["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"].map((value) => (
+                      <option key={value} value={value}>{formatWeightClass(value)}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-2 text-sm font-bold text-zinc-200 sm:col-span-2">
+                  Gym
+                  <input
+                    value={registerForm.gym}
+                    onChange={(event) => setRegisterForm({ ...registerForm, gym: event.target.value })}
+                    className={inputClass}
+                    placeholder="Bakı Combat Club"
+                  />
+                </label>
+              </div>
+              <button disabled={loading} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
+                {loading ? "Creating account..." : "Register"}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogout }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -171,10 +411,24 @@ function AppHeader({ page, setPage }) {
             <Search size={16} />
             Search
           </button>
-          <button className="inline-flex items-center gap-2 rounded bg-blood px-4 py-2 text-sm font-black text-white shadow-red hover:bg-ember">
-            Join FightID
-            <ArrowRight size={16} />
-          </button>
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="max-w-[180px] truncate text-sm font-bold text-white">{getUserDisplayName(user)}</span>
+              <button onClick={onLogout} className="rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
+                Logout
+              </button>
+            </div>
+          ) : (
+            <>
+              <button onClick={onLoginClick} className="inline-flex items-center gap-2 rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
+                Login
+              </button>
+              <button onClick={onRegisterClick} className="inline-flex items-center gap-2 rounded bg-blood px-4 py-2 text-sm font-black text-white shadow-red hover:bg-ember">
+                Join FightID
+                <ArrowRight size={16} />
+              </button>
+            </>
+          )}
         </div>
 
         <button className="rounded border border-white/15 p-2 text-white lg:hidden" onClick={() => setOpen(!open)} aria-label="Toggle navigation">
@@ -196,6 +450,43 @@ function AppHeader({ page, setPage }) {
               {item}
             </button>
           ))}
+          <div className="mt-3 grid gap-2 border-t border-white/10 pt-3">
+            {user ? (
+              <>
+                <div className="rounded bg-white/5 px-3 py-3 text-sm font-bold text-white">{getUserDisplayName(user)}</div>
+                <button
+                  onClick={() => {
+                    onLogout();
+                    setOpen(false);
+                  }}
+                  className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    onLoginClick();
+                    setOpen(false);
+                  }}
+                  className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    onRegisterClick();
+                    setOpen(false);
+                  }}
+                  className="block w-full rounded bg-blood px-3 py-3 text-left text-sm font-black text-white shadow-red hover:bg-ember"
+                >
+                  Join FightID
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
     </header>
@@ -732,10 +1023,68 @@ function PlaceholderPage({ title, icon: Icon }) {
 export default function App() {
   const [page, setPage] = useState("Home");
   const [selectedFighterId, setSelectedFighterId] = useState(null);
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem(userStorageKey);
+    if (!stored) return null;
+
+    try {
+      return JSON.parse(stored);
+    } catch {
+      localStorage.removeItem(userStorageKey);
+      return null;
+    }
+  });
+  const [authModal, setAuthModal] = useState(null);
+
+  useEffect(() => {
+    const refreshToken = localStorage.getItem(refreshTokenStorageKey);
+    if (!refreshToken) return;
+
+    let ignore = false;
+    authApi
+      .refresh(refreshToken)
+      .then((result) => {
+        if (ignore) return;
+        setAccessToken(result.accessToken);
+        localStorage.setItem(refreshTokenStorageKey, result.refreshToken);
+      })
+      .catch(() => {
+        if (ignore) return;
+        setAccessToken(null);
+        localStorage.removeItem(refreshTokenStorageKey);
+        localStorage.removeItem(userStorageKey);
+        setUser(null);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const openProfile = (fighterId) => {
     setSelectedFighterId(fighterId);
     setPage(fighterId ? "Fighter Profile" : "Fighters");
+  };
+
+  const openAuth = (tab) => {
+    setAuthModal(tab);
+  };
+
+  const closeAuth = () => {
+    setAuthModal(null);
+  };
+
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem(refreshTokenStorageKey);
+
+    try {
+      if (refreshToken) await authApi.logout(refreshToken);
+    } finally {
+      setAccessToken(null);
+      localStorage.removeItem(refreshTokenStorageKey);
+      localStorage.removeItem(userStorageKey);
+      setUser(null);
+    }
   };
 
   const pages = {
@@ -749,8 +1098,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-canvas text-bone">
-      <AppHeader page={page} setPage={setPage} />
+      <AppHeader
+        page={page}
+        setPage={setPage}
+        user={user}
+        onLoginClick={() => openAuth("login")}
+        onRegisterClick={() => openAuth("register")}
+        onLogout={handleLogout}
+      />
       {pages[page]}
+      {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={setUser} />}
       <footer className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-500">
         FightID frontend | React + Tailwind CSS | Live Railway API
       </footer>

@@ -10,9 +10,13 @@ import {
   Flag,
   Gauge,
   Globe2,
+  Languages,
   Menu,
+  Palette,
   Search,
+  Settings,
   ShieldCheck,
+  SlidersHorizontal,
   Swords,
   Trophy,
   X,
@@ -60,6 +64,33 @@ const fallbackPortrait = "/assets/fighter-portrait.png";
 const fallbackCover = "/assets/hero-arena.png";
 const refreshTokenStorageKey = "fightidRefreshToken";
 const userStorageKey = "fightidUser";
+const settingsStorageKey = "fightidSettings";
+const defaultSettings = {
+  language: "az",
+  theme: "dark",
+  accent: "#dc1f26",
+  compactMode: false,
+  reduceMotion: false,
+  showLiveErrors: true,
+  notificationSound: false,
+};
+const languageOptions = [
+  { value: "az", label: "AZ", name: "Azərbaycanca" },
+  { value: "en", label: "EN", name: "English" },
+  { value: "tr", label: "TR", name: "Türkçe" },
+  { value: "ru", label: "RU", name: "Русский" },
+];
+const themeOptions = [
+  { value: "dark", label: "Dark", description: "Classic FightID charcoal" },
+  { value: "midnight", label: "Midnight", description: "Deeper black arena look" },
+  { value: "contrast", label: "High Contrast", description: "Sharper text and panels" },
+];
+const accentOptions = [
+  { value: "#dc1f26", label: "Blood Red" },
+  { value: "#d6a21d", label: "Gold" },
+  { value: "#18a999", label: "Teal" },
+  { value: "#7c3aed", label: "Violet" },
+];
 const weightClassOptions = ["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"];
 const ruleSetOptions = ["MMA", "GRAPPLING", "BOXING", "MUAY_THAI"];
 const BADGE_META = {
@@ -202,6 +233,16 @@ function ErrorPanel({ message, action }) {
 
 function getUserDisplayName(user) {
   return user?.fighterProfile?.fullName || user?.email || "Fighter";
+}
+
+function loadStoredSettings() {
+  try {
+    const stored = localStorage.getItem(settingsStorageKey);
+    return stored ? { ...defaultSettings, ...JSON.parse(stored) } : defaultSettings;
+  } catch {
+    localStorage.removeItem(settingsStorageKey);
+    return defaultSettings;
+  }
 }
 
 function getChallengeOpponent(challenge, user) {
@@ -552,7 +593,128 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
   );
 }
 
-function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogout }) {
+function SettingsPanel({ open, settings, onChange, onClose }) {
+  if (!open) return null;
+
+  const toggleRows = [
+    { key: "compactMode", label: "Compact mode", description: "Tighter spacing for dense fighter data." },
+    { key: "reduceMotion", label: "Reduce motion", description: "Minimize animation and hover movement." },
+    { key: "showLiveErrors", label: "Show live API errors", description: "Keep backend connection messages visible." },
+    { key: "notificationSound", label: "Notification sound", description: "Prepare sound alerts for future notifications." },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[110] bg-black/70 backdrop-blur" role="dialog" aria-modal="true" aria-label="FightID settings">
+      <button className="absolute inset-0 cursor-default" onClick={onClose} aria-label="Close settings" />
+      <aside className="relative ml-auto flex h-full w-full max-w-md flex-col border-l border-white/10 bg-[#111113] shadow-red">
+        <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-blood/40 bg-blood/15 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-red-100">
+              <Settings size={14} />
+              Settings
+            </div>
+            <h2 className="mt-4 font-display text-3xl font-black text-white">FightID controls</h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">Theme, language, notification, and comfort settings for this browser.</p>
+          </div>
+          <button onClick={onClose} className="rounded border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Close settings">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 space-y-6 overflow-y-auto p-5">
+          <section>
+            <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-white">
+              <Languages size={17} />
+              Language
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {languageOptions.map((language) => (
+                <button
+                  key={language.value}
+                  onClick={() => onChange({ language: language.value })}
+                  className={`rounded border px-4 py-3 text-left transition ${
+                    settings.language === language.value ? "border-blood bg-blood/20 text-white" : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="block text-sm font-black">{language.label}</span>
+                  <span className="mt-1 block text-xs text-zinc-400">{language.name}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-white">
+              <Palette size={17} />
+              Theme
+            </div>
+            <div className="grid gap-2">
+              {themeOptions.map((theme) => (
+                <button
+                  key={theme.value}
+                  onClick={() => onChange({ theme: theme.value })}
+                  className={`rounded border px-4 py-3 text-left transition ${
+                    settings.theme === theme.value ? "border-blood bg-blood/20 text-white" : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="block text-sm font-black">{theme.label}</span>
+                  <span className="mt-1 block text-xs text-zinc-400">{theme.description}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-white">
+              <SlidersHorizontal size={17} />
+              Accent color
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {accentOptions.map((accent) => (
+                <button
+                  key={accent.value}
+                  onClick={() => onChange({ accent: accent.value })}
+                  className={`flex items-center gap-3 rounded border px-4 py-3 text-left transition ${
+                    settings.accent === accent.value ? "border-white bg-white/10 text-white" : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="h-5 w-5 rounded-full border border-white/30" style={{ backgroundColor: accent.value }} />
+                  <span className="text-sm font-black">{accent.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <div className="mb-3 text-sm font-black uppercase tracking-[0.14em] text-white">Other settings</div>
+            {toggleRows.map((row) => (
+              <label key={row.key} className="flex cursor-pointer items-center justify-between gap-4 rounded border border-white/10 bg-white/5 p-4 hover:bg-white/10">
+                <span>
+                  <span className="block text-sm font-black text-white">{row.label}</span>
+                  <span className="mt-1 block text-xs leading-5 text-zinc-400">{row.description}</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={Boolean(settings[row.key])}
+                  onChange={(event) => onChange({ [row.key]: event.target.checked })}
+                  className="h-5 w-5 accent-[#dc1f26]"
+                />
+              </label>
+            ))}
+          </section>
+        </div>
+
+        <div className="border-t border-white/10 p-5">
+          <button onClick={() => onChange(defaultSettings)} className="w-full rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10">
+            Reset settings
+          </button>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function AppHeader({ page, setPage, user, settings, onSettingsClick, onLoginClick, onRegisterClick, onLogout }) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -716,6 +878,10 @@ function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogou
             <Search size={16} />
             Search
           </button>
+          <button onClick={onSettingsClick} className="inline-flex items-center gap-2 rounded border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
+            <Settings size={16} />
+            <span>{settings?.language?.toUpperCase() || "AZ"}</span>
+          </button>
           {user ? (
             <div className="flex items-center gap-3">
               <NotificationBell />
@@ -784,6 +950,15 @@ function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogou
             </div>
           ))}
           <div className="mt-3 grid gap-2 border-t border-white/10 pt-3">
+            <button
+              onClick={() => {
+                onSettingsClick();
+                setOpen(false);
+              }}
+              className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
+            >
+              Settings / {settings?.language?.toUpperCase() || "AZ"}
+            </button>
             {user ? (
               <>
                 <div className="flex items-center justify-between rounded bg-white/5 px-3 py-3">
@@ -1763,6 +1938,47 @@ export default function App() {
   });
   const [authModal, setAuthModal] = useState(null);
   const [toast, setToast] = useState(null);
+  const [settings, setSettings] = useState(loadStoredSettings);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
+    document.documentElement.dataset.fightidTheme = settings.theme;
+    document.documentElement.dataset.fightidLanguage = settings.language;
+    document.documentElement.dataset.fightidCompact = String(settings.compactMode);
+    document.documentElement.dataset.fightidReduceMotion = String(settings.reduceMotion);
+
+    const styleId = "fightid-settings-overrides";
+    let style = document.getElementById(styleId);
+    if (!style) {
+      style = document.createElement("style");
+      style.id = styleId;
+      document.head.appendChild(style);
+    }
+
+    style.textContent = `
+      :root { --fightid-accent: ${settings.accent}; }
+      .bg-blood { background-color: var(--fightid-accent) !important; }
+      .text-blood { color: var(--fightid-accent) !important; }
+      .border-blood { border-color: var(--fightid-accent) !important; }
+      .shadow-red { box-shadow: 0 0 30px color-mix(in srgb, var(--fightid-accent), transparent 58%) !important; }
+      html[data-fightid-theme="midnight"] body,
+      html[data-fightid-theme="midnight"] .bg-canvas { background-color: #050509 !important; }
+      html[data-fightid-theme="midnight"] .bg-panel { background-color: #0d0d12 !important; }
+      html[data-fightid-theme="contrast"] body,
+      html[data-fightid-theme="contrast"] .bg-canvas { background-color: #000 !important; }
+      html[data-fightid-theme="contrast"] .bg-panel { background-color: #151515 !important; border-color: rgba(255,255,255,0.22) !important; }
+      html[data-fightid-compact="true"] { font-size: 14px; }
+      html[data-fightid-reduce-motion="true"] *,
+      html[data-fightid-reduce-motion="true"] *::before,
+      html[data-fightid-reduce-motion="true"] *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    `;
+  }, [settings]);
 
   useEffect(() => {
     const refreshToken = localStorage.getItem(refreshTokenStorageKey);
@@ -1816,6 +2032,10 @@ export default function App() {
     setAuthModal(null);
   };
 
+  const updateSettings = (patch) => {
+    setSettings((current) => ({ ...current, ...patch }));
+  };
+
   const handleLogout = async () => {
     const refreshToken = localStorage.getItem(refreshTokenStorageKey);
 
@@ -1853,12 +2073,15 @@ export default function App() {
         page={page}
         setPage={setPage}
         user={user}
+        settings={settings}
+        onSettingsClick={() => setSettingsOpen(true)}
         onLoginClick={() => openAuth("login")}
         onRegisterClick={() => openAuth("register")}
         onLogout={handleLogout}
       />
       {pages[page]}
       {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={setUser} />}
+      <SettingsPanel open={settingsOpen} settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} />
       {toast && <div className="fixed bottom-5 right-5 z-[120] rounded border border-blood/40 bg-[#111113] px-5 py-4 font-bold text-white shadow-red">{toast}</div>}
       <footer className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-500">
         FightID frontend | React + Tailwind CSS | Live Railway API

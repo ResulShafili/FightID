@@ -7,10 +7,10 @@ import { adminFightersQuerySchema, adminRoleUpdateSchema } from "../validators/a
 
 const router = Router();
 
-router.use(authenticateJWT, authorizeRole("ADMIN"));
-router.get("/stats", platformStats);
-router.get("/fighters", validate(adminFightersQuerySchema, "query"), adminFighters);
-router.put("/fighters/:id/role", validate(adminRoleUpdateSchema), updateFighterRole);
-router.delete("/fights/:id", adminDeleteFight);
+router.use(authenticateJWT);
+router.get("/stats", authorizeRole("ADMIN", "FEDERATION_REP"), platformStats);
+router.get("/fighters", authorizeRole("ADMIN", "FEDERATION_REP"), validate(adminFightersQuerySchema, "query"), adminFighters);
+router.put("/fighters/:id/role", authorizeRole("ADMIN"), validate(adminRoleUpdateSchema), updateFighterRole);
+router.delete("/fights/:id", authorizeRole("ADMIN"), adminDeleteFight);
 
 export default router;

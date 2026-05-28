@@ -25,6 +25,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import {
   apiRequest,
+  adminApi,
   authApi,
   badgeApi,
   cardApi,
@@ -38,6 +39,7 @@ import {
   setAccessToken,
   tournamentApi,
   trainingApi,
+  verificationApi,
 } from "./lib/api";
 import { createFightIdSocket } from "./lib/socket";
 
@@ -2023,6 +2025,182 @@ function RankingsPage({ openProfile }) {
   );
 }
 
+function FederationPanel({ user, onLoginClick, openProfile }) {
+  const [stats, setStats] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [fighters, setFighters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionLoading, setActionLoading] = useState("");
+  const [note, setNote] = useState("");
+  const canReview = ["ADMIN", "FEDERATION_REP"].includes(user?.role);
+  const isAdmin = user?.role === "ADMIN";
+
+  const loadPanel = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [statsResult, pendingResult, fightersResult] = await Promise.all([
+        adminApi.stats(),
+        verificationApi.pending(),
+        adminApi.fighters({ limit: 8 }),
+      ]);
+      setStats(statsResult);
+      setRequests(pendingResult || []);
+      setFighters(fightersResult.data || []);
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (canReview) loadPanel();
+  }, [canReview]);
+
+  const reviewRequest = async (requestId, decision) => {
+    setActionLoading(requestId);
+    setError("");
+    try {
+      if (decision === "approve") await verificationApi.approve(requestId, note);
+      else await verificationApi.reject(requestId, note || "Not enough verified documentation.");
+      setNote("");
+      await loadPanel();
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  const updateRole = async (fighterId, role) => {
+    setActionLoading(fighterId);
+    setError("");
+    try {
+      await adminApi.updateRole(fighterId, role);
+      await loadPanel();
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  if (!user) {
+    return (
+      <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+        <div className="rounded border border-white/10 bg-panel p-8">
+          <Badge tone="red">Federation</Badge>
+          <h1 className="mt-5 font-display text-4xl font-black text-white">Login required</h1>
+          <p className="mt-3 text-zinc-400">Federation tools are protected for admins and federation representatives.</p>
+          <button onClick={onLoginClick} className="mt-6 rounded bg-blood px-5 py-3 font-black text-white shadow-red">Login</button>
+        </div>
+      </main>
+    );
+  }
+
+  if (!canReview) {
+    return (
+      <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+        <div className="rounded border border-white/10 bg-panel p-8">
+          <Badge tone="red">Federation</Badge>
+          <h1 className="mt-5 font-display text-4xl font-black text-white">Access restricted</h1>
+          <p className="mt-3 text-zinc-400">This panel is available only for ADMIN and FEDERATION_REP accounts.</p>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <Badge tone="red">Federation Command</Badge>
+          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Federation Panel</h1>
+          <p className="mt-3 max-w-2xl text-zinc-400">Review Pro requests, monitor platform health, and manage fighter status.</p>
+        </div>
+        <button onClick={loadPanel} className="rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10">Refresh</button>
+      </div>
+
+      {loading && <div className="mt-8"><LoadingPanel label="Loading federation data" /></div>}
+      {error && <div className="mt-8"><ErrorPanel message={error} action={{ label: "Try again", onClick: loadPanel }} /></div>}
+
+      {!loading && !error && (
+        <>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.totalFighters || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Fighters</div></div>
+            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.proCount || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Pros</div></div>
+            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.fightsLogged || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Fights</div></div>
+            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.activeChallenges || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Active challenges</div></div>
+          </div>
+
+          <section className="mt-8 rounded border border-white/10 bg-panel p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-display text-2xl font-black text-white">Pending Pro Verification</h2>
+                <p className="mt-1 text-sm text-zinc-400">{requests.length} request{requests.length === 1 ? "" : "s"} waiting for review.</p>
+              </div>
+              <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Review note, optional for approve" className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-blood sm:max-w-md" />
+            </div>
+            <div className="mt-5 grid gap-3">
+              {requests.length === 0 && <div className="rounded border border-white/10 bg-white/5 p-4 text-sm text-zinc-400">No pending Pro verification requests.</div>}
+              {requests.map((request) => (
+                <div key={request.id} className="grid gap-4 rounded border border-white/10 bg-white/[0.03] p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div>
+                    <button onClick={() => openProfile(request.fighterId)} className="font-display text-xl font-black text-white hover:text-red-100">{request.fighter?.fullName || "Fighter"}</button>
+                    <div className="mt-1 text-sm text-zinc-400">{request.federation?.name} · submitted {formatDate(request.createdAt)}</div>
+                    {request.documentUrl && <a href={request.documentUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-bold text-red-100 hover:text-white">Open document</a>}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "approve")} className="rounded bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-60">Approve</button>
+                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "reject")} className="rounded bg-blood px-4 py-3 text-sm font-black text-white disabled:opacity-60">Reject</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-8 overflow-hidden rounded border border-white/10 bg-panel">
+            <div className="border-b border-white/10 p-5">
+              <h2 className="font-display text-2xl font-black text-white">Recent Fighters</h2>
+              <p className="mt-1 text-sm text-zinc-400">Fast status overview for federation review.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[780px] text-left text-sm">
+                <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.16em] text-zinc-500">
+                  <tr>{["Fighter", "Role", "Country", "Weight", "Points", "Admin Action"].map((head) => <th key={head} className="px-5 py-4 font-black">{head}</th>)}</tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {fighters.map((fighter) => (
+                    <tr key={fighter.id} className="text-zinc-300">
+                      <td className="px-5 py-4"><button onClick={() => openProfile(fighter.id)} className="font-bold text-white hover:text-red-100">{fighter.fullName}</button></td>
+                      <td className="px-5 py-4"><Badge tone={fighter.isVerifiedPro ? "red" : "dark"}>{fighter.user?.role || "AMATEUR"}</Badge></td>
+                      <td className="px-5 py-4">{fighter.country}</td>
+                      <td className="px-5 py-4">{formatWeightClass(fighter.weightClass)}</td>
+                      <td className="px-5 py-4 font-black text-white">{fighter.points}</td>
+                      <td className="px-5 py-4">
+                        {isAdmin ? (
+                          <div className="flex gap-2">
+                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "PRO")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 disabled:opacity-60">Make Pro</button>
+                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "AMATEUR")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 disabled:opacity-60">Amateur</button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-zinc-500">Admin only</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
+    </main>
+  );
+}
+
 function PlaceholderPage({ title, icon: Icon }) {
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
@@ -2199,7 +2377,7 @@ export default function App() {
     "Fighter Profile": <FighterProfilePage fighterId={selectedFighterId} openProfile={openProfile} user={user} onLoginRequired={() => openAuth("login")} />,
     Rankings: <RankingsPage openProfile={openProfile} />,
     Challenges: <ChallengesPage user={user} onLoginClick={() => openAuth("login")} />,
-    Federation: <PlaceholderPage title="Federation Panel" icon={ShieldCheck} />,
+    Federation: <FederationPanel user={user} onLoginClick={() => openAuth("login")} openProfile={openProfile} />,
   };
 
   return (

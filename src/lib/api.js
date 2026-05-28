@@ -115,6 +115,18 @@ export const leaderboardApi = {
   isChampion: (fighterId) => apiRequest(`/fighters/${fighterId}/isNationalChampion`),
 };
 
+export const adminApi = {
+  stats: () => apiRequest("/admin/stats"),
+  fighters: (params = {}) => apiRequest(`/admin/fighters${toQueryString(params)}`),
+  updateRole: (fighterId, role) => apiRequest(`/admin/fighters/${fighterId}/role`, { method: "PUT", body: JSON.stringify({ role }) }),
+};
+
+export const verificationApi = {
+  pending: () => apiRequest("/verification/pending"),
+  approve: (id, adminNote = "") => apiRequest(`/verification/${id}/approve`, { method: "PUT", body: JSON.stringify({ adminNote }) }),
+  reject: (id, adminNote) => apiRequest(`/verification/${id}/reject`, { method: "PUT", body: JSON.stringify({ adminNote }) }),
+};
+
 function toQueryString(params = {}) {
   const filtered = Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== "");
   const query = new URLSearchParams(filtered).toString();

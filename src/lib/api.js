@@ -8,10 +8,11 @@ export const setAccessToken = (token) => {
 
 export const apiRequest = async (path, options = {}) => {
   const hasBody = options.body !== undefined;
+  const isFormData = options.isFormData;
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      ...(hasBody ? { "Content-Type": "application/json" } : {}),
+      ...(hasBody && !isFormData ? { "Content-Type": "application/json" } : {}),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...options.headers,
     },
@@ -37,6 +38,7 @@ export const fighterApi = {
   list: (params = {}) => apiRequest(`/fighters${toQueryString(params)}`),
   get: (id) => apiRequest(`/fighters/${id}`),
   leaderboard: (params = {}) => apiRequest(`/fighters/leaderboard${toQueryString(params)}`),
+  rivals: (id) => apiRequest(`/fighters/${id}/rivals`),
   updateMe: (payload) => apiRequest("/fighters/me", { method: "PUT", body: JSON.stringify(payload) }),
 };
 
@@ -45,6 +47,72 @@ export const challengeApi = {
   send: (payload) => apiRequest("/challenges", { method: "POST", body: JSON.stringify(payload) }),
   accept: (id) => apiRequest(`/challenges/${id}/accept`, { method: "PUT" }),
   decline: (id) => apiRequest(`/challenges/${id}/decline`, { method: "PUT" }),
+};
+
+export const cardApi = {
+  getForFighter: (fighterId) => apiRequest(`/cards/fighter/${fighterId}`),
+  collect: (cardId) => apiRequest(`/cards/${cardId}/collect`, { method: "POST" }),
+  uncollect: (cardId) => apiRequest(`/cards/${cardId}/collect`, { method: "DELETE" }),
+  myCollection: () => apiRequest("/cards/my-collection"),
+};
+
+export const cornerManApi = {
+  add: (fighterId) => apiRequest(`/cornermen/${fighterId}`, { method: "POST" }),
+  remove: (fighterId) => apiRequest(`/cornermen/${fighterId}`, { method: "DELETE" }),
+  count: (fighterId) => apiRequest(`/cornermen/${fighterId}/count`),
+  myFighters: () => apiRequest("/cornermen/my-fighters"),
+};
+
+export const seekApi = {
+  list: (params = {}) => apiRequest(`/fightseek${toQueryString(params)}`),
+  post: (payload) => apiRequest("/fightseek", { method: "POST", body: JSON.stringify(payload) }),
+  remove: (id) => apiRequest(`/fightseek/${id}`, { method: "DELETE" }),
+};
+
+export const trainingApi = {
+  log: (payload) => apiRequest("/training", { method: "POST", body: JSON.stringify(payload) }),
+  forFighter: (fighterId) => apiRequest(`/training/fighter/${fighterId}`),
+  delete: (id) => apiRequest(`/training/${id}`, { method: "DELETE" }),
+};
+
+export const tournamentApi = {
+  list: (params = {}) => apiRequest(`/tournaments${toQueryString(params)}`),
+  get: (id) => apiRequest(`/tournaments/${id}`),
+  create: (payload) => apiRequest("/tournaments", { method: "POST", body: JSON.stringify(payload) }),
+  setWinner: (id, matchId, winnerId) => apiRequest(`/tournaments/${id}/matches/${matchId}/winner`, { method: "PUT", body: JSON.stringify({ winnerId }) }),
+};
+
+export const badgeApi = {
+  forFighter: (fighterId) => apiRequest(`/badges/fighter/${fighterId}`),
+};
+
+export const gymApi = {
+  list: (params = {}) => apiRequest(`/gyms${toQueryString(params)}`),
+  get: (id) => apiRequest(`/gyms/${id}`),
+  leaderboard: () => apiRequest("/gyms/leaderboard"),
+  create: (payload) => apiRequest("/gyms", { method: "POST", body: JSON.stringify(payload) }),
+  update: (id, payload) => apiRequest(`/gyms/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  uploadLogo: (id, file) => {
+    const fd = new FormData();
+    fd.append("logo", file);
+    return apiRequest(`/gyms/${id}/logo`, { method: "POST", body: fd, isFormData: true });
+  },
+  join: (id) => apiRequest(`/gyms/${id}/join`, { method: "POST" }),
+  leave: (id) => apiRequest(`/gyms/${id}/join`, { method: "DELETE" }),
+};
+
+export const micCheckApi = {
+  post: (payload) => apiRequest("/micchecks", { method: "POST", body: JSON.stringify(payload) }),
+  feed: () => apiRequest("/micchecks/feed"),
+  forChallenge: (challengeId) => apiRequest(`/micchecks/challenge/${challengeId}`),
+  react: (id, emoji) => apiRequest(`/micchecks/${id}/react`, { method: "POST", body: JSON.stringify({ emoji }) }),
+  unreact: (id) => apiRequest(`/micchecks/${id}/react`, { method: "DELETE" }),
+};
+
+export const leaderboardApi = {
+  national: () => apiRequest("/leaderboard/national"),
+  nationalByCountry: (country) => apiRequest(`/leaderboard/national/${country}`),
+  isChampion: (fighterId) => apiRequest(`/fighters/${fighterId}/isNationalChampion`),
 };
 
 function toQueryString(params = {}) {

@@ -3,6 +3,8 @@ import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { hashToken, refreshExpiryDate, signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/tokens.js";
+import { upsertFighterCard } from "../services/cardService.js";
+import { evaluateBadges } from "../services/badgeService.js";
 
 const publicUser = (user) => ({
   id: user.id,
@@ -49,6 +51,8 @@ export const register = asyncHandler(async (req, res) => {
     include: { fighterProfile: true },
   });
 
+  await upsertFighterCard(user.fighterProfile);
+  await evaluateBadges(user.fighterProfile.id);
   const tokens = await issueTokens(user);
   res.status(201).json({ user: publicUser(user), ...tokens });
 });

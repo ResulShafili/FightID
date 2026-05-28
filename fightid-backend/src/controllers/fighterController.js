@@ -8,10 +8,41 @@ import { ApiError } from "../utils/apiError.js";
 const fighterInclude = {
   user: { select: { role: true, email: true } },
   verifiedByFederation: true,
+  gymProfile: true,
+  cornerMen: true,
+};
+
+const statsForFights = (fights) => {
+  const wins = fights.filter((fight) => fight.result === "WIN");
+  const stats = {
+    record: {
+      wins: wins.length,
+      losses: fights.filter((fight) => fight.result === "LOSS").length,
+      draws: fights.filter((fight) => fight.result === "DRAW").length,
+      noContests: fights.filter((fight) => fight.result === "NO_CONTEST").length,
+    },
+    methods: {
+      KO_TKO: wins.filter((fight) => fight.method === "KO_TKO").length,
+      SUBMISSION: wins.filter((fight) => fight.method === "SUBMISSION").length,
+      DECISION: wins.filter((fight) => fight.method === "DECISION").length,
+      DQ: wins.filter((fight) => fight.method === "DQ").length,
+      OTHER: wins.filter((fight) => fight.method === "OTHER").length,
+    },
+  };
+  const totalWins = stats.record.wins;
+  const koRatio = totalWins > 0 ? stats.methods.KO_TKO / totalWins : 0;
+  const subRatio = totalWins > 0 ? stats.methods.SUBMISSION / totalWins : 0;
+  const decRatio = totalWins > 0 ? stats.methods.DECISION / totalWins : 0;
+  let style = "BALANCED";
+  if (koRatio >= 0.5) style = "STRIKER";
+  else if (subRatio >= 0.5) style = "GRAPPLER";
+  else if (decRatio >= 0.6) style = "TECHNICIAN";
+  else if (totalWins === 0) style = "UNPROVEN";
+  return { stats, style };
 };
 
 export const listFighters = asyncHandler(async (req, res) => {
-  const { weightClass, country, role, search } = req.query;
+  const { weightClass, country, role, search, seekingSparring } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -21,6 +52,7 @@ export const listFighters = asyncHandler(async (req, res) => {
     ...(weightClass ? { weightClass } : {}),
     ...(country ? { country } : {}),
     ...(isVerifiedPro !== undefined ? { isVerifiedPro } : {}),
+    ...(seekingSparring === "true" ? { seekingSparring: true } : {}),
     ...(search
       ? {
           OR: [
@@ -38,12 +70,12 @@ export const listFighters = asyncHandler(async (req, res) => {
       skip,
       take: limit,
       orderBy: [{ points: "desc" }, { fullName: "asc" }],
-      include: fighterInclude,
+      include: { ...fighterInclude, fights: { where: { isVerified: true } } },
     }),
     prisma.fighterProfile.count({ where }),
   ]);
 
-  res.json({ data: fighters, pagination: { page, limit, total } });
+  res.json({ data: fighters.map((fighter) => ({ ...fighter, ...statsForFights(fighter.fights), cornerCount: fighter.cornerMen.length })), pagination: { page, limit, total } });
 });
 
 export const getFighter = asyncHandler(async (req, res) => {
@@ -52,29 +84,14 @@ export const getFighter = asyncHandler(async (req, res) => {
     include: {
       ...fighterInclude,
       fights: { orderBy: { fightDate: "desc" } },
+      badges: true,
+      fighterCard: true,
     },
   });
 
   if (!fighter) throw new ApiError(404, "Fighter not found");
 
-  const wins = fighter.fights.filter((fight) => fight.result === "WIN");
-  const stats = {
-    record: {
-      wins: wins.length,
-      losses: fighter.fights.filter((fight) => fight.result === "LOSS").length,
-      draws: fighter.fights.filter((fight) => fight.result === "DRAW").length,
-      noContests: fighter.fights.filter((fight) => fight.result === "NO_CONTEST").length,
-    },
-    methods: {
-      KO_TKO: wins.filter((fight) => fight.method === "KO_TKO").length,
-      SUBMISSION: wins.filter((fight) => fight.method === "SUBMISSION").length,
-      DECISION: wins.filter((fight) => fight.method === "DECISION").length,
-      DQ: wins.filter((fight) => fight.method === "DQ").length,
-      OTHER: wins.filter((fight) => fight.method === "OTHER").length,
-    },
-  };
-
-  res.json({ ...fighter, stats });
+  res.json({ ...fighter, ...statsForFights(fighter.fights), cornerCount: fighter.cornerMen.length });
 });
 
 export const updateMe = asyncHandler(async (req, res) => {
@@ -103,4 +120,23 @@ export const uploadProfilePhoto = asyncHandler(async (req, res) => {
 export const leaderboard = asyncHandler(async (req, res) => {
   const result = await getLeaderboard(req.query);
   res.json(result);
+});
+
+export const rivals = asyncHandler(async (req, res) => {
+  const fighter = await prisma.fighterProfile.findUnique({ where: { id: req.params.id } });
+  if (!fighter) throw new ApiError(404, "Fighter not found");
+
+  const data = await prisma.fighterProfile.findMany({
+    where: {
+      id: { not: fighter.id },
+      weightClass: fighter.weightClass,
+      points: { gte: Math.max(0, fighter.points - 200), lte: fighter.points + 200 },
+    },
+    include: { ...fighterInclude, fights: { where: { isVerified: true } } },
+  });
+
+  res.json(data
+    .map((item) => ({ ...item, ...statsForFights(item.fights), pointGap: Math.abs(item.points - fighter.points) }))
+    .sort((a, b) => a.pointGap - b.pointGap)
+    .slice(0, 5));
 });

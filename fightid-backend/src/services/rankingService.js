@@ -1,4 +1,6 @@
 import { prisma } from "../lib/prisma.js";
+import { evaluateBadges } from "./badgeService.js";
+import { upsertFighterCard } from "./cardService.js";
 
 const TOP_10_MULTIPLIER = 2.5;
 const TOP_50_MULTIPLIER = 1.5;
@@ -76,10 +78,14 @@ export const applyFightRanking = async (fight) => {
 
   if (delta === 0) return fighter;
 
-  return prisma.fighterProfile.update({
+  const updated = await prisma.fighterProfile.update({
     where: { id: fighter.id },
     data: { points: Math.max(0, fighter.points + delta) },
   });
+
+  await upsertFighterCard(updated);
+  await evaluateBadges(updated.id);
+  return updated;
 };
 
 export const applyInactivityDecay = async () => {
@@ -104,10 +110,12 @@ export const applyInactivityDecay = async () => {
     const deduction = periods * DECAY_POINTS;
 
     if (deduction > 0) {
-      await prisma.fighterProfile.update({
+      const updated = await prisma.fighterProfile.update({
         where: { id: fighter.id },
         data: { points: Math.max(0, fighter.points - deduction) },
       });
+      await upsertFighterCard(updated);
+      await evaluateBadges(updated.id);
     }
   }
 };

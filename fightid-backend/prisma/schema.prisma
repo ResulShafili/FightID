@@ -71,6 +71,51 @@ enum NotificationType {
   PRO_REJECTED
   FIGHT_CONFIRMED
   RANK_CHANGE
+  FIGHTER_WON
+  BADGE_EARNED
+  MIC_CHECK_POSTED
+}
+
+enum CardTier {
+  BRONZE
+  SILVER
+  GOLD
+  CHAMPION
+}
+
+enum TrainingType {
+  STRIKING
+  GRAPPLING
+  CONDITIONING
+  SPARRING
+  DRILLING
+  RECOVERY
+  OTHER
+}
+
+enum TournamentStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
+enum BadgeType {
+  FIRST_WIN
+  FIRST_KO
+  FIRST_SUBMISSION
+  WIN_STREAK_3
+  WIN_STREAK_5
+  WIN_STREAK_10
+  UNDEFEATED
+  VETERAN_10_FIGHTS
+  VETERAN_25_FIGHTS
+  KO_SPECIALIST
+  SUBMISSION_SPECIALIST
+  DECISION_MASTER
+  POINTS_500
+  POINTS_1000
+  POINTS_2000
+  PLATFORM_PIONEER
 }
 
 model User {
@@ -85,6 +130,11 @@ model User {
   federation      Federation?
   notifications   Notification[]
   refreshTokens   RefreshToken[]
+  cardCollections CardCollection[]
+  cornerMen        CornerMan[]
+  gymsOwned        Gym[]              @relation("GymOwner")
+  tournaments      Tournament[]
+  micCheckReactions MicCheckReaction[]
 
   @@index([role])
 }
@@ -117,6 +167,10 @@ model FighterProfile {
   coverPhotoUrl          String?
   instagramUrl           String?
   youtubeUrl             String?
+  gymId                  String?      @db.Uuid
+  seekingSparring        Boolean      @default(false)
+  sparringLocation       String?
+  sparringNote           String?
   isVerifiedPro          Boolean     @default(false)
   verifiedByFederationId String?     @db.Uuid
   points                 Int         @default(0)
@@ -124,6 +178,7 @@ model FighterProfile {
   updatedAt              DateTime    @updatedAt
 
   user                 User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gymProfile           Gym?                     @relation("FighterGymRelation", fields: [gymId], references: [id], onDelete: SetNull)
   verifiedByFederation Federation?              @relation("FederationVerifiedFighters", fields: [verifiedByFederationId], references: [id], onDelete: SetNull)
   fights               Fight[]                  @relation("FighterFightRecords")
   opponentFights       Fight[]                  @relation("OpponentPlatformFights")
@@ -131,10 +186,21 @@ model FighterProfile {
   receivedChallenges   Challenge[]              @relation("ReceivedChallenges")
   resultSubmissions    Challenge[]              @relation("ChallengeResultSubmitter")
   verificationRequests ProVerificationRequest[]
+  fighterCard          FighterCard?
+  cornerMen            CornerMan[]
+  fightSeeks           FightSeek[]
+  trainingLogs         TrainingLog[]
+  badges               FighterBadge[]
+  tournamentFighter1   TournamentMatch[]        @relation("TMatchFighter1")
+  tournamentFighter2   TournamentMatch[]        @relation("TMatchFighter2")
+  tournamentWins       TournamentMatch[]        @relation("TMatchWinner")
+  micChecks            MicCheck[]
 
   @@index([fullName])
   @@index([country])
+  @@index([gymId])
   @@index([weightClass])
+  @@index([seekingSparring])
   @@index([isVerifiedPro, weightClass, points])
 }
 
@@ -164,6 +230,7 @@ model Fight {
   round             Int
   fightTime         String
   isVerified        Boolean     @default(false)
+  highlightUrl      String?
   createdAt         DateTime    @default(now())
 
   fighter         FighterProfile  @relation("FighterFightRecords", fields: [fighterId], references: [id], onDelete: Cascade)
@@ -195,10 +262,193 @@ model Challenge {
   sender            FighterProfile  @relation("SentChallenges", fields: [senderId], references: [id], onDelete: Cascade)
   receiver          FighterProfile  @relation("ReceivedChallenges", fields: [receiverId], references: [id], onDelete: Cascade)
   resultSubmitter   FighterProfile? @relation("ChallengeResultSubmitter", fields: [resultSubmittedBy], references: [id], onDelete: SetNull)
+  micChecks         MicCheck[]
 
   @@index([senderId])
   @@index([receiverId])
   @@index([status])
+}
+
+model FighterCard {
+  id         String   @id @default(uuid()) @db.Uuid
+  fighterId String   @unique @db.Uuid
+  tier       CardTier
+  createdAt  DateTime @default(now())
+
+  fighter    FighterProfile @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+  collectors CardCollection[]
+
+  @@index([tier])
+}
+
+model CardCollection {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  cardId      String   @db.Uuid
+  collectedAt DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card FighterCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId])
+  @@index([cardId])
+}
+
+model CornerMan {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  fighterId String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fighter FighterProfile @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fighterId])
+  @@index([fighterId])
+  @@index([userId])
+}
+
+model FightSeek {
+  id          String      @id @default(uuid()) @db.Uuid
+  fighterId   String      @db.Uuid
+  weightClass WeightClass
+  ruleSet     RuleSet
+  location    String
+  dateFrom    DateTime
+  dateTo      DateTime
+  message     String?
+  expiresAt   DateTime
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+
+  fighter FighterProfile @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+
+  @@index([weightClass])
+  @@index([ruleSet])
+  @@index([isActive, expiresAt])
+  @@index([fighterId])
+}
+
+model TrainingLog {
+  id           String       @id @default(uuid()) @db.Uuid
+  fighterId    String       @db.Uuid
+  type         TrainingType
+  durationMins Int
+  note         String?
+  date         DateTime     @default(now())
+  createdAt    DateTime     @default(now())
+
+  fighter FighterProfile @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+
+  @@index([fighterId, date])
+}
+
+model Tournament {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String
+  weightClass WeightClass
+  ruleSet     RuleSet
+  status      TournamentStatus @default(UPCOMING)
+  size        Int
+  createdById String           @db.Uuid
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  createdBy User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  matches   TournamentMatch[]
+
+  @@index([status])
+  @@index([weightClass])
+  @@index([createdById])
+}
+
+model TournamentMatch {
+  id           String    @id @default(uuid()) @db.Uuid
+  tournamentId String    @db.Uuid
+  round        Int
+  matchNumber  Int
+  fighter1Id   String?   @db.Uuid
+  fighter2Id   String?   @db.Uuid
+  winnerId     String?   @db.Uuid
+  scheduledAt  DateTime?
+  completedAt  DateTime?
+
+  tournament Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  fighter1   FighterProfile? @relation("TMatchFighter1", fields: [fighter1Id], references: [id], onDelete: SetNull)
+  fighter2   FighterProfile? @relation("TMatchFighter2", fields: [fighter2Id], references: [id], onDelete: SetNull)
+  winner     FighterProfile? @relation("TMatchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+
+  @@unique([tournamentId, round, matchNumber])
+  @@index([tournamentId])
+  @@index([fighter1Id])
+  @@index([fighter2Id])
+  @@index([winnerId])
+}
+
+model FighterBadge {
+  id        String    @id @default(uuid()) @db.Uuid
+  fighterId String    @db.Uuid
+  type      BadgeType
+  earnedAt  DateTime  @default(now())
+
+  fighter FighterProfile @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+
+  @@unique([fighterId, type])
+  @@index([fighterId])
+}
+
+model Gym {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  country     String
+  city        String
+  logoUrl     String?
+  description String?
+  websiteUrl  String?
+  ownerId     String?  @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner    User?            @relation("GymOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  fighters FighterProfile[] @relation("FighterGymRelation")
+
+  @@index([country])
+  @@index([name])
+  @@index([ownerId])
+}
+
+model MicCheck {
+  id          String   @id @default(uuid()) @db.Uuid
+  challengeId String   @db.Uuid
+  fighterId   String   @db.Uuid
+  message     String
+  videoUrl    String?
+  createdAt   DateTime @default(now())
+
+  challenge Challenge      @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  fighter   FighterProfile @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+  reactions MicCheckReaction[]
+
+  @@unique([challengeId, fighterId])
+  @@index([challengeId])
+  @@index([fighterId])
+  @@index([createdAt])
+}
+
+model MicCheckReaction {
+  id         String   @id @default(uuid()) @db.Uuid
+  micCheckId String   @db.Uuid
+  userId     String   @db.Uuid
+  emoji      String
+  createdAt  DateTime @default(now())
+
+  micCheck MicCheck @relation(fields: [micCheckId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([micCheckId, userId])
+  @@index([micCheckId])
+  @@index([userId])
 }
 
 model ProVerificationRequest {

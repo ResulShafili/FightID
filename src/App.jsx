@@ -19,15 +19,49 @@ import {
   Zap,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { apiRequest, authApi, challengeApi, fighterApi, setAccessToken } from "./lib/api";
+import {
+  apiRequest,
+  authApi,
+  badgeApi,
+  cardApi,
+  challengeApi,
+  cornerManApi,
+  fighterApi,
+  gymApi,
+  leaderboardApi,
+  micCheckApi,
+  seekApi,
+  setAccessToken,
+  tournamentApi,
+  trainingApi,
+} from "./lib/api";
+import { createFightIdSocket } from "./lib/socket";
 
-const navItems = ["Home", "Fighters", "Fighter Profile", "Rankings", "Challenges", "Federation"];
+const navItems = ["Home", "Fighters", "Compare", "Fight Board", "Sparring", "Tournaments", "Gyms", "National Champions", "Mic Check 🎤", "Rankings", "Challenges", "Federation"];
 const fallbackPortrait = "/assets/fighter-portrait.png";
 const fallbackCover = "/assets/hero-arena.png";
 const refreshTokenStorageKey = "fightidRefreshToken";
 const userStorageKey = "fightidUser";
 const weightClassOptions = ["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"];
 const ruleSetOptions = ["MMA", "GRAPPLING", "BOXING", "MUAY_THAI"];
+const BADGE_META = {
+  FIRST_WIN: { label: "First Blood", emoji: "🩸", desc: "Won their first fight" },
+  FIRST_KO: { label: "Lights Out", emoji: "💡", desc: "First KO/TKO victory" },
+  FIRST_SUBMISSION: { label: "Tap Out", emoji: "🤙", desc: "First submission win" },
+  WIN_STREAK_3: { label: "On Fire", emoji: "🔥", desc: "3 wins in a row" },
+  WIN_STREAK_5: { label: "Unstoppable", emoji: "⚡", desc: "5 wins in a row" },
+  WIN_STREAK_10: { label: "Wrecking Machine", emoji: "🤖", desc: "10 wins in a row" },
+  UNDEFEATED: { label: "Perfect Record", emoji: "💎", desc: "Undefeated with 3+ fights" },
+  VETERAN_10_FIGHTS: { label: "Veteran", emoji: "🎖️", desc: "10 fights on record" },
+  VETERAN_25_FIGHTS: { label: "War Machine", emoji: "⚔️", desc: "25 fights on record" },
+  KO_SPECIALIST: { label: "KO Artist", emoji: "💥", desc: "5+ KO/TKO wins" },
+  SUBMISSION_SPECIALIST: { label: "Submission Wizard", emoji: "🧙", desc: "5+ submission wins" },
+  DECISION_MASTER: { label: "Chess Player", emoji: "♟️", desc: "5+ decision wins" },
+  POINTS_500: { label: "Silver Fighter", emoji: "🥈", desc: "Reached 500 points" },
+  POINTS_1000: { label: "Gold Fighter", emoji: "🥇", desc: "Reached 1000 points" },
+  POINTS_2000: { label: "Champion Class", emoji: "🏆", desc: "Reached 2000 points" },
+  PLATFORM_PIONEER: { label: "Pioneer", emoji: "🚀", desc: "Among the first 100 fighters" },
+};
 
 const notificationApi = {
   list: () => apiRequest("/notifications"),
@@ -636,6 +670,8 @@ function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogou
             <div className="flex items-center gap-3">
               <NotificationBell />
               <span className="max-w-[180px] truncate text-sm font-bold text-white">{getUserDisplayName(user)}</span>
+              <button onClick={() => setPage("My Collection")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">Cards</button>
+              <button onClick={() => setPage("My Fighters")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">My Fighters</button>
               <button onClick={onLogout} className="rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
                 Logout
               </button>
@@ -1071,6 +1107,98 @@ function ChallengesPage({ user, onLoginClick }) {
   );
 }
 
+function SimpleFeaturePage({ title, badge, loader, renderItem, empty = "Nothing here yet.", user, loginRequired = false, onLoginClick }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (loginRequired && !user) {
+      setLoading(false);
+      return;
+    }
+    let ignore = false;
+    setLoading(true);
+    loader()
+      .then((result) => {
+        if (!ignore) setItems(result?.data || result || []);
+      })
+      .catch((caught) => {
+        if (!ignore) setError(caught.message);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [user, loginRequired]);
+
+  if (loginRequired && !user) {
+    return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><div className="rounded border border-white/10 bg-[#111113] p-8"><Badge tone="red">{badge}</Badge><h1 className="mt-5 font-display text-4xl font-black text-white">Please login to continue</h1><button onClick={onLoginClick} className="mt-6 rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Login</button></div></main>;
+  }
+
+  return (
+    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+      {badge && <Badge tone="red">{badge}</Badge>}
+      {title && <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">{title}</h1>}
+      {loading && <div className="mt-8"><LoadingPanel /></div>}
+      {error && <div className="mt-8"><ErrorPanel message={error} /></div>}
+      {!loading && !error && items.length === 0 && <div className="mt-8 rounded border border-white/10 bg-[#111113] p-8 text-zinc-400">{empty}</div>}
+      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">{items.map(renderItem)}</div>
+    </main>
+  );
+}
+
+function MyCollectionPage({ user, onLoginClick }) {
+  return <SimpleFeaturePage title="My Collection" badge="Fighter Cards" user={user} loginRequired onLoginClick={onLoginClick} loader={cardApi.myCollection} empty="No cards yet. Explore fighters and collect your first card." renderItem={(item) => <div key={item.id} className="rounded border border-yellow-400/30 bg-[#111113] p-5"><img src={item.card.fighter.profilePhotoUrl || fallbackPortrait} className="h-52 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{item.card.fighter.fullName}</h3><Badge tone="red">{item.card.tier}</Badge></div>} />;
+}
+
+function MyFightersPage({ user, onLoginClick }) {
+  return <SimpleFeaturePage title="My Fighters" badge="Corner Men" user={user} loginRequired onLoginClick={onLoginClick} loader={cornerManApi.myFighters} empty="You are not cornering any fighters yet." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><img src={item.fighter.profilePhotoUrl || fallbackPortrait} className="h-48 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><button onClick={() => cornerManApi.remove(item.fighter.id)} className="mt-4 rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Remove Corner</button></div>} />;
+}
+
+function HeadToHead() {
+  const [query, setQuery] = useState("");
+  const [fighters, setFighters] = useState([]);
+  const [left, setLeft] = useState(null);
+  const [right, setRight] = useState(null);
+  useEffect(() => { const timer = window.setTimeout(() => fighterApi.list({ search: query, limit: 10 }).then((r) => setFighters(r.data || [])).catch(() => setFighters([])), 300); return () => window.clearTimeout(timer); }, [query]);
+  const selectFighter = async (id) => (left ? setRight(await fighterApi.get(id)) : setLeft(await fighterApi.get(id)));
+  const rows = left && right ? [["Record", recordFromStats(left.stats), recordFromStats(right.stats)], ["Points", left.points, right.points], ["KO/TKO wins", left.stats?.methods?.KO_TKO || 0, right.stats?.methods?.KO_TKO || 0], ["Submission wins", left.stats?.methods?.SUBMISSION || 0, right.stats?.methods?.SUBMISSION || 0], ["Decision wins", left.stats?.methods?.DECISION || 0, right.stats?.methods?.DECISION || 0], ["Weight class", formatWeightClass(left.weightClass), formatWeightClass(right.weightClass)], ["Status", getStatus(left), getStatus(right)], ["Country", left.country, right.country]] : [];
+  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Head to Head</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Compare Fighters</h1><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fighters" className="mt-8 w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" /><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{fighters.map((fighter) => <button key={fighter.id} onClick={() => selectFighter(fighter.id)} className="rounded border border-white/10 bg-[#111113] p-3 text-left text-white">{fighter.fullName}</button>)}</div><div className="mt-8 grid gap-5 md:grid-cols-2">{[left, right].map((fighter, index) => <div key={index} className="rounded border border-white/10 bg-[#111113] p-5">{fighter ? <><img src={fighter.profilePhotoUrl || fallbackPortrait} className="h-64 w-full rounded object-cover" /><h2 className="mt-4 font-display text-3xl font-black text-white">{fighter.fullName}</h2></> : <p className="text-zinc-400">Select fighter {index + 1}</p>}</div>)}</div>{rows.length > 0 && <div className="mt-8 rounded border border-white/10 bg-[#111113] p-5">{rows.map(([label, l, r]) => <div key={label} className="grid grid-cols-3 border-b border-white/10 py-3 text-center text-white"><span>{l}</span><b>{label}</b><span>{r}</span></div>)}</div>}</main>;
+}
+
+function FightSeekBoard() {
+  return <SimpleFeaturePage title="Fight Board" badge="Fight Wanted" loader={() => seekApi.list({ limit: 30 })} empty="No fight listings for this weight class yet. Be the first to post." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><h3 className="font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><p className="mt-2 text-zinc-400">{formatWeightClass(item.weightClass)} · {formatResult(item.ruleSet)} · {item.location}</p><p className="mt-3 text-sm text-zinc-500">{item.message}</p></div>} />;
+}
+
+function SparringFinder() {
+  return <SimpleFeaturePage title="Sparring Finder" badge="Sparring" loader={() => fighterApi.list({ seekingSparring: "true", limit: 30 })} empty="No fighters are looking for sparring right now." renderItem={(fighter) => <div key={fighter.id} className="rounded border border-white/10 bg-[#111113] p-5"><img src={fighter.profilePhotoUrl || fallbackPortrait} className="h-48 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{fighter.fullName}</h3><p className="mt-2 text-zinc-400">{fighter.sparringLocation || fighter.country}</p><p className="mt-2 text-sm text-emerald-300">Seeking sparring partner</p></div>} />;
+}
+
+function TournamentHub() {
+  return <SimpleFeaturePage title="Tournaments" badge="Bracket Hub" loader={() => tournamentApi.list({ limit: 30 })} empty="No tournaments yet." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><Badge tone="red">{item.status}</Badge><h3 className="mt-4 font-display text-2xl font-black text-white">{item.name}</h3><p className="mt-2 text-zinc-400">{formatWeightClass(item.weightClass)} · {formatResult(item.ruleSet)} · {item.size} slots</p></div>} />;
+}
+
+function GymHub() {
+  const [tab, setTab] = useState("gyms");
+  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Gym Network</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Gyms</h1><div className="mt-6 flex gap-3"><button onClick={() => setTab("gyms")} className="rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Gyms</button><button onClick={() => setTab("leaderboard")} className="rounded border border-white/10 px-5 py-3 font-black text-white">Gym Leaderboard</button></div><SimpleFeaturePage title="" badge="" loader={tab === "gyms" ? () => gymApi.list({ limit: 30 }) : gymApi.leaderboard} empty="No gyms yet." renderItem={(gym) => <div key={gym.id} className="rounded border border-white/10 bg-[#111113] p-5"><h3 className="font-display text-2xl font-black text-white">{gym.name}</h3><p className="mt-2 text-zinc-400">{gym.city}, {gym.country}</p><p className="mt-2 text-sm text-zinc-500">{gym.fighterCount || 0} fighters · {gym.totalPoints || 0} points</p></div>} /></main>;
+}
+
+function MicCheckFeed({ user }) {
+  const emojis = ["🔥", "💀", "😂", "🥶", "👊"];
+  return <SimpleFeaturePage title="Mic Check 🎤" badge="Fight Talk" loader={micCheckApi.feed} empty="No Mic Checks yet." user={user} renderItem={(item) => <div key={item.id} className="rounded border border-blood/30 bg-[#111113] p-5"><div className="flex gap-4"><img src={item.fighter.profilePhotoUrl || fallbackPortrait} className="h-20 w-20 rounded object-cover" /><div><h3 className="font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><p className="text-zinc-400">{formatWeightClass(item.challenge.weightClass)} · {formatResult(item.challenge.ruleSet)}</p></div></div><p className="mt-5 text-2xl font-black italic text-white">"{item.message}"</p><div className="mt-5 flex gap-2">{emojis.map((emoji) => <button key={emoji} onClick={() => user && micCheckApi.react(item.id, emoji)} className="rounded border border-white/10 px-3 py-2 text-white">{emoji} {item.reactionCounts?.[emoji] || 0}</button>)}</div></div>} />;
+}
+
+function NationalChampions({ openProfile }) {
+  const [data, setData] = useState({});
+  const [weight, setWeight] = useState("LIGHTWEIGHT");
+  useEffect(() => { leaderboardApi.national().then(setData).catch(() => setData({})); }, []);
+  const rows = data[weight] || [];
+  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">National Champions</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Country #1 Fighters</h1><div className="mt-6 flex gap-2 overflow-x-auto">{weightClassOptions.map((item) => <button key={item} onClick={() => setWeight(item)} className={`rounded px-4 py-2 text-sm font-black ${weight === item ? "bg-[#dc1f26] text-white" : "border border-white/10 text-zinc-300"}`}>{formatWeightClass(item)}</button>)}</div><div className="mt-8 overflow-hidden rounded border border-white/10 bg-[#111113]"><table className="w-full text-left text-sm"><tbody>{rows.map((row) => <tr key={row.country} className="border-b border-white/10"><td className="p-4 text-white">{row.country}</td><td className="p-4"><button onClick={() => openProfile(row.fighter.id)} className="font-bold text-white">{row.fighter.fullName}</button></td><td className="p-4 text-zinc-300">{row.fighter.points} pts</td></tr>)}</tbody></table></div></main>;
+}
+
 function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const [profile, setProfile] = useState(null);
   const [countryRank, setCountryRank] = useState("Live");
@@ -1079,6 +1207,11 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const [shareCopied, setShareCopied] = useState(false);
   const [upcomingFight, setUpcomingFight] = useState(null);
   const [upcomingStatus, setUpcomingStatus] = useState("Login to view your challenges");
+  const [badges, setBadges] = useState([]);
+  const [card, setCard] = useState(null);
+  const [nationalChampion, setNationalChampion] = useState(null);
+  const [corner, setCorner] = useState({ count: 0, hasCornered: false });
+  const [training, setTraining] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -1146,6 +1279,15 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
     };
   }, [profile, user]);
 
+  useEffect(() => {
+    if (!profile) return;
+    badgeApi.forFighter(profile.id).then(setBadges).catch(() => setBadges([]));
+    cardApi.getForFighter(profile.id).then(setCard).catch(() => setCard(null));
+    leaderboardApi.isChampion(profile.id).then(setNationalChampion).catch(() => setNationalChampion(null));
+    cornerManApi.count(profile.id).then(setCorner).catch(() => setCorner({ count: 0, hasCornered: false }));
+    trainingApi.forFighter(profile.id).then(setTraining).catch(() => setTraining(null));
+  }, [profile]);
+
   if (loading) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
@@ -1188,6 +1330,25 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
     }
   };
 
+  const toggleCorner = async () => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+    if (corner.hasCornered) await cornerManApi.remove(profile.id);
+    else await cornerManApi.add(profile.id);
+    const next = await cornerManApi.count(profile.id);
+    setCorner(next);
+  };
+
+  const collectCard = async () => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+    if (card) await cardApi.collect(card.id);
+  };
+
   return (
     <main className="pt-20">
       {challengeModalOpen && <ChallengeModal receiver={profile} onClose={() => setChallengeModalOpen(false)} />}
@@ -1203,8 +1364,15 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
             <div className="flex flex-wrap gap-3">
               <Badge tone={status === "Pro" ? "red" : "dark"}><ShieldCheck className="mr-2" size={14} /> {status}</Badge>
               {profile.verifiedByFederation?.name && <Badge>{profile.verifiedByFederation.name}</Badge>}
+              <Badge tone="light">🎖️ {badges.length} badges</Badge>
+              {profile.seekingSparring && <Badge tone="light">🥊 Seeking Sparring {profile.sparringLocation ? `· ${profile.sparringLocation}` : ""}</Badge>}
             </div>
             <h1 className="mt-5 font-display text-5xl font-black leading-none text-white sm:text-7xl">{profile.fullName}</h1>
+            {nationalChampion?.isChampion && (
+              <div className="mt-5 rounded border border-yellow-300/40 bg-yellow-400/20 px-5 py-4 text-lg font-black text-yellow-100">
+                🥇 {profile.country} National Champion · {formatWeightClass(profile.weightClass)}
+              </div>
+            )}
             <p className="mt-3 text-2xl font-bold text-zinc-300">"{profile.nickname || "No nickname"}"</p>
             <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-300">{profile.bio || "Verified FightID fighter profile."}</p>
             <div className="mt-7 flex flex-wrap gap-3 text-sm font-bold text-zinc-300">
@@ -1221,6 +1389,11 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
                 <ArrowRight size={18} />
                 {shareCopied ? "Link copied!" : "Share Profile"}
               </button>
+              {user?.fighterProfile?.id !== profile.id && (
+                <button onClick={toggleCorner} className={`inline-flex items-center justify-center gap-2 rounded px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white ${corner.hasCornered ? "bg-blood" : "border border-white/15 bg-white/5 hover:bg-white/10"}`}>
+                  🧤 {corner.hasCornered ? "In Your Corner ✓" : "Corner This Fighter"} · {corner.count}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1307,9 +1480,55 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
                 </table>
               </div>
             </div>
+
+            <div className="rounded border border-white/10 bg-panel p-5">
+              <h2 className="font-display text-2xl font-black text-white">Badges</h2>
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {Object.entries(BADGE_META).map(([type, meta]) => {
+                  const earned = badges.find((badge) => badge.type === type);
+                  return (
+                    <div key={type} title={`${meta.desc}${earned ? ` · Earned ${formatDate(earned.earnedAt)}` : ""}`} className={`rounded border border-white/10 bg-white/5 p-4 text-center ${earned ? "opacity-100" : "opacity-30"}`}>
+                      <div className="text-3xl">{earned ? meta.emoji : "🔒"}</div>
+                      <div className="mt-2 text-xs font-black uppercase tracking-[0.12em] text-white">{meta.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded border border-white/10 bg-panel p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-display text-2xl font-black text-white">Training Activity</h2>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    This month: {training?.summary?.totalSessionsThisMonth || 0} sessions · {Number(training?.summary?.totalHoursThisMonth || 0).toFixed(1)} hours
+                  </p>
+                </div>
+                {user?.fighterProfile?.id === profile.id && <button className="rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Log Training Session</button>}
+              </div>
+              <div className="mt-5 grid gap-3">
+                {(training?.data || []).slice(0, 10).map((log) => (
+                  <div key={log.id} className="rounded border border-white/10 bg-white/5 p-4 text-sm text-zinc-300">
+                    <b className="text-white">{formatResult(log.type)}</b> · {log.durationMins} mins · {formatDate(log.date)}
+                    {log.note && <p className="mt-1 text-zinc-400">{log.note}</p>}
+                  </div>
+                ))}
+                {(!training?.data || training.data.length === 0) && <p className="text-sm text-zinc-500">No training logs yet.</p>}
+              </div>
+            </div>
           </div>
 
           <aside className="grid gap-5 self-start">
+            {card && (
+              <div className="rounded border border-yellow-400/30 bg-panel p-5 shadow-red">
+                <Badge tone="red">{card.tier}</Badge>
+                <h2 className="mt-4 font-display text-xl font-black text-white">Collectible Fighter Card</h2>
+                <img src={profile.profilePhotoUrl || fallbackPortrait} alt={profile.fullName} className="mt-4 h-52 w-full rounded object-cover" />
+                <button disabled={user?.fighterProfile?.id === profile.id} onClick={collectCard} className="mt-4 w-full rounded bg-[#dc1f26] px-5 py-3 font-black text-white disabled:opacity-60">
+                  {user?.fighterProfile?.id === profile.id ? "Your Card" : "Collect"}
+                </button>
+              </div>
+            )}
             <div className="rounded border border-white/10 bg-panel p-5">
               <h2 className="font-display text-xl font-black text-white">Upcoming fight</h2>
               <div className="mt-5 rounded border border-blood/30 bg-blood/10 p-4">
@@ -1468,6 +1687,7 @@ export default function App() {
     }
   });
   const [authModal, setAuthModal] = useState(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const refreshToken = localStorage.getItem(refreshTokenStorageKey);
@@ -1493,6 +1713,20 @@ export default function App() {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    const socket = createFightIdSocket(user.id);
+    const showToast = (message) => {
+      setToast(message);
+      window.setTimeout(() => setToast(null), 3000);
+    };
+    socket.on("fighter:won", () => showToast("Your fighter just won!"));
+    socket.on("training:new", () => showToast("Your fighter just logged a training session 💪"));
+    socket.on("miccheck:new", () => showToast("Your opponent just dropped a Mic Check 🎤 — check it out!"));
+    socket.on("notification:new", (notification) => showToast(notification.message));
+    return () => socket.disconnect();
+  }, [user]);
 
   const openProfile = (fighterId) => {
     setSelectedFighterId(fighterId);
@@ -1523,6 +1757,15 @@ export default function App() {
   const pages = {
     Home: <LandingPage setPage={setPage} openProfile={openProfile} />,
     Fighters: <FightersPage openProfile={openProfile} />,
+    Compare: <HeadToHead />,
+    "Fight Board": <FightSeekBoard user={user} onLoginClick={() => openAuth("login")} />,
+    Sparring: <SparringFinder />,
+    Tournaments: <TournamentHub user={user} />,
+    Gyms: <GymHub />,
+    "National Champions": <NationalChampions openProfile={openProfile} />,
+    "Mic Check 🎤": <MicCheckFeed user={user} />,
+    "My Collection": <MyCollectionPage user={user} onLoginClick={() => openAuth("login")} />,
+    "My Fighters": <MyFightersPage user={user} onLoginClick={() => openAuth("login")} />,
     "Fighter Profile": <FighterProfilePage fighterId={selectedFighterId} openProfile={openProfile} user={user} onLoginRequired={() => openAuth("login")} />,
     Rankings: <RankingsPage openProfile={openProfile} />,
     Challenges: <ChallengesPage user={user} onLoginClick={() => openAuth("login")} />,
@@ -1541,6 +1784,7 @@ export default function App() {
       />
       {pages[page]}
       {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={setUser} />}
+      {toast && <div className="fixed bottom-5 right-5 z-[120] rounded border border-blood/40 bg-[#111113] px-5 py-4 font-bold text-white shadow-red">{toast}</div>}
       <footer className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-500">
         FightID frontend | React + Tailwind CSS | Live Railway API
       </footer>

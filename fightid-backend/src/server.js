@@ -11,7 +11,7 @@ const app = createApp();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: env.clientUrl,
+    origin: env.clientUrls,
     credentials: true,
   },
 });
@@ -23,6 +23,14 @@ cron.schedule("15 3 * * *", async () => {
     await applyInactivityDecay();
   } catch (error) {
     console.error("Daily ranking decay failed", error);
+  }
+});
+
+cron.schedule("0 * * * *", async () => {
+  try {
+    await prisma.fightSeek.updateMany({ where: { isActive: true, expiresAt: { lt: new Date() } }, data: { isActive: false } });
+  } catch (error) {
+    console.error("Fight seek expiry failed", error);
   }
 });
 

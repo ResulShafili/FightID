@@ -164,6 +164,17 @@ function slugify(value) {
 }
 
 async function main() {
+  await prisma.micCheckReaction.deleteMany();
+  await prisma.micCheck.deleteMany();
+  await prisma.tournamentMatch.deleteMany();
+  await prisma.tournament.deleteMany();
+  await prisma.trainingLog.deleteMany();
+  await prisma.fightSeek.deleteMany();
+  await prisma.cornerMan.deleteMany();
+  await prisma.cardCollection.deleteMany();
+  await prisma.fighterCard.deleteMany();
+  await prisma.fighterBadge.deleteMany();
+  await prisma.gym.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.proVerificationRequest.deleteMany();
   await prisma.challenge.deleteMany();
@@ -192,6 +203,12 @@ async function main() {
     federations.push(federation);
   }
 
+  const gyms = await Promise.all([
+    prisma.gym.create({ data: { name: "Baki Combat Club", country: "AZ", city: "Baku", ownerId: admin.id, description: "Elite MMA training room in Baku." } }),
+    prisma.gym.create({ data: { name: "Xezer MMA", country: "AZ", city: "Baku", description: "Caspian grappling and striking team." } }),
+    prisma.gym.create({ data: { name: "Neftci Fight Team", country: "AZ", city: "Baku", description: "High-output fight camp for amateur and pro fighters." } }),
+  ]);
+
   const profiles = [];
   for (let index = 0; index < fighterSeeds.length; index += 1) {
     const fighter = fighterSeeds[index];
@@ -211,6 +228,7 @@ async function main() {
             country: "AZ",
             weightClass: fighter.weightClass,
             gym: fighter.gym,
+            gymId: gyms[index % gyms.length].id,
             bio: `${fighter.fullName} is an Azerbaijani ${fighter.weightClass.toLowerCase().replace("_", " ")} fighter representing ${fighter.gym}.`,
             profilePhotoUrl,
             coverPhotoUrl,
@@ -219,6 +237,9 @@ async function main() {
             isVerifiedPro: fighter.isVerifiedPro,
             verifiedByFederationId: fighter.isVerifiedPro ? federation.id : undefined,
             points: fighter.points,
+            seekingSparring: index % 3 === 0,
+            sparringLocation: index % 3 === 0 ? "Baku" : undefined,
+            sparringNote: index % 3 === 0 ? "Technical sparring, 3 rounds preferred." : undefined,
           },
         },
       },
@@ -226,6 +247,12 @@ async function main() {
     });
 
     profiles.push(user.fighterProfile);
+  }
+
+  const cards = [];
+  for (const profile of profiles) {
+    const tier = profile.points >= 2000 ? "CHAMPION" : profile.points >= 1000 ? "GOLD" : profile.points >= 500 ? "SILVER" : "BRONZE";
+    cards.push(await prisma.fighterCard.create({ data: { fighterId: profile.id, tier } }));
   }
 
   for (const [fighterIndex, opponentIndex, eventName, fightDate, result, method, round, fightTime, isVerified] of fightSeeds) {
@@ -248,11 +275,12 @@ async function main() {
     });
   }
 
+  const challenges = [];
   for (const [senderIndex, receiverIndex, status, proposedDateFrom, proposedDateTo, location, weightClass, ruleSet, senderMessage] of challengeSeeds) {
     const sender = profiles[senderIndex];
     const receiver = profiles[receiverIndex];
 
-    await prisma.challenge.create({
+    const challenge = await prisma.challenge.create({
       data: {
         senderId: sender.id,
         receiverId: receiver.id,
@@ -268,7 +296,24 @@ async function main() {
         resultConfirmed: status === "COMPLETED",
       },
     });
+    challenges.push(challenge);
   }
+
+  await prisma.cardCollection.createMany({ data: [{ userId: profiles[0].userId, cardId: cards[1].id }, { userId: profiles[1].userId, cardId: cards[0].id }, { userId: profiles[2].userId, cardId: cards[5].id }] });
+  await prisma.cornerMan.createMany({ data: [{ userId: profiles[4].userId, fighterId: profiles[0].id }, { userId: profiles[6].userId, fighterId: profiles[1].id }, { userId: profiles[8].userId, fighterId: profiles[5].id }] });
+  await prisma.fighterBadge.createMany({ data: [{ fighterId: profiles[0].id, type: "FIRST_WIN" }, { fighterId: profiles[0].id, type: "POINTS_1000" }, { fighterId: profiles[5].id, type: "FIRST_KO" }] });
+  await prisma.fightSeek.createMany({ data: [{ fighterId: profiles[0].id, weightClass: "LIGHTWEIGHT", ruleSet: "MMA", location: "Baku", dateFrom: new Date("2026-06-01"), dateTo: new Date("2026-06-30"), expiresAt: new Date("2026-07-01"), message: "Looking for a ranked lightweight." }, { fighterId: profiles[1].id, weightClass: "WELTERWEIGHT", ruleSet: "GRAPPLING", location: "Baku", dateFrom: new Date("2026-07-01"), dateTo: new Date("2026-07-15"), expiresAt: new Date("2026-07-31"), message: "Grappling super fight wanted." }] });
+  await prisma.trainingLog.createMany({ data: [{ fighterId: profiles[0].id, type: "STRIKING", durationMins: 90, note: "Pad work and cage exits." }, { fighterId: profiles[0].id, type: "SPARRING", durationMins: 60, note: "Five technical rounds." }, { fighterId: profiles[5].id, type: "GRAPPLING", durationMins: 75, note: "Back control rounds." }] });
+  await prisma.micCheck.create({ data: { challengeId: challenges[1].id, fighterId: profiles[1].id, message: "I respect the work, but this cage belongs to me.", videoUrl: "https://youtu.be/dQw4w9WgXcQ" } });
+
+  const tournament = await prisma.tournament.create({ data: { name: "Baku Lightweight Grand Prix", weightClass: "LIGHTWEIGHT", ruleSet: "MMA", size: 4, status: "ACTIVE", createdById: admin.id } });
+  await prisma.tournamentMatch.createMany({
+    data: [
+      { tournamentId: tournament.id, round: 1, matchNumber: 1, fighter1Id: profiles[0].id, fighter2Id: profiles[3].id },
+      { tournamentId: tournament.id, round: 1, matchNumber: 2, fighter1Id: profiles[6].id, fighter2Id: profiles[9].id },
+      { tournamentId: tournament.id, round: 2, matchNumber: 1 },
+    ],
+  });
 
   await prisma.proVerificationRequest.create({
     data: {

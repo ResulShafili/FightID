@@ -6,6 +6,7 @@ export const fighterListQuerySchema = paginationQuerySchema.extend({
   country: z.string().min(2).max(2).toUpperCase().optional(),
   role: userRoleSchema.optional(),
   search: z.string().max(120).optional(),
+  seekingSparring: z.enum(["true", "false"]).optional(),
 });
 
 export const leaderboardQuerySchema = paginationQuerySchema.extend({
@@ -24,4 +25,7 @@ export const updateProfileSchema = z.object({
   instagramUrl: optionalUrlSchema.nullable().optional(),
   youtubeUrl: optionalUrlSchema.nullable().optional(),
   coverPhotoUrl: optionalUrlSchema.nullable().optional(),
+  seekingSparring: z.boolean().optional(),
+  sparringLocation: z.string().max(120).nullable().optional(),
+  sparringNote: z.string().max(300).nullable().optional(),
 });

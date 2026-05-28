@@ -12,6 +12,7 @@ import fighterRoutes from "./routes/fighterRoutes.js";
 import fightRoutes from "./routes/fightRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import verificationRoutes from "./routes/verificationRoutes.js";
+import { badgeRoutes, cardRoutes, cornerManRoutes, fightSeekRoutes, gymRoutes, leaderboardRoutes, micCheckRoutes, tournamentRoutes, trainingRoutes } from "./routes/featureRoutes.js";
 
 export const createApp = () => {
   const app = express();
@@ -52,6 +53,15 @@ export const createApp = () => {
   app.use("/api/verification", verificationRoutes);
   app.use("/api/notifications", notificationRoutes);
   app.use("/api/admin", adminRoutes);
+  app.use("/api/cards", cardRoutes);
+  app.use("/api/cornermen", cornerManRoutes);
+  app.use("/api/fightseek", fightSeekRoutes);
+  app.use("/api/training", trainingRoutes);
+  app.use("/api/badges", badgeRoutes);
+  app.use("/api/leaderboard", leaderboardRoutes);
+  app.use("/api/gyms", gymRoutes);
+  app.use("/api/micchecks", micCheckRoutes);
+  app.use("/api/tournaments", tournamentRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({ message: "Route not found" });

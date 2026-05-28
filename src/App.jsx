@@ -37,7 +37,25 @@ import {
 } from "./lib/api";
 import { createFightIdSocket } from "./lib/socket";
 
-const navItems = ["Home", "Fighters", "Compare", "Fight Board", "Sparring", "Tournaments", "Gyms", "National Champions", "Mic Check 🎤", "Rankings", "Challenges", "Federation"];
+const navGroups = [
+  { label: "Home", page: "Home" },
+  {
+    label: "Discover",
+    items: ["Fighters", "Rankings", "National Champions", "Gyms"],
+  },
+  {
+    label: "Fight Tools",
+    items: ["Compare", "Fight Board", "Sparring", "Tournaments"],
+  },
+  {
+    label: "Community",
+    items: ["Challenges", "Mic Check 🎤"],
+  },
+  {
+    label: "Manage",
+    items: ["Federation"],
+  },
+];
 const fallbackPortrait = "/assets/fighter-portrait.png";
 const fallbackCover = "/assets/hero-arena.png";
 const refreshTokenStorageKey = "fightidRefreshToken";
@@ -648,17 +666,49 @@ function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogou
         </button>
 
         <nav className="hidden items-center gap-1 lg:flex">
-          {navItems.map((item) => (
-            <button
-              key={item}
-              onClick={() => setPage(item)}
-              className={`rounded px-4 py-2 text-sm font-semibold transition ${
-                page === item ? "bg-white text-black" : "text-zinc-300 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
+          {navGroups.map((group) => {
+            const isActive = group.page === page || group.items?.includes(page);
+
+            if (group.page) {
+              return (
+                <button
+                  key={group.label}
+                  onClick={() => setPage(group.page)}
+                  className={`rounded px-4 py-2 text-sm font-semibold transition ${
+                    isActive ? "bg-white text-black" : "text-zinc-300 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {group.label}
+                </button>
+              );
+            }
+
+            return (
+              <div key={group.label} className="group relative">
+                <button
+                  className={`inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-semibold transition ${
+                    isActive ? "bg-white text-black" : "text-zinc-300 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {group.label}
+                  <ChevronRight className="rotate-90" size={14} />
+                </button>
+                <div className="invisible absolute left-0 top-full z-[70] min-w-56 translate-y-2 rounded border border-white/10 bg-[#111113] p-2 opacity-0 shadow-red transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                  {group.items.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => setPage(item)}
+                      className={`block w-full rounded px-3 py-3 text-left text-sm font-bold transition ${
+                        page === item ? "bg-white text-black" : "text-zinc-300 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
@@ -696,17 +746,42 @@ function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogou
 
       {open && (
         <div className="border-t border-white/10 bg-canvas px-4 py-3 lg:hidden">
-          {navItems.map((item) => (
-            <button
-              key={item}
-              onClick={() => {
-                setPage(item);
-                setOpen(false);
-              }}
-              className="block w-full rounded px-3 py-3 text-left text-sm font-semibold text-zinc-200 hover:bg-white/10"
-            >
-              {item}
-            </button>
+          {navGroups.map((group) => (
+            <div key={group.label} className="py-1">
+              {group.page ? (
+                <button
+                  onClick={() => {
+                    setPage(group.page);
+                    setOpen(false);
+                  }}
+                  className={`block w-full rounded px-3 py-3 text-left text-sm font-semibold ${
+                    page === group.page ? "bg-white text-black" : "text-zinc-200 hover:bg-white/10"
+                  }`}
+                >
+                  {group.label}
+                </button>
+              ) : (
+                <>
+                  <div className="px-3 pt-3 text-[11px] font-black uppercase tracking-[0.18em] text-zinc-500">{group.label}</div>
+                  <div className="mt-1 grid gap-1">
+                    {group.items.map((item) => (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          setPage(item);
+                          setOpen(false);
+                        }}
+                        className={`block w-full rounded px-3 py-2 text-left text-sm font-semibold ${
+                          page === item ? "bg-white text-black" : "text-zinc-200 hover:bg-white/10"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           ))}
           <div className="mt-3 grid gap-2 border-t border-white/10 pt-3">
             {user ? (

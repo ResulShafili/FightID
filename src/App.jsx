@@ -91,6 +91,121 @@ const accentOptions = [
   { value: "#18a999", label: "Teal" },
   { value: "#7c3aed", label: "Violet" },
 ];
+const themePalettes = {
+  dark: { canvas: "#07080a", panel: "#101114", elevated: "#111113", text: "#f4f0e8", border: "rgba(255,255,255,0.10)" },
+  midnight: { canvas: "#02030a", panel: "#090b16", elevated: "#0d1020", text: "#f7f8ff", border: "rgba(117,139,255,0.22)" },
+  contrast: { canvas: "#000000", panel: "#181818", elevated: "#202020", text: "#ffffff", border: "rgba(255,255,255,0.28)" },
+};
+const translations = {
+  az: {
+    settings: "Ayarlar",
+    fightIdControls: "FightID idarə paneli",
+    settingsDescription: "Bu brauzer üçün tema, dil, bildiriş və rahatlıq ayarları.",
+    language: "Dil",
+    theme: "Tema",
+    accentColor: "Vurğu rəngi",
+    otherSettings: "Digər ayarlar",
+    resetSettings: "Ayarları sıfırla",
+    search: "Axtarış",
+    login: "Giriş",
+    logout: "Çıxış",
+    joinFightId: "FightID-ə qoşul",
+    notifications: "Bildirişlər",
+    markAllRead: "Hamısını oxunmuş et",
+    noNotifications: "Hələ bildiriş yoxdur.",
+    cards: "Kartlar",
+    myFighters: "Mənim döyüşçülərim",
+    compactMode: "Yığcam görünüş",
+    compactModeDesc: "Sıx döyüşçü məlumatları üçün daha dar aralıqlar.",
+    reduceMotion: "Animasiya azalt",
+    reduceMotionDesc: "Animasiya və hover hərəkətlərini minimuma endir.",
+    showLiveErrors: "Canlı API xətalarını göstər",
+    showLiveErrorsDesc: "Backend bağlantı mesajlarını görünən saxla.",
+    notificationSound: "Bildiriş səsi",
+    notificationSoundDesc: "Gələcək bildiriş səsləri üçün hazırlıq.",
+  },
+  en: {
+    settings: "Settings",
+    fightIdControls: "FightID controls",
+    settingsDescription: "Theme, language, notification, and comfort settings for this browser.",
+    language: "Language",
+    theme: "Theme",
+    accentColor: "Accent color",
+    otherSettings: "Other settings",
+    resetSettings: "Reset settings",
+    search: "Search",
+    login: "Login",
+    logout: "Logout",
+    joinFightId: "Join FightID",
+    notifications: "Notifications",
+    markAllRead: "Mark all read",
+    noNotifications: "No notifications yet.",
+    cards: "Cards",
+    myFighters: "My Fighters",
+    compactMode: "Compact mode",
+    compactModeDesc: "Tighter spacing for dense fighter data.",
+    reduceMotion: "Reduce motion",
+    reduceMotionDesc: "Minimize animation and hover movement.",
+    showLiveErrors: "Show live API errors",
+    showLiveErrorsDesc: "Keep backend connection messages visible.",
+    notificationSound: "Notification sound",
+    notificationSoundDesc: "Prepare sound alerts for future notifications.",
+  },
+  tr: {
+    settings: "Ayarlar",
+    fightIdControls: "FightID kontrolleri",
+    settingsDescription: "Bu tarayıcı için tema, dil, bildirim ve kullanım ayarları.",
+    language: "Dil",
+    theme: "Tema",
+    accentColor: "Vurgu rengi",
+    otherSettings: "Diğer ayarlar",
+    resetSettings: "Ayarları sıfırla",
+    search: "Arama",
+    login: "Giriş",
+    logout: "Çıkış",
+    joinFightId: "FightID'e katıl",
+    notifications: "Bildirimler",
+    markAllRead: "Tümünü okundu yap",
+    noNotifications: "Henüz bildirim yok.",
+    cards: "Kartlar",
+    myFighters: "Dövüşçülerim",
+    compactMode: "Kompakt mod",
+    compactModeDesc: "Yoğun dövüşçü verileri için daha sıkı aralıklar.",
+    reduceMotion: "Hareketi azalt",
+    reduceMotionDesc: "Animasyon ve hover hareketlerini azalt.",
+    showLiveErrors: "Canlı API hatalarını göster",
+    showLiveErrorsDesc: "Backend bağlantı mesajlarını görünür tut.",
+    notificationSound: "Bildirim sesi",
+    notificationSoundDesc: "Gelecek bildirim sesleri için hazırlık.",
+  },
+  ru: {
+    settings: "Настройки",
+    fightIdControls: "Панель FightID",
+    settingsDescription: "Тема, язык, уведомления и параметры удобства для этого браузера.",
+    language: "Язык",
+    theme: "Тема",
+    accentColor: "Акцентный цвет",
+    otherSettings: "Другие настройки",
+    resetSettings: "Сбросить настройки",
+    search: "Поиск",
+    login: "Войти",
+    logout: "Выйти",
+    joinFightId: "Присоединиться",
+    notifications: "Уведомления",
+    markAllRead: "Отметить все",
+    noNotifications: "Уведомлений пока нет.",
+    cards: "Карты",
+    myFighters: "Мои бойцы",
+    compactMode: "Компактный режим",
+    compactModeDesc: "Меньше отступов для плотных данных.",
+    reduceMotion: "Меньше анимации",
+    reduceMotionDesc: "Минимизировать анимации и движения.",
+    showLiveErrors: "Показывать API ошибки",
+    showLiveErrorsDesc: "Оставлять сообщения backend видимыми.",
+    notificationSound: "Звук уведомлений",
+    notificationSoundDesc: "Подготовка звуков для будущих уведомлений.",
+  },
+};
 const weightClassOptions = ["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"];
 const ruleSetOptions = ["MMA", "GRAPPLING", "BOXING", "MUAY_THAI"];
 const BADGE_META = {
@@ -593,14 +708,14 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
   );
 }
 
-function SettingsPanel({ open, settings, onChange, onClose }) {
+function SettingsPanel({ open, settings, onChange, onClose, t }) {
   if (!open) return null;
 
   const toggleRows = [
-    { key: "compactMode", label: "Compact mode", description: "Tighter spacing for dense fighter data." },
-    { key: "reduceMotion", label: "Reduce motion", description: "Minimize animation and hover movement." },
-    { key: "showLiveErrors", label: "Show live API errors", description: "Keep backend connection messages visible." },
-    { key: "notificationSound", label: "Notification sound", description: "Prepare sound alerts for future notifications." },
+    { key: "compactMode", label: t.compactMode, description: t.compactModeDesc },
+    { key: "reduceMotion", label: t.reduceMotion, description: t.reduceMotionDesc },
+    { key: "showLiveErrors", label: t.showLiveErrors, description: t.showLiveErrorsDesc },
+    { key: "notificationSound", label: t.notificationSound, description: t.notificationSoundDesc },
   ];
 
   return (
@@ -611,10 +726,10 @@ function SettingsPanel({ open, settings, onChange, onClose }) {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-blood/40 bg-blood/15 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-red-100">
               <Settings size={14} />
-              Settings
+              {t.settings}
             </div>
-            <h2 className="mt-4 font-display text-3xl font-black text-white">FightID controls</h2>
-            <p className="mt-2 text-sm leading-6 text-zinc-400">Theme, language, notification, and comfort settings for this browser.</p>
+            <h2 className="mt-4 font-display text-3xl font-black text-white">{t.fightIdControls}</h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">{t.settingsDescription}</p>
           </div>
           <button onClick={onClose} className="rounded border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Close settings">
             <X size={20} />
@@ -625,7 +740,7 @@ function SettingsPanel({ open, settings, onChange, onClose }) {
           <section>
             <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-white">
               <Languages size={17} />
-              Language
+              {t.language}
             </div>
             <div className="grid grid-cols-2 gap-2">
               {languageOptions.map((language) => (
@@ -646,7 +761,7 @@ function SettingsPanel({ open, settings, onChange, onClose }) {
           <section>
             <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-white">
               <Palette size={17} />
-              Theme
+              {t.theme}
             </div>
             <div className="grid gap-2">
               {themeOptions.map((theme) => (
@@ -667,7 +782,7 @@ function SettingsPanel({ open, settings, onChange, onClose }) {
           <section>
             <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-white">
               <SlidersHorizontal size={17} />
-              Accent color
+              {t.accentColor}
             </div>
             <div className="grid grid-cols-2 gap-2">
               {accentOptions.map((accent) => (
@@ -686,7 +801,7 @@ function SettingsPanel({ open, settings, onChange, onClose }) {
           </section>
 
           <section className="space-y-2">
-            <div className="mb-3 text-sm font-black uppercase tracking-[0.14em] text-white">Other settings</div>
+            <div className="mb-3 text-sm font-black uppercase tracking-[0.14em] text-white">{t.otherSettings}</div>
             {toggleRows.map((row) => (
               <label key={row.key} className="flex cursor-pointer items-center justify-between gap-4 rounded border border-white/10 bg-white/5 p-4 hover:bg-white/10">
                 <span>
@@ -706,7 +821,7 @@ function SettingsPanel({ open, settings, onChange, onClose }) {
 
         <div className="border-t border-white/10 p-5">
           <button onClick={() => onChange(defaultSettings)} className="w-full rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10">
-            Reset settings
+            {t.resetSettings}
           </button>
         </div>
       </aside>
@@ -714,7 +829,7 @@ function SettingsPanel({ open, settings, onChange, onClose }) {
   );
 }
 
-function AppHeader({ page, setPage, user, settings, onSettingsClick, onLoginClick, onRegisterClick, onLogout }) {
+function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginClick, onRegisterClick, onLogout }) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -789,15 +904,15 @@ function AppHeader({ page, setPage, user, settings, onSettingsClick, onLoginClic
       {notificationsOpen && (
         <div className="absolute right-0 top-12 z-[80] w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded border border-white/10 bg-[#111113] shadow-red">
           <div className="flex items-center justify-between gap-3 border-b border-white/10 p-3">
-            <span className="text-sm font-black uppercase tracking-[0.14em] text-white">Notifications</span>
+            <span className="text-sm font-black uppercase tracking-[0.14em] text-white">{t.notifications}</span>
             <button onClick={markAllNotificationsRead} className="rounded bg-[#dc1f26] px-3 py-2 text-xs font-black text-white">
-              Mark all read
+              {t.markAllRead}
             </button>
           </div>
           {notificationError && <div className="border-b border-blood/30 bg-blood/15 p-3 text-sm font-semibold text-red-100">{notificationError}</div>}
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-4 text-sm text-zinc-400">No notifications yet.</div>
+              <div className="p-4 text-sm text-zinc-400">{t.noNotifications}</div>
             ) : (
               notifications.map((notification) => (
                 <button
@@ -876,7 +991,7 @@ function AppHeader({ page, setPage, user, settings, onSettingsClick, onLoginClic
         <div className="hidden items-center gap-3 md:flex">
           <button onClick={() => setPage("Fighters")} className="inline-flex items-center gap-2 rounded border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
             <Search size={16} />
-            Search
+            {t.search}
           </button>
           <button onClick={onSettingsClick} className="inline-flex items-center gap-2 rounded border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
             <Settings size={16} />
@@ -886,19 +1001,19 @@ function AppHeader({ page, setPage, user, settings, onSettingsClick, onLoginClic
             <div className="flex items-center gap-3">
               <NotificationBell />
               <span className="max-w-[180px] truncate text-sm font-bold text-white">{getUserDisplayName(user)}</span>
-              <button onClick={() => setPage("My Collection")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">Cards</button>
-              <button onClick={() => setPage("My Fighters")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">My Fighters</button>
+              <button onClick={() => setPage("My Collection")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">{t.cards}</button>
+              <button onClick={() => setPage("My Fighters")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">{t.myFighters}</button>
               <button onClick={onLogout} className="rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
-                Logout
+                {t.logout}
               </button>
             </div>
           ) : (
             <>
               <button onClick={onLoginClick} className="inline-flex items-center gap-2 rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
-                Login
+                {t.login}
               </button>
               <button onClick={onRegisterClick} className="inline-flex items-center gap-2 rounded bg-blood px-4 py-2 text-sm font-black text-white shadow-red hover:bg-ember">
-                Join FightID
+                {t.joinFightId}
                 <ArrowRight size={16} />
               </button>
             </>
@@ -957,7 +1072,7 @@ function AppHeader({ page, setPage, user, settings, onSettingsClick, onLoginClic
               }}
               className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
             >
-              Settings / {settings?.language?.toUpperCase() || "AZ"}
+              {t.settings} / {settings?.language?.toUpperCase() || "AZ"}
             </button>
             {user ? (
               <>
@@ -972,7 +1087,7 @@ function AppHeader({ page, setPage, user, settings, onSettingsClick, onLoginClic
                   }}
                   className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
                 >
-                  Logout
+                  {t.logout}
                 </button>
               </>
             ) : (
@@ -984,7 +1099,7 @@ function AppHeader({ page, setPage, user, settings, onSettingsClick, onLoginClic
                   }}
                   className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
                 >
-                  Login
+                  {t.login}
                 </button>
                 <button
                   onClick={() => {
@@ -993,7 +1108,7 @@ function AppHeader({ page, setPage, user, settings, onSettingsClick, onLoginClic
                   }}
                   className="block w-full rounded bg-blood px-3 py-3 text-left text-sm font-black text-white shadow-red hover:bg-ember"
                 >
-                  Join FightID
+                  {t.joinFightId}
                 </button>
               </>
             )}
@@ -1940,8 +2055,11 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [settings, setSettings] = useState(loadStoredSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const t = translations[settings.language] || translations.az;
 
   useEffect(() => {
+    const palette = themePalettes[settings.theme] || themePalettes.dark;
+
     localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
     document.documentElement.dataset.fightidTheme = settings.theme;
     document.documentElement.dataset.fightidLanguage = settings.language;
@@ -1957,17 +2075,34 @@ export default function App() {
     }
 
     style.textContent = `
-      :root { --fightid-accent: ${settings.accent}; }
+      :root {
+        --fightid-accent: ${settings.accent};
+        --fightid-canvas: ${palette.canvas};
+        --fightid-panel: ${palette.panel};
+        --fightid-elevated: ${palette.elevated};
+        --fightid-text: ${palette.text};
+        --fightid-border: ${palette.border};
+      }
+      body { background: var(--fightid-canvas) !important; color: var(--fightid-text) !important; }
+      .bg-canvas,
+      .bg-canvas\\/80 { background-color: var(--fightid-canvas) !important; }
+      .bg-panel,
+      .bg-\\[\\#111113\\],
+      .bg-\\[\\#0a0a0b\\] { background-color: var(--fightid-panel) !important; }
+      .text-bone { color: var(--fightid-text) !important; }
+      .border-white\\/10,
+      .border-white\\/15 { border-color: var(--fightid-border) !important; }
       .bg-blood { background-color: var(--fightid-accent) !important; }
+      .bg-blood\\/10 { background-color: color-mix(in srgb, var(--fightid-accent), transparent 90%) !important; }
+      .bg-blood\\/15 { background-color: color-mix(in srgb, var(--fightid-accent), transparent 85%) !important; }
+      .bg-blood\\/20 { background-color: color-mix(in srgb, var(--fightid-accent), transparent 80%) !important; }
       .text-blood { color: var(--fightid-accent) !important; }
       .border-blood { border-color: var(--fightid-accent) !important; }
+      .border-blood\\/30,
+      .border-blood\\/40 { border-color: color-mix(in srgb, var(--fightid-accent), transparent 58%) !important; }
       .shadow-red { box-shadow: 0 0 30px color-mix(in srgb, var(--fightid-accent), transparent 58%) !important; }
-      html[data-fightid-theme="midnight"] body,
-      html[data-fightid-theme="midnight"] .bg-canvas { background-color: #050509 !important; }
-      html[data-fightid-theme="midnight"] .bg-panel { background-color: #0d0d12 !important; }
-      html[data-fightid-theme="contrast"] body,
-      html[data-fightid-theme="contrast"] .bg-canvas { background-color: #000 !important; }
-      html[data-fightid-theme="contrast"] .bg-panel { background-color: #151515 !important; border-color: rgba(255,255,255,0.22) !important; }
+      html[data-fightid-theme="contrast"] .text-zinc-400 { color: #d4d4d8 !important; }
+      html[data-fightid-theme="contrast"] .text-zinc-500 { color: #b7b7c0 !important; }
       html[data-fightid-compact="true"] { font-size: 14px; }
       html[data-fightid-reduce-motion="true"] *,
       html[data-fightid-reduce-motion="true"] *::before,
@@ -2074,6 +2209,7 @@ export default function App() {
         setPage={setPage}
         user={user}
         settings={settings}
+        t={t}
         onSettingsClick={() => setSettingsOpen(true)}
         onLoginClick={() => openAuth("login")}
         onRegisterClick={() => openAuth("register")}
@@ -2081,7 +2217,7 @@ export default function App() {
       />
       {pages[page]}
       {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={setUser} />}
-      <SettingsPanel open={settingsOpen} settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} />
+      <SettingsPanel open={settingsOpen} settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} t={t} />
       {toast && <div className="fixed bottom-5 right-5 z-[120] rounded border border-blood/40 bg-[#111113] px-5 py-4 font-bold text-white shadow-red">{toast}</div>}
       <footer className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-500">
         FightID frontend | React + Tailwind CSS | Live Railway API

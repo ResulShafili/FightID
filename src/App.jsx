@@ -18,14 +18,22 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { authApi, fighterApi, setAccessToken } from "./lib/api";
+import React, { useEffect, useRef, useState } from "react";
+import { apiRequest, authApi, challengeApi, fighterApi, setAccessToken } from "./lib/api";
 
 const navItems = ["Home", "Fighters", "Fighter Profile", "Rankings", "Challenges", "Federation"];
 const fallbackPortrait = "/assets/fighter-portrait.png";
 const fallbackCover = "/assets/hero-arena.png";
 const refreshTokenStorageKey = "fightidRefreshToken";
 const userStorageKey = "fightidUser";
+const weightClassOptions = ["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"];
+const ruleSetOptions = ["MMA", "GRAPPLING", "BOXING", "MUAY_THAI"];
+
+const notificationApi = {
+  list: () => apiRequest("/notifications"),
+  markRead: (id) => apiRequest(`/notifications/${id}/read`, { method: "PUT" }),
+  markAllRead: () => apiRequest("/notifications/read-all", { method: "PUT" }),
+};
 
 const countryNames = {
   AZ: "Azerbaijan",
@@ -142,6 +150,120 @@ function ErrorPanel({ message, action }) {
 
 function getUserDisplayName(user) {
   return user?.fighterProfile?.fullName || user?.email || "Fighter";
+}
+
+function getChallengeOpponent(challenge, user) {
+  const profileId = user?.fighterProfile?.id;
+  if (!profileId) return challenge.receiver?.fullName || challenge.sender?.fullName || "Opponent";
+  return challenge.senderId === profileId ? challenge.receiver?.fullName : challenge.sender?.fullName;
+}
+
+function ChallengeModal({ receiver, onClose }) {
+  const [form, setForm] = useState({
+    proposedDateFrom: "",
+    proposedDateTo: "",
+    location: "",
+    weightClass: receiver?.weightClass || "LIGHTWEIGHT",
+    ruleSet: "MMA",
+    senderMessage: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const inputClass = "w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-blood";
+
+  const submitChallenge = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      await challengeApi.send({
+        receiverId: receiver.id,
+        proposedDateFrom: form.proposedDateFrom,
+        proposedDateTo: form.proposedDateTo,
+        location: form.location,
+        weightClass: form.weightClass,
+        ruleSet: form.ruleSet,
+        senderMessage: form.senderMessage || undefined,
+      });
+      setSuccess("Challenge sent!");
+      window.setTimeout(onClose, 2000);
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 px-4 backdrop-blur">
+      <div className="mx-auto mt-20 max-w-lg rounded border border-white/10 bg-[#111113] p-5 shadow-red">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl font-black text-white">Challenge {receiver.fullName}</h2>
+            <p className="mt-1 text-sm text-zinc-400">Send a formal FightID challenge request.</p>
+          </div>
+          <button onClick={onClose} className="rounded border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Close challenge modal">
+            <X size={18} />
+          </button>
+        </div>
+
+        {error && <div className="mt-4 rounded border border-blood/40 bg-blood/15 px-4 py-3 text-sm font-semibold text-red-100">{error}</div>}
+        {success && <div className="mt-4 rounded border border-emerald-400/30 bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-200">{success}</div>}
+
+        <form onSubmit={submitChallenge} className="mt-5 grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-bold text-zinc-200">
+              Date from
+              <input required type="date" value={form.proposedDateFrom} onChange={(event) => setForm({ ...form, proposedDateFrom: event.target.value })} className={inputClass} />
+            </label>
+            <label className="grid gap-2 text-sm font-bold text-zinc-200">
+              Date to
+              <input required type="date" value={form.proposedDateTo} onChange={(event) => setForm({ ...form, proposedDateTo: event.target.value })} className={inputClass} />
+            </label>
+          </div>
+          <label className="grid gap-2 text-sm font-bold text-zinc-200">
+            Location
+            <input required minLength={2} value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} className={inputClass} placeholder="Baku, Azerbaijan" />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-bold text-zinc-200">
+              Weight class
+              <select required value={form.weightClass} onChange={(event) => setForm({ ...form, weightClass: event.target.value })} className={inputClass}>
+                {weightClassOptions.map((value) => (
+                  <option key={value} value={value}>{formatWeightClass(value)}</option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-bold text-zinc-200">
+              Rule set
+              <select required value={form.ruleSet} onChange={(event) => setForm({ ...form, ruleSet: event.target.value })} className={inputClass}>
+                {ruleSetOptions.map((value) => (
+                  <option key={value} value={value}>{formatResult(value)}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <label className="grid gap-2 text-sm font-bold text-zinc-200">
+            Message
+            <textarea
+              maxLength={1000}
+              value={form.senderMessage}
+              onChange={(event) => setForm({ ...form, senderMessage: event.target.value })}
+              className={`${inputClass} min-h-28 resize-y`}
+              placeholder="Optional note to the fighter"
+            />
+          </label>
+          <button disabled={loading || success} className="rounded bg-[#dc1f26] px-5 py-3 font-black text-white hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
+            {loading ? "Sending..." : success || "Send Challenge"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function AuthModal({ initialTab = "login", onClose, onSuccess }) {
@@ -380,6 +502,105 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
 
 function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogout }) {
   const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationError, setNotificationError] = useState("");
+  const notificationsRef = useRef(null);
+
+  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
+
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      setNotificationsOpen(false);
+      return;
+    }
+
+    notificationApi.list().then(setNotifications).catch(() => setNotifications([]));
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggleNotifications = async () => {
+    const nextOpen = !notificationsOpen;
+    setNotificationsOpen(nextOpen);
+    setNotificationError("");
+
+    if (nextOpen) {
+      try {
+        setNotifications(await notificationApi.list());
+      } catch (caught) {
+        setNotificationError(caught.message);
+      }
+    }
+  };
+
+  const markNotificationRead = async (notification) => {
+    try {
+      const updated = await notificationApi.markRead(notification.id);
+      setNotifications((items) => items.map((item) => (item.id === updated.id ? updated : item)));
+    } catch (caught) {
+      setNotificationError(caught.message);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      await notificationApi.markAllRead();
+      setNotifications((items) => items.map((item) => ({ ...item, isRead: true })));
+    } catch (caught) {
+      setNotificationError(caught.message);
+    }
+  };
+
+  const NotificationBell = () => (
+    <div className="relative" ref={notificationsRef}>
+      <button onClick={toggleNotifications} className="relative rounded border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Open notifications">
+        <Bell size={18} />
+        {unreadCount > 0 && (
+          <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-[#dc1f26] px-1 text-[10px] font-black text-white">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+      {notificationsOpen && (
+        <div className="absolute right-0 top-12 z-[80] w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded border border-white/10 bg-[#111113] shadow-red">
+          <div className="flex items-center justify-between gap-3 border-b border-white/10 p-3">
+            <span className="text-sm font-black uppercase tracking-[0.14em] text-white">Notifications</span>
+            <button onClick={markAllNotificationsRead} className="rounded bg-[#dc1f26] px-3 py-2 text-xs font-black text-white">
+              Mark all read
+            </button>
+          </div>
+          {notificationError && <div className="border-b border-blood/30 bg-blood/15 p-3 text-sm font-semibold text-red-100">{notificationError}</div>}
+          <div className="max-h-80 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-4 text-sm text-zinc-400">No notifications yet.</div>
+            ) : (
+              notifications.map((notification) => (
+                <button
+                  key={notification.id}
+                  onClick={() => markNotificationRead(notification)}
+                  className={`block w-full border-b border-white/10 p-4 text-left hover:bg-white/10 ${notification.isRead ? "bg-white/[0.02]" : "bg-blood/10"}`}
+                >
+                  <div className={`text-sm font-semibold ${notification.isRead ? "text-zinc-300" : "text-white"}`}>{notification.message}</div>
+                  <div className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-zinc-500">{formatDate(notification.createdAt)}</div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-canvas/80 backdrop-blur-xl">
@@ -413,6 +634,7 @@ function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogou
           </button>
           {user ? (
             <div className="flex items-center gap-3">
+              <NotificationBell />
               <span className="max-w-[180px] truncate text-sm font-bold text-white">{getUserDisplayName(user)}</span>
               <button onClick={onLogout} className="rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
                 Logout
@@ -453,7 +675,10 @@ function AppHeader({ page, setPage, user, onLoginClick, onRegisterClick, onLogou
           <div className="mt-3 grid gap-2 border-t border-white/10 pt-3">
             {user ? (
               <>
-                <div className="rounded bg-white/5 px-3 py-3 text-sm font-bold text-white">{getUserDisplayName(user)}</div>
+                <div className="flex items-center justify-between rounded bg-white/5 px-3 py-3">
+                  <span className="text-sm font-bold text-white">{getUserDisplayName(user)}</span>
+                  <NotificationBell />
+                </div>
                 <button
                   onClick={() => {
                     onLogout();
@@ -545,7 +770,7 @@ function LandingPage({ setPage, openProfile }) {
         setFighters(data.map(normalizeCardFighter));
         setStats({
           fighters: result.pagination?.total || data.length,
-          fights: "API",
+          fights: "Live",
           countries: new Set(data.map((fighter) => fighter.country)).size || "Live",
         });
       })
@@ -584,7 +809,7 @@ function LandingPage({ setPage, openProfile }) {
             <div className="mt-10 grid max-w-2xl grid-cols-3 gap-2 sm:gap-4">
               <Stat value={stats.fighters} label="Fighters" />
               <Stat value={stats.countries} label="Countries" />
-              <Stat value={stats.fights} label="Backend" />
+              <Stat value={stats.fights} label="Active" />
             </div>
           </div>
         </div>
@@ -704,10 +929,156 @@ function MethodBar({ method, total }) {
   );
 }
 
-function FighterProfilePage({ fighterId, openProfile }) {
+function ChallengeStatusBadge({ status }) {
+  const tones = {
+    PENDING: "border-yellow-400/30 bg-yellow-400/15 text-yellow-200",
+    ACCEPTED: "border-emerald-400/30 bg-emerald-400/15 text-emerald-200",
+    DECLINED: "border-blood/40 bg-blood/15 text-red-100",
+    COUNTERED: "border-blue-400/30 bg-blue-400/15 text-blue-200",
+    CANCELLED: "border-zinc-400/20 bg-zinc-400/10 text-zinc-300",
+    COMPLETED: "border-white/30 bg-white/15 text-white",
+  };
+
+  return <span className={`rounded border px-2 py-1 text-xs font-black ${tones[status] || tones.CANCELLED}`}>{status}</span>;
+}
+
+function ChallengesPage({ user, onLoginClick }) {
+  const [challenges, setChallenges] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState("");
+  const [error, setError] = useState("");
+
+  const loadChallenges = async () => {
+    if (!user) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      setChallenges(await challengeApi.mine());
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadChallenges();
+  }, [user]);
+
+  const runAction = async (id, action) => {
+    setActionLoading(id);
+    setError("");
+
+    try {
+      if (action === "accept") await challengeApi.accept(id);
+      if (action === "decline") await challengeApi.decline(id);
+      if (action === "cancel") await apiRequest(`/challenges/${id}/cancel`, { method: "PUT" });
+      await loadChallenges();
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  if (!user) {
+    return (
+      <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+        <div className="rounded border border-white/10 bg-[#111113] p-8">
+          <Badge tone="red">Challenges</Badge>
+          <h1 className="mt-5 font-display text-4xl font-black text-white">Please login to view your challenges</h1>
+          <button onClick={onLoginClick} className="mt-6 rounded bg-[#dc1f26] px-5 py-3 font-black text-white">
+            Login
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <Badge tone="red">Challenge Center</Badge>
+          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Challenges</h1>
+        </div>
+        <button onClick={loadChallenges} className="rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10">
+          Refresh
+        </button>
+      </div>
+
+      <div className="mt-8 overflow-hidden rounded border border-white/10 bg-[#111113]">
+        {loading && <div className="p-5"><LoadingPanel label="Loading your challenges" /></div>}
+        {error && <div className="m-5 rounded border border-blood/40 bg-blood/15 p-4 text-sm font-semibold text-red-100">{error}</div>}
+        {!loading && (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[920px] text-left text-sm">
+              <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.16em] text-zinc-500">
+                <tr>
+                  {["Opponent", "Status", "Rule Set", "Location", "Date Range", "Actions"].map((head) => (
+                    <th key={head} className="px-5 py-4 font-black">{head}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {challenges.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-8 text-center font-semibold text-zinc-400">No challenges yet.</td>
+                  </tr>
+                ) : (
+                  challenges.map((challenge) => {
+                    const isReceiver = challenge.receiverId === user.fighterProfile?.id;
+                    const isSender = challenge.senderId === user.fighterProfile?.id;
+
+                    return (
+                      <tr key={challenge.id} className="text-zinc-300">
+                        <td className="px-5 py-4 font-bold text-white">{getChallengeOpponent(challenge, user)}</td>
+                        <td className="px-5 py-4"><ChallengeStatusBadge status={challenge.status} /></td>
+                        <td className="px-5 py-4">{formatResult(challenge.ruleSet)}</td>
+                        <td className="px-5 py-4">{challenge.location}</td>
+                        <td className="px-5 py-4">{formatDate(challenge.proposedDateFrom)} - {formatDate(challenge.proposedDateTo)}</td>
+                        <td className="px-5 py-4">
+                          <div className="flex flex-wrap gap-2">
+                            {challenge.status === "PENDING" && isReceiver && (
+                              <>
+                                <button disabled={actionLoading === challenge.id} onClick={() => runAction(challenge.id, "accept")} className="rounded bg-emerald-600 px-3 py-2 text-xs font-black text-white disabled:opacity-60">
+                                  Accept
+                                </button>
+                                <button disabled={actionLoading === challenge.id} onClick={() => runAction(challenge.id, "decline")} className="rounded bg-[#dc1f26] px-3 py-2 text-xs font-black text-white disabled:opacity-60">
+                                  Decline
+                                </button>
+                              </>
+                            )}
+                            {challenge.status === "PENDING" && isSender && (
+                              <button disabled={actionLoading === challenge.id} onClick={() => runAction(challenge.id, "cancel")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 disabled:opacity-60">
+                                Cancel
+                              </button>
+                            )}
+                            {challenge.status !== "PENDING" && <span className="text-xs font-semibold text-zinc-500">No actions</span>}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
+function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const [profile, setProfile] = useState(null);
   const [countryRank, setCountryRank] = useState("Live");
   const [weightRank, setWeightRank] = useState("Live");
+  const [challengeModalOpen, setChallengeModalOpen] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [upcomingFight, setUpcomingFight] = useState(null);
+  const [upcomingStatus, setUpcomingStatus] = useState("Login to view your challenges");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -745,6 +1116,36 @@ function FighterProfilePage({ fighterId, openProfile }) {
     };
   }, [fighterId]);
 
+  useEffect(() => {
+    if (!profile) return;
+
+    const isOwnProfile = user?.fighterProfile?.id === profile.id;
+    if (!user || !isOwnProfile) {
+      setUpcomingFight(null);
+      setUpcomingStatus("Login to view your challenges");
+      return;
+    }
+
+    let ignore = false;
+    setUpcomingStatus("Loading challenges...");
+
+    challengeApi
+      .mine()
+      .then((challenges) => {
+        if (ignore) return;
+        const accepted = challenges.find((challenge) => challenge.status === "ACCEPTED");
+        setUpcomingFight(accepted || null);
+        setUpcomingStatus(accepted ? "" : "No upcoming fight scheduled");
+      })
+      .catch((caught) => {
+        if (!ignore) setUpcomingStatus(caught.message);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [profile, user]);
+
   if (loading) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
@@ -765,9 +1166,31 @@ function FighterProfilePage({ fighterId, openProfile }) {
   const totalMethodWins = methods.reduce((sum, method) => sum + method.value, 0);
   const status = getStatus(profile);
   const record = profile.stats?.record || {};
+  const fightHistory = profile.fights || [];
+  const upcomingOpponent = upcomingFight ? getChallengeOpponent(upcomingFight, user) : null;
+
+  const openChallenge = () => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+
+    setChallengeModalOpen(true);
+  };
+
+  const shareProfile = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareCopied(true);
+      window.setTimeout(() => setShareCopied(false), 1800);
+    } catch {
+      setShareCopied(false);
+    }
+  };
 
   return (
     <main className="pt-20">
+      {challengeModalOpen && <ChallengeModal receiver={profile} onClose={() => setChallengeModalOpen(false)} />}
       <section className="relative min-h-[520px] overflow-hidden">
         <img src={profile.coverPhotoUrl || fallbackCover} alt={`${profile.fullName} cover`} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#07080a_0%,rgba(7,8,10,.78)_45%,rgba(7,8,10,.52)_100%)]" />
@@ -790,13 +1213,13 @@ function FighterProfilePage({ fighterId, openProfile }) {
               <span className="inline-flex items-center gap-2 rounded border border-white/10 bg-white/5 px-3 py-2"><Globe2 size={16} /> {profile.gym || "Independent"}</span>
             </div>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button className="inline-flex items-center justify-center gap-2 rounded bg-blood px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-ember">
+              <button onClick={openChallenge} className="inline-flex items-center justify-center gap-2 rounded bg-blood px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-ember">
                 <Swords size={18} />
                 Challenge this Fighter
               </button>
-              <button className="inline-flex items-center justify-center gap-2 rounded border border-white/15 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white/10">
-                <Bell size={18} />
-                Follow
+              <button onClick={shareProfile} className="inline-flex items-center justify-center gap-2 rounded border border-white/15 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white/10">
+                <ArrowRight size={18} />
+                {shareCopied ? "Link copied!" : "Share Profile"}
               </button>
             </div>
           </div>
@@ -861,19 +1284,25 @@ function FighterProfilePage({ fighterId, openProfile }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/10">
-                    {(profile.fights || []).map((fight) => (
-                      <tr key={fight.id} className="text-zinc-300">
-                        <td className="px-5 py-4 font-semibold">{formatDate(fight.fightDate)}</td>
-                        <td className="px-5 py-4 text-white">{fight.opponentName}</td>
-                        <td className="px-5 py-4">{fight.eventName}</td>
-                        <td className="px-5 py-4">
-                          <span className={`rounded px-2 py-1 text-xs font-black ${fight.result === "WIN" ? "bg-emerald-500/15 text-emerald-300" : "bg-blood/15 text-red-200"}`}>{formatResult(fight.result)}</span>
-                        </td>
-                        <td className="px-5 py-4">{formatResult(fight.method)}</td>
-                        <td className="px-5 py-4">{fight.round}</td>
-                        <td className="px-5 py-4">{fight.fightTime}</td>
+                    {fightHistory.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-5 py-8 text-center font-semibold text-zinc-400">No recorded fights yet.</td>
                       </tr>
-                    ))}
+                    ) : (
+                      fightHistory.map((fight) => (
+                        <tr key={fight.id} className="text-zinc-300">
+                          <td className="px-5 py-4 font-semibold">{formatDate(fight.fightDate)}</td>
+                          <td className="px-5 py-4 text-white">{fight.opponentName}</td>
+                          <td className="px-5 py-4">{fight.eventName}</td>
+                          <td className="px-5 py-4">
+                            <span className={`rounded px-2 py-1 text-xs font-black ${fight.result === "WIN" ? "bg-emerald-500/15 text-emerald-300" : "bg-blood/15 text-red-200"}`}>{formatResult(fight.result)}</span>
+                          </td>
+                          <td className="px-5 py-4">{formatResult(fight.method)}</td>
+                          <td className="px-5 py-4">{fight.round}</td>
+                          <td className="px-5 py-4">{fight.fightTime}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -886,10 +1315,14 @@ function FighterProfilePage({ fighterId, openProfile }) {
               <div className="mt-5 rounded border border-blood/30 bg-blood/10 p-4">
                 <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-red-100">
                   <CalendarDays size={16} />
-                  Live challenge feed pending
+                  {upcomingFight ? formatDate(upcomingFight.proposedDateFrom) : "Challenge schedule"}
                 </div>
-                <h3 className="mt-3 font-display text-2xl font-black text-white">No accepted challenge loaded</h3>
-                <p className="mt-2 text-sm text-zinc-400">Challenge data will appear here when the authenticated challenge endpoints are connected.</p>
+                <h3 className="mt-3 font-display text-2xl font-black text-white">{upcomingFight ? upcomingOpponent : upcomingStatus}</h3>
+                {upcomingFight && (
+                  <p className="mt-2 text-sm text-zinc-400">
+                    {formatResult(upcomingFight.ruleSet)} in {upcomingFight.location} from {formatDate(upcomingFight.proposedDateFrom)}.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -951,7 +1384,7 @@ function RankingsPage({ openProfile }) {
     <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Badge tone="red">/api/fighters/leaderboard</Badge>
+          <Badge tone="red">Live Rankings</Badge>
           <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Rankings</h1>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -1090,9 +1523,9 @@ export default function App() {
   const pages = {
     Home: <LandingPage setPage={setPage} openProfile={openProfile} />,
     Fighters: <FightersPage openProfile={openProfile} />,
-    "Fighter Profile": <FighterProfilePage fighterId={selectedFighterId} openProfile={openProfile} />,
+    "Fighter Profile": <FighterProfilePage fighterId={selectedFighterId} openProfile={openProfile} user={user} onLoginRequired={() => openAuth("login")} />,
     Rankings: <RankingsPage openProfile={openProfile} />,
-    Challenges: <PlaceholderPage title="Challenges" icon={Zap} />,
+    Challenges: <ChallengesPage user={user} onLoginClick={() => openAuth("login")} />,
     Federation: <PlaceholderPage title="Federation Panel" icon={ShieldCheck} />,
   };
 

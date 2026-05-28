@@ -10,6 +10,8 @@ const DECAY_POINTS = 10;
 const DAYS_PER_DECAY_PERIOD = 90;
 
 export const getLeaderboard = async ({ weightClass, country, role, page = 1, limit = 50 }) => {
+  page = Number(page) || 1;
+  limit = Math.min(Number(limit) || 50, 100);
   const skip = (page - 1) * limit;
   const isVerifiedPro = role === "PRO" ? true : role === "AMATEUR" ? false : undefined;
 

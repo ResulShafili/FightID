@@ -4,6 +4,11 @@ export const validate = (schema, source = "body") => (req, _res, next) => {
   if (!result.success) {
     return next(new ApiError(400, "Validation failed", result.error.flatten()));
   }
-  req[source] = result.data;
+  if (source === "query") {
+    for (const key of Object.keys(req.query)) delete req.query[key];
+    Object.assign(req.query, result.data);
+  } else {
+    req[source] = result.data;
+  }
   return next();
 };

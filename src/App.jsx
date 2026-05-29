@@ -207,6 +207,15 @@ const translations = {
 
 const phraseTranslations = {
   Home: { az: "Ana səhifə", tr: "Ana sayfa", ru: "Главная" },
+  Database: { az: "Baza", tr: "Veritabanı", ru: "База" },
+  Match: { az: "Uyğunlaşdırma", tr: "Eşleşme", ru: "Матчмейкинг" },
+  "MMA records database": { az: "MMA rekord bazası", tr: "MMA kayıt veritabanı", ru: "База рекордов MMA" },
+  "MMA fighter database": { az: "MMA döyüşçü bazası", tr: "MMA dövüşçü veritabanı", ru: "База бойцов MMA" },
+  "Records. Rankings. Real matchups.": { az: "Rekordlar. Reytinqlər. Real uyğunlaşmalar.", tr: "Kayıtlar. Sıralamalar. Gerçek eşleşmeler.", ru: "Рекорды. Рейтинги. Реальные пары." },
+  "Search Database": { az: "Bazadan axtar", tr: "Veritabanında ara", ru: "Искать в базе" },
+  "Database snapshot": { az: "Baza icmalı", tr: "Veritabanı özeti", ru: "Сводка базы" },
+  "Top ranked fighters": { az: "Ən yüksək reytinqli döyüşçülər", tr: "En yüksek sıralı dövüşçüler", ru: "Топ бойцов рейтинга" },
+  "Full table": { az: "Tam cədvəl", tr: "Tam tablo", ru: "Полная таблица" },
   Discover: { az: "Kəşf et", tr: "Keşfet", ru: "Обзор" },
   "Fight Tools": { az: "Döyüş alətləri", tr: "Dövüş araçları", ru: "Инструменты" },
   Community: { az: "İcma", tr: "Topluluk", ru: "Сообщество" },
@@ -246,6 +255,11 @@ const phraseTranslations = {
   "Live rankings": { az: "Canlı reytinqlər", tr: "Canlı sıralamalar", ru: "Живые рейтинги" },
   Countries: { az: "Ölkələr", tr: "Ülkeler", ru: "Страны" },
   Active: { az: "Aktiv", tr: "Aktif", ru: "Активно" },
+  "FightID is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and clean discovery tools for real matchmaking.": {
+    az: "FightID ciddi döyüş idmanı bazası kimi qurulub: təsdiqli döyüşçü profilləri, axtarıla bilən həvəskar rekordları, çəki reytinqləri, zal bağlantıları və real uyğunlaşma üçün təmiz kəşf alətləri.",
+    tr: "FightID ciddi bir dövüş sporları veritabanı gibi kuruldu: doğrulanmış dövüşçü profilleri, aranabilir amatör kayıtları, kilo sıralamaları, salon bağlantıları ve gerçek eşleşme için temiz keşif araçları.",
+    ru: "FightID построен как серьезная база единоборств: проверенные профили бойцов, поиск любительских рекордов, рейтинги по весам, связи с залами и чистые инструменты поиска для реального матчмейкинга.",
+  },
   "Build a verified fighter identity, track real fight history, climb weight-class rankings, and challenge matched opponents through a confirmation-first fight system.": {
     az: "Təsdiqli döyüşçü kimliyi yarat, real döyüş tarixçəsini izlə, çəki reytinqlərində yüksəl və uyğun rəqiblərə çağırış göndər.",
     tr: "Doğrulanmış dövüşçü kimliği oluştur, gerçek dövüş geçmişini takip et, kilo sıralamalarında yüksel ve uygun rakiplere meydan oku.",
@@ -476,7 +490,7 @@ function normalizeCardFighter(fighter, index = 0) {
     country: countryNames[fighter.country] || fighter.country,
     countryCode: fighter.country,
     weightClass: formatWeightClass(fighter.weightClass),
-    record: fighter.stats ? recordFromStats(fighter.stats) : "Live",
+    record: fighter.stats ? recordFromStats(fighter.stats) : fighter.record || "0-0-0",
     points: fighter.points || 0,
     rank: fighter.rank || index + 1,
     status: getStatus(fighter),

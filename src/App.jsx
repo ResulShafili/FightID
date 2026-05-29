@@ -211,6 +211,7 @@ const phraseTranslations = {
   Match: { az: "Uyğunlaşdırma", tr: "Eşleşme", ru: "Матчмейкинг" },
   "MMA records database": { az: "MMA rekord bazası", tr: "MMA kayıt veritabanı", ru: "База рекордов MMA" },
   "MMA fighter database": { az: "MMA döyüşçü bazası", tr: "MMA dövüşçü veritabanı", ru: "База бойцов MMA" },
+  "Fight Records Database": { az: "Döyüş Rekord Bazası", tr: "Dövüş Kayıt Veritabanı", ru: "База боевых рекордов" },
   "Records. Rankings. Real matchups.": { az: "Rekordlar. Reytinqlər. Real uyğunlaşmalar.", tr: "Kayıtlar. Sıralamalar. Gerçek eşleşmeler.", ru: "Рекорды. Рейтинги. Реальные пары." },
   "Search Database": { az: "Bazadan axtar", tr: "Veritabanında ara", ru: "Искать в базе" },
   "Database snapshot": { az: "Baza icmalı", tr: "Veritabanı özeti", ru: "Сводка базы" },
@@ -266,6 +267,25 @@ const phraseTranslations = {
     ru: "Создай проверенный профиль бойца, отслеживай реальные бои, поднимайся в рейтинге и вызывай подходящих соперников.",
   },
   "Verified records": { az: "Təsdiqli rekordlar", tr: "Doğrulanmış kayıtlar", ru: "Проверенные рекорды" },
+  "Amateur fighter index": { az: "Həvəskar döyüşçü indeksi", tr: "Amatör dövüşçü indeksi", ru: "Индекс любителей" },
+  "Gym and country profiles": { az: "Zal və ölkə profilləri", tr: "Salon ve ülke profilleri", ru: "Профили залов и стран" },
+  "Amateur-first profiles": { az: "Həvəskar öncəli profillər", tr: "Amatör odaklı profiller", ru: "Профили для любителей" },
+  "Local discovery": { az: "Lokal kəşf", tr: "Yerel keşif", ru: "Локальный поиск" },
+  "Keep fighter identities, gyms, countries, and fight histories organized in one public database.": {
+    az: "Döyüşçü kimliklərini, zalları, ölkələri və döyüş tarixçələrini bir açıq bazada səliqəli saxla.",
+    tr: "Dövüşçü kimliklerini, salonları, ülkeleri ve dövüş geçmişlerini tek açık veritabanında düzenli tut.",
+    ru: "Храни профили бойцов, залы, страны и историю боев в одной открытой базе.",
+  },
+  "Give young and amateur fighters a clean profile page before they reach major promotions.": {
+    az: "Gənc və həvəskar döyüşçülərə böyük promouterlərə çatmadan təmiz profil səhifəsi ver.",
+    tr: "Genç ve amatör dövüşçülere büyük organizasyonlara çıkmadan temiz bir profil sayfası ver.",
+    ru: "Дай молодым и любительским бойцам аккуратную страницу до крупных промоушенов.",
+  },
+  "Search fighters by country, gym, weight class, rank, and activity without noisy extras.": {
+    az: "Döyüşçüləri ölkə, zal, çəki, reytinq və aktivliyə görə artıq səs-küy olmadan tap.",
+    tr: "Dövüşçüleri ülke, salon, kilo, sıra ve aktivliğe göre gereksiz kalabalık olmadan bul.",
+    ru: "Ищи бойцов по стране, залу, весу, рейтингу и активности без лишнего шума.",
+  },
   "Challenge-ready profiles": { az: "Çağırışa hazır profillər", tr: "Meydan okumaya hazır profiller", ru: "Профили для вызова" },
   "Federation review": { az: "Federasiya yoxlaması", tr: "Federasyon incelemesi", ru: "Проверка федерации" },
   "Federation verified": { az: "Federasiya təsdiqli", tr: "Federasyon onaylı", ru: "Проверено федерацией" },
@@ -1436,7 +1456,7 @@ function LandingPage({ setPage, openProfile }) {
         <div className="relative mx-auto grid min-h-[calc(88vh-6rem)] max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:px-8">
           <div className="w-full max-w-[calc(100vw-2rem)] sm:max-w-3xl">
             <Badge tone="red">MMA fighter database</Badge>
-            <h1 className="mt-6 font-display text-5xl font-black leading-[0.96] text-white sm:text-7xl lg:text-8xl">Records. Rankings. Real matchups.</h1>
+            <h1 className="mt-6 max-w-4xl font-display text-5xl font-black leading-[1.02] text-white sm:text-7xl lg:text-7xl xl:text-8xl">Fight Records Database</h1>
             <p className="mt-6 max-w-[calc(100vw-2rem)] break-words text-lg leading-8 text-zinc-300 sm:max-w-2xl sm:text-xl">
               FightID is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and clean discovery tools for real matchmaking.
             </p>
@@ -1448,18 +1468,6 @@ function LandingPage({ setPage, openProfile }) {
               <button onClick={() => setPage("Rankings")} className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-white/15 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white/10 sm:w-auto">
                 Rankings
               </button>
-            </div>
-            <div className="mt-10 grid max-w-2xl grid-cols-3 gap-2 sm:gap-4">
-              <Stat value={stats.fighters} label="Fighters" />
-              <Stat value={stats.countries} label="Countries" />
-              <Stat value={stats.fights} label="Active" />
-            </div>
-            <div className="mt-8 flex max-w-3xl flex-wrap gap-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-300">
-              {["Verified records", "Amateur fighter index", "Live rankings", "Gym and country profiles"].map((item) => (
-                <span key={item} className="rounded-sm border border-white/10 bg-black/30 px-3 py-2 backdrop-blur">
-                  {item}
-                </span>
-              ))}
             </div>
           </div>
           <div className="hidden rounded-sm border border-zinc-800 bg-[#101113]/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur lg:block">
@@ -1487,6 +1495,23 @@ function LandingPage({ setPage, openProfile }) {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid gap-8 border-y border-zinc-800 py-8 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="grid max-w-2xl grid-cols-3 gap-2 sm:gap-4">
+            <Stat value={stats.fighters} label="Fighters" />
+            <Stat value={stats.countries} label="Countries" />
+            <Stat value={stats.fights} label="Active" />
+          </div>
+          <div className="flex max-w-3xl flex-wrap gap-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-300">
+            {["Verified records", "Amateur fighter index", "Live rankings", "Gym and country profiles"].map((item) => (
+              <span key={item} className="rounded-sm border border-white/10 bg-black/30 px-3 py-2 backdrop-blur">
+                {item}
+              </span>
+            ))}
           </div>
         </div>
       </section>

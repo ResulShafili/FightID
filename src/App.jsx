@@ -214,6 +214,144 @@ const translations = {
     notificationSoundDesc: "Подготовка звуков для будущих уведомлений.",
   },
 };
+
+const phraseTranslations = {
+  Home: { az: "Ana səhifə", tr: "Ana sayfa", ru: "Главная" },
+  Discover: { az: "Kəşf et", tr: "Keşfet", ru: "Обзор" },
+  "Fight Tools": { az: "Döyüş alətləri", tr: "Dövüş araçları", ru: "Инструменты" },
+  Community: { az: "İcma", tr: "Topluluk", ru: "Сообщество" },
+  Manage: { az: "İdarə", tr: "Yönetim", ru: "Управление" },
+  Fighters: { az: "Döyüşçülər", tr: "Dövüşçüler", ru: "Бойцы" },
+  Rankings: { az: "Reytinqlər", tr: "Sıralamalar", ru: "Рейтинги" },
+  "National Champions": { az: "Milli çempionlar", tr: "Ulusal şampiyonlar", ru: "Национальные чемпионы" },
+  Gyms: { az: "Zallar", tr: "Salonlar", ru: "Залы" },
+  Compare: { az: "Müqayisə", tr: "Karşılaştır", ru: "Сравнить" },
+  "Fight Board": { az: "Döyüş lövhəsi", tr: "Dövüş panosu", ru: "Доска боев" },
+  Sparring: { az: "Sparrinq", tr: "Sparring", ru: "Спарринг" },
+  Tournaments: { az: "Turnirlər", tr: "Turnuvalar", ru: "Турниры" },
+  Challenges: { az: "Çağırışlar", tr: "Meydan okumalar", ru: "Вызовы" },
+  Federation: { az: "Federasiya", tr: "Federasyon", ru: "Федерация" },
+  "Mic Check 🎤": { az: "Mikrofon 🎤", tr: "Mikrofon 🎤", ru: "Микрофон 🎤" },
+  "Fighter List": { az: "Döyüşçü siyahısı", tr: "Dövüşçü listesi", ru: "Список бойцов" },
+  "Live fighter database": { az: "Canlı döyüşçü bazası", tr: "Canlı dövüşçü veritabanı", ru: "Живая база бойцов" },
+  "All roles": { az: "Bütün rollar", tr: "Tüm roller", ru: "Все роли" },
+  Pro: { az: "Pro", tr: "Pro", ru: "Про" },
+  Amateur: { az: "Həvəskar", tr: "Amatör", ru: "Любитель" },
+  "Compare Fighters": { az: "Döyüşçüləri müqayisə et", tr: "Dövüşçüleri karşılaştır", ru: "Сравнить бойцов" },
+  "Head to Head": { az: "Üzbəüz", tr: "Kafa kafaya", ru: "Лицом к лицу" },
+  "Tap a slot, search, then choose a fighter.": { az: "Slot seç, axtar, sonra döyüşçünü seç.", tr: "Bir slot seç, ara, sonra dövüşçüyü seç.", ru: "Выбери слот, найди и выбери бойца." },
+  "Fighter 1": { az: "Döyüşçü 1", tr: "Dövüşçü 1", ru: "Боец 1" },
+  "Fighter 2": { az: "Döyüşçü 2", tr: "Dövüşçü 2", ru: "Боец 2" },
+  "Select Fighter 1": { az: "Döyüşçü 1 seç", tr: "Dövüşçü 1 seç", ru: "Выбери бойца 1" },
+  "Select Fighter 2": { az: "Döyüşçü 2 seç", tr: "Dövüşçü 2 seç", ru: "Выбери бойца 2" },
+  "Choose Fighter 1": { az: "Döyüşçü 1 üçün seç", tr: "Dövüşçü 1 için seç", ru: "Выбор бойца 1" },
+  "Choose Fighter 2": { az: "Döyüşçü 2 üçün seç", tr: "Dövüşçü 2 için seç", ru: "Выбор бойца 2" },
+  Clear: { az: "Sil", tr: "Temizle", ru: "Очистить" },
+  Switch: { az: "Dəyiş", tr: "Değiştir", ru: "Сменить" },
+  "Search fighters": { az: "Döyüşçü axtar", tr: "Dövüşçü ara", ru: "Поиск бойцов" },
+  "Search by name, nickname, or gym": { az: "Ad, ləqəb və ya zal ilə axtar", tr: "İsim, lakap veya salon ile ara", ru: "Поиск по имени, прозвищу или залу" },
+  "Verified MMA Fighter Platform": { az: "Təsdiqli MMA döyüşçü platforması", tr: "Doğrulanmış MMA dövüşçü platformu", ru: "Платформа проверенных MMA бойцов" },
+  "View Fighters": { az: "Döyüşçülərə bax", tr: "Dövüşçüleri gör", ru: "Смотреть бойцов" },
+  "Live Rankings": { az: "Canlı reytinqlər", tr: "Canlı sıralamalar", ru: "Живые рейтинги" },
+  "Live rankings": { az: "Canlı reytinqlər", tr: "Canlı sıralamalar", ru: "Живые рейтинги" },
+  Countries: { az: "Ölkələr", tr: "Ülkeler", ru: "Страны" },
+  Active: { az: "Aktiv", tr: "Aktif", ru: "Активно" },
+  "Build a verified fighter identity, track real fight history, climb weight-class rankings, and challenge matched opponents through a confirmation-first fight system.": {
+    az: "Təsdiqli döyüşçü kimliyi yarat, real döyüş tarixçəsini izlə, çəki reytinqlərində yüksəl və uyğun rəqiblərə çağırış göndər.",
+    tr: "Doğrulanmış dövüşçü kimliği oluştur, gerçek dövüş geçmişini takip et, kilo sıralamalarında yüksel ve uygun rakiplere meydan oku.",
+    ru: "Создай проверенный профиль бойца, отслеживай реальные бои, поднимайся в рейтинге и вызывай подходящих соперников.",
+  },
+  "Verified records": { az: "Təsdiqli rekordlar", tr: "Doğrulanmış kayıtlar", ru: "Проверенные рекорды" },
+  "Challenge-ready profiles": { az: "Çağırışa hazır profillər", tr: "Meydan okumaya hazır profiller", ru: "Профили для вызова" },
+  "Federation review": { az: "Federasiya yoxlaması", tr: "Federasyon incelemesi", ru: "Проверка федерации" },
+  "Federation verified": { az: "Federasiya təsdiqli", tr: "Federasyon onaylı", ru: "Проверено федерацией" },
+  "Pro badges are granted through admin and federation review, never self-declared.": {
+    az: "Pro nişanları yalnız admin və federasiya yoxlaması ilə verilir, özü elan edilmir.",
+    tr: "Pro rozetleri yalnızca admin ve federasyon incelemesiyle verilir, kullanıcı kendisi seçemez.",
+    ru: "Pro-статус выдается только после проверки админом и федерацией.",
+  },
+  "Challenge workflow": { az: "Çağırış prosesi", tr: "Meydan okuma akışı", ru: "Процесс вызова" },
+  "Send, counter, accept, confirm, and escalate disputed results in one flow.": {
+    az: "Göndər, qarşı təklif et, qəbul et, təsdiqlə və mübahisəli nəticələri eyni axında yönləndir.",
+    tr: "Gönder, karşı teklif ver, kabul et, onayla ve tartışmalı sonuçları tek akışta yönet.",
+    ru: "Отправляй, предлагай ответ, принимай, подтверждай и передавай спорные результаты.",
+  },
+  "Weighted rankings": { az: "Çəkili reytinqlər", tr: "Ağırlıklı sıralamalar", ru: "Взвешенные рейтинги" },
+  "Opponent rank, activity, and status influence weekly leaderboard movement.": {
+    az: "Rəqib reytinqi, aktivlik və status həftəlik liderlik dəyişiminə təsir edir.",
+    tr: "Rakip sırası, aktivlik ve statü haftalık lider tablosunu etkiler.",
+    ru: "Рейтинг соперника, активность и статус влияют на недельную таблицу.",
+  },
+  "Fight notifications": { az: "Döyüş bildirişləri", tr: "Dövüş bildirimleri", ru: "Уведомления о боях" },
+  "Challenge and ranking changes trigger in-app and email-ready events.": {
+    az: "Çağırış və reytinq dəyişiklikləri tətbiqdaxili və email-ready bildirişlər yaradır.",
+    tr: "Meydan okuma ve sıralama değişiklikleri uygulama içi ve e-posta hazır bildirimler üretir.",
+    ru: "Изменения вызовов и рейтингов создают уведомления в приложении и для email.",
+  },
+  "Live top fighters": { az: "Canlı top döyüşçülər", tr: "Canlı top dövüşçüler", ru: "Лучшие бойцы" },
+  "Ranked identities, real records.": { az: "Reytinqli profillər, real rekordlar.", tr: "Sıralı kimlikler, gerçek kayıtlar.", ru: "Рейтинговые профили, реальные рекорды." },
+  "Full leaderboard": { az: "Tam liderlik cədvəli", tr: "Tam lider tablosu", ru: "Вся таблица" },
+  Record: { az: "Rekord", tr: "Kayıt", ru: "Рекорд" },
+  Points: { az: "Xallar", tr: "Puan", ru: "Очки" },
+  Gym: { az: "Zal", tr: "Salon", ru: "Зал" },
+  Country: { az: "Ölkə", tr: "Ülke", ru: "Страна" },
+  Weight: { az: "Çəki", tr: "Kilo", ru: "Вес" },
+  Status: { az: "Status", tr: "Durum", ru: "Статус" },
+  Actions: { az: "Əməliyyatlar", tr: "İşlemler", ru: "Действия" },
+  Opponent: { az: "Rəqib", tr: "Rakip", ru: "Соперник" },
+  "Rule Set": { az: "Qaydalar", tr: "Kural seti", ru: "Правила" },
+  Location: { az: "Məkan", tr: "Konum", ru: "Локация" },
+  "Date Range": { az: "Tarix aralığı", tr: "Tarih aralığı", ru: "Диапазон дат" },
+  Refresh: { az: "Yenilə", tr: "Yenile", ru: "Обновить" },
+  Accept: { az: "Qəbul et", tr: "Kabul et", ru: "Принять" },
+  Decline: { az: "Rədd et", tr: "Reddet", ru: "Отклонить" },
+  Cancel: { az: "Ləğv et", tr: "İptal", ru: "Отмена" },
+  "No actions": { az: "Əməliyyat yoxdur", tr: "İşlem yok", ru: "Нет действий" },
+  "No challenges yet.": { az: "Hələ çağırış yoxdur.", tr: "Henüz meydan okuma yok.", ru: "Вызовов пока нет." },
+  "Please login to continue": { az: "Davam etmək üçün giriş et", tr: "Devam etmek için giriş yap", ru: "Войдите, чтобы продолжить" },
+  "Please login to view your challenges": { az: "Çağırışlarını görmək üçün giriş et", tr: "Meydan okumaları görmek için giriş yap", ru: "Войдите, чтобы увидеть вызовы" },
+  "Challenge Center": { az: "Çağırış mərkəzi", tr: "Meydan okuma merkezi", ru: "Центр вызовов" },
+  "Fight Wanted": { az: "Döyüş axtarılır", tr: "Dövüş aranıyor", ru: "Ищу бой" },
+  "Sparring Finder": { az: "Sparrinq axtarışı", tr: "Sparring bulucu", ru: "Поиск спарринга" },
+  "Seeking sparring partner": { az: "Sparrinq partnyoru axtarır", tr: "Sparring partneri arıyor", ru: "Ищет спарринг" },
+  "Bracket Hub": { az: "Turnir mərkəzi", tr: "Turnuva merkezi", ru: "Турнирный центр" },
+  "Gym Network": { az: "Zal şəbəkəsi", tr: "Salon ağı", ru: "Сеть залов" },
+  "Gym Leaderboard": { az: "Zal liderliyi", tr: "Salon sıralaması", ru: "Рейтинг залов" },
+  "Fight Talk": { az: "Döyüş söhbəti", tr: "Dövüş konuşması", ru: "Бойцовский разговор" },
+  "Country #1 Fighters": { az: "Ölkə üzrə #1 döyüşçülər", tr: "Ülke #1 dövüşçüleri", ru: "Бойцы #1 по странам" },
+  "Challenge this Fighter": { az: "Bu döyüşçüyə çağırış göndər", tr: "Bu dövüşçüye meydan oku", ru: "Вызвать бойца" },
+  "Share Profile": { az: "Profili paylaş", tr: "Profili paylaş", ru: "Поделиться" },
+  "Link copied!": { az: "Link kopyalandı!", tr: "Link kopyalandı!", ru: "Ссылка скопирована!" },
+  "No recorded fights yet.": { az: "Hələ döyüş qeydi yoxdur.", tr: "Henüz dövüş kaydı yok.", ru: "Боёв пока нет." },
+  "Training Activity": { az: "Məşq aktivliyi", tr: "Antrenman aktivitesi", ru: "Тренировочная активность" },
+  "No training logs yet.": { az: "Hələ məşq qeydi yoxdur.", tr: "Henüz antrenman kaydı yok.", ru: "Тренировок пока нет." },
+  "Collectible Fighter Card": { az: "Kolleksiya döyüşçü kartı", tr: "Koleksiyon dövüşçü kartı", ru: "Коллекционная карта" },
+  Collect: { az: "Topla", tr: "Koleksiyona ekle", ru: "Собрать" },
+  "Your Card": { az: "Sənin kartın", tr: "Senin kartın", ru: "Твоя карта" },
+  "Federation Panel": { az: "Federasiya paneli", tr: "Federasyon paneli", ru: "Панель федерации" },
+  "Federation Command": { az: "Federasiya idarəsi", tr: "Federasyon yönetimi", ru: "Управление федерации" },
+  "Login required": { az: "Giriş tələb olunur", tr: "Giriş gerekli", ru: "Требуется вход" },
+  "Access restricted": { az: "Giriş məhduddur", tr: "Erişim kısıtlı", ru: "Доступ ограничен" },
+  "Pending Pro Verification": { az: "Gözləyən Pro təsdiqləri", tr: "Bekleyen Pro doğrulamaları", ru: "Ожидающие Pro проверки" },
+  "Recent Fighters": { az: "Son döyüşçülər", tr: "Son dövüşçüler", ru: "Недавние бойцы" },
+  Approve: { az: "Təsdiqlə", tr: "Onayla", ru: "Одобрить" },
+  Reject: { az: "Rədd et", tr: "Reddet", ru: "Отклонить" },
+  "Make Pro": { az: "Pro et", tr: "Pro yap", ru: "Сделать Pro" },
+  "Admin only": { az: "Yalnız admin", tr: "Sadece admin", ru: "Только админ" },
+  "Loading live FightID data": { az: "Canlı FightID məlumatları yüklənir", tr: "Canlı FightID verileri yükleniyor", ru: "Загрузка данных FightID" },
+  "Live data unavailable": { az: "Canlı məlumat əlçatan deyil", tr: "Canlı veri kullanılamıyor", ru: "Данные недоступны" },
+  "Failed to fetch": { az: "Bağlantı alınmadı", tr: "Veri alınamadı", ru: "Не удалось загрузить" },
+  "Live sync is reconnecting. Showing a polished preview while the fight database comes back online.": {
+    az: "Canlı bağlantı yenidən qurulur. Döyüş bazası qayıdana qədər səliqəli preview göstərilir.",
+    tr: "Canlı bağlantı yeniden kuruluyor. Dövüş veritabanı dönene kadar düzenli bir önizleme gösteriliyor.",
+    ru: "Живое подключение восстанавливается. Пока база возвращается, показан аккуратный preview.",
+  },
+  "Verified combat network for fighters, federations, and fight fans.": {
+    az: "Döyüşçülər, federasiyalar və fanatlar üçün təsdiqli döyüş şəbəkəsi.",
+    tr: "Dövüşçüler, federasyonlar ve fanlar için doğrulanmış dövüş ağı.",
+    ru: "Проверенная бойцовская сеть для бойцов, федераций и фанатов.",
+  },
+};
 const weightClassOptions = ["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"];
 const ruleSetOptions = ["MMA", "GRAPPLING", "BOXING", "MUAY_THAI"];
 const BADGE_META = {
@@ -244,6 +382,50 @@ const notificationApi = {
 function getFighterImage(url) {
   if (!url || url.includes("thispersondoesnotexist.com") || url.includes("fighter-portrait.png")) return fightIdLogo;
   return url;
+}
+
+function applyPageTranslations(language) {
+  const targetLanguage = ["az", "en", "tr", "ru"].includes(language) ? language : "az";
+  const reverse = new Map();
+
+  Object.entries(phraseTranslations).forEach(([english, values]) => {
+    reverse.set(english, english);
+    Object.values(values).forEach((value) => reverse.set(value, english));
+  });
+
+  const translateValue = (value) => {
+    const trimmed = value.trim();
+    if (!trimmed) return value;
+    const english = reverse.get(trimmed);
+    if (!english) return value;
+    const translated = targetLanguage === "en" ? english : phraseTranslations[english]?.[targetLanguage] || english;
+    return value.replace(trimmed, translated);
+  };
+
+  const root = document.getElementById("root");
+  if (!root) return;
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!parent || ["SCRIPT", "STYLE", "TEXTAREA"].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
+      if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+  textNodes.forEach((node) => {
+    const nextValue = translateValue(node.nodeValue);
+    if (nextValue !== node.nodeValue) node.nodeValue = nextValue;
+  });
+
+  root.querySelectorAll("[placeholder]").forEach((element) => {
+    const current = element.getAttribute("placeholder");
+    const nextValue = translateValue(current || "");
+    if (nextValue !== current) element.setAttribute("placeholder", nextValue);
+  });
 }
 
 const countryNames = {
@@ -2513,6 +2695,17 @@ export default function App() {
     document.body.classList.toggle("fightid-home", page === "Home");
     return () => document.body.classList.remove("fightid-home");
   }, [page]);
+
+  useEffect(() => {
+    const translate = () => applyPageTranslations(settings.language);
+    const root = document.getElementById("root");
+    translate();
+    if (!root) return undefined;
+
+    const observer = new MutationObserver(() => window.requestAnimationFrame(translate));
+    observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["placeholder"] });
+    return () => observer.disconnect();
+  }, [settings.language, page, authModal, settingsOpen, user]);
 
   useEffect(() => {
     window.history.replaceState({ fightid: true, page, selectedFighterId }, "", window.location.href);

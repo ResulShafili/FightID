@@ -2390,6 +2390,11 @@ export default function App() {
     return () => socket.disconnect();
   }, [user]);
 
+  useEffect(() => {
+    document.body.classList.toggle("fightid-home", page === "Home");
+    return () => document.body.classList.remove("fightid-home");
+  }, [page]);
+
   const openProfile = (fighterId) => {
     setSelectedFighterId(fighterId);
     setPage(fighterId ? "Fighter Profile" : "Fighters");

@@ -702,11 +702,6 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
     fullName: "",
     email: "",
     password: "",
-    nickname: "",
-    dateOfBirth: "",
-    country: "",
-    weightClass: "",
-    gym: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -757,11 +752,6 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
       fullName: registerForm.fullName,
       email: registerForm.email,
       password: registerForm.password,
-      nickname: registerForm.nickname || undefined,
-      dateOfBirth: registerForm.dateOfBirth || "2000-01-01",
-      country: (registerForm.country || "AZ").toUpperCase(),
-      weightClass: registerForm.weightClass || "LIGHTWEIGHT",
-      gym: registerForm.gym || undefined,
     };
 
     try {
@@ -845,7 +835,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
               <div className="rounded border border-white/10 bg-white/[0.03] p-4">
                 <h3 className="font-display text-xl font-black text-white">Email verification</h3>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  We sent a 6-digit FightID code to <span className="font-bold text-white">{pendingVerification.email}</span>. Enter it here to finish {pendingVerification.purpose === "REGISTER" ? "registration" : "login"}.
+                  We sent a 6-digit FightID code to <span className="font-bold text-white">{pendingVerification.email}</span>. Enter it here to finish login.
                 </p>
                 {!pendingVerification.emailSent && pendingVerification.devCode && (
                   <p className="mt-3 rounded border border-yellow-400/30 bg-yellow-400/10 px-3 py-2 text-sm font-bold text-yellow-100">
@@ -911,8 +901,8 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
             </form>
           ) : (
             <form onSubmit={submitRegister} className="grid gap-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-2 text-sm font-bold text-zinc-200 sm:col-span-2">
+              <div className="grid gap-4">
+                <label className="grid gap-2 text-sm font-bold text-zinc-200">
                   Full name
                   <input
                     required
@@ -944,57 +934,10 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                     placeholder="At least 8 characters"
                   />
                 </label>
-                <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                  Nickname
-                  <input
-                    value={registerForm.nickname}
-                    onChange={(event) => setRegisterForm({ ...registerForm, nickname: event.target.value })}
-                    className={inputClass}
-                    placeholder="Optional"
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                  Date of birth
-                  <input
-                    type="date"
-                    value={registerForm.dateOfBirth}
-                    onChange={(event) => setRegisterForm({ ...registerForm, dateOfBirth: event.target.value })}
-                    className={inputClass}
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                  Country
-                  <input
-                    value={registerForm.country}
-                    onChange={(event) => setRegisterForm({ ...registerForm, country: event.target.value })}
-                    className={inputClass}
-                    placeholder="AZ"
-                    maxLength={2}
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                  Weight class
-                  <select
-                    value={registerForm.weightClass}
-                    onChange={(event) => setRegisterForm({ ...registerForm, weightClass: event.target.value })}
-                    className={inputClass}
-                  >
-                    <option value="">Lightweight default</option>
-                    {["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"].map((value) => (
-                      <option key={value} value={value}>{formatWeightClass(value)}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm font-bold text-zinc-200 sm:col-span-2">
-                  Gym
-                  <input
-                    value={registerForm.gym}
-                    onChange={(event) => setRegisterForm({ ...registerForm, gym: event.target.value })}
-                    className={inputClass}
-                    placeholder="Bakı Combat Club"
-                  />
-                </label>
               </div>
+              <p className="text-sm leading-6 text-zinc-400">
+                Nickname, birth date, country, weight class, and gym can be completed later from your fighter profile.
+              </p>
               <button disabled={loading} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
                 {loading ? "Creating account..." : "Register"}
               </button>

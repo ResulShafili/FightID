@@ -90,9 +90,9 @@ export const register = asyncHandler(async (req, res) => {
         create: {
           fullName,
           nickname,
-          dateOfBirth,
-          country,
-          weightClass,
+          dateOfBirth: dateOfBirth || new Date("2000-01-01"),
+          country: country || "AZ",
+          weightClass: weightClass || "LIGHTWEIGHT",
           gym,
           bio,
         },
@@ -103,7 +103,8 @@ export const register = asyncHandler(async (req, res) => {
 
   await upsertFighterCard(user.fighterProfile);
   await evaluateBadges(user.fighterProfile.id);
-  await authPendingResponse(res, user, "REGISTER");
+  const tokens = await issueTokens(user);
+  res.status(201).json({ user: publicUser(user), ...tokens });
 });
 
 export const login = asyncHandler(async (req, res) => {

@@ -6,9 +6,9 @@ export const registerSchema = z.object({
   password: z.string().min(8).max(128),
   fullName: z.string().min(2).max(120),
   nickname: z.string().max(80).optional(),
-  dateOfBirth: z.coerce.date(),
-  country: z.string().min(2).max(2).toUpperCase(),
-  weightClass: weightClassSchema,
+  dateOfBirth: z.coerce.date().optional(),
+  country: z.string().min(2).max(2).toUpperCase().optional(),
+  weightClass: weightClassSchema.optional(),
   gym: z.string().max(120).optional(),
   bio: z.string().max(1000).optional(),
 });

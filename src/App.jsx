@@ -596,6 +596,8 @@ function ChallengeModal({ receiver, onClose }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(null);
+  const [emailCode, setEmailCode] = useState("");
   const [success, setSuccess] = useState("");
 
   const inputClass = "w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-blood";
@@ -712,6 +714,8 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
   useEffect(() => {
     setTab(initialTab);
     setError("");
+    setPendingVerification(null);
+    setEmailCode("");
   }, [initialTab]);
 
   const handleAuthSuccess = (result) => {
@@ -729,7 +733,12 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
 
     try {
       const result = await authApi.login(loginForm);
-      handleAuthSuccess(result);
+      if (result.requiresEmailCode) {
+        setPendingVerification(result);
+        setEmailCode(result.devCode || "");
+      } else {
+        handleAuthSuccess(result);
+      }
     } catch (caught) {
       setError(caught.message);
     } finally {
@@ -755,6 +764,31 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
 
     try {
       const result = await authApi.register(payload);
+      if (result.requiresEmailCode) {
+        setPendingVerification(result);
+        setEmailCode(result.devCode || "");
+      } else {
+        handleAuthSuccess(result);
+      }
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitEmailCode = async (event) => {
+    event.preventDefault();
+    if (!pendingVerification) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await authApi.verifyEmailCode({
+        email: pendingVerification.email,
+        purpose: pendingVerification.purpose,
+        code: emailCode,
+      });
       handleAuthSuccess(result);
     } catch (caught) {
       setError(caught.message);
@@ -785,6 +819,8 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
               onClick={() => {
                 setTab(item);
                 setError("");
+                setPendingVerification(null);
+                setEmailCode("");
               }}
               className={`px-4 py-4 text-sm font-black uppercase tracking-[0.16em] transition ${
                 tab === item ? "bg-blood text-white" : "bg-white/[0.03] text-zinc-400 hover:bg-white/10 hover:text-white"
@@ -802,7 +838,48 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
             </div>
           )}
 
-          {tab === "login" ? (
+          {pendingVerification ? (
+            <form onSubmit={submitEmailCode} className="grid gap-4">
+              <div className="rounded border border-white/10 bg-white/[0.03] p-4">
+                <h3 className="font-display text-xl font-black text-white">Email verification</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  We sent a 6-digit FightID code to <span className="font-bold text-white">{pendingVerification.email}</span>. Enter it here to finish {pendingVerification.purpose === "REGISTER" ? "registration" : "login"}.
+                </p>
+                {!pendingVerification.emailSent && pendingVerification.devCode && (
+                  <p className="mt-3 rounded border border-yellow-400/30 bg-yellow-400/10 px-3 py-2 text-sm font-bold text-yellow-100">
+                    Dev mode code: {pendingVerification.devCode}
+                  </p>
+                )}
+              </div>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Verification code
+                <input
+                  required
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={emailCode}
+                  onChange={(event) => setEmailCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className={`${inputClass} text-center text-2xl tracking-[0.4em]`}
+                  placeholder="000000"
+                />
+              </label>
+              <button disabled={loading || emailCode.length !== 6} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
+                {loading ? "Verifying..." : "Verify and continue"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingVerification(null);
+                  setEmailCode("");
+                  setError("");
+                }}
+                className="rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10"
+              >
+                Back
+              </button>
+            </form>
+          ) : tab === "login" ? (
             <form onSubmit={submitLogin} className="grid gap-4">
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
                 Email

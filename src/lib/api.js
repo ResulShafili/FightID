@@ -30,6 +30,7 @@ export const apiRequest = async (path, options = {}) => {
 export const authApi = {
   register: (payload) => apiRequest("/auth/register", { method: "POST", body: JSON.stringify(payload) }),
   login: (payload) => apiRequest("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+  verifyEmailCode: (payload) => apiRequest("/auth/verify-email-code", { method: "POST", body: JSON.stringify(payload) }),
   refresh: (refreshToken) => apiRequest("/auth/refresh", { method: "POST", body: JSON.stringify({ refreshToken }) }),
   logout: (refreshToken) => apiRequest("/auth/logout", { method: "POST", body: JSON.stringify({ refreshToken }) }),
 };

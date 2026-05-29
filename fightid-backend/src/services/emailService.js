@@ -17,7 +17,13 @@ const createTransporter = () => {
 
 export const sendEmail = async ({ to, subject, text }) => {
   const transporter = createTransporter();
-  if (!transporter || !to) return;
+  if (!to) return false;
+  if (!transporter) {
+    if (env.nodeEnv !== "production") {
+      console.info(`[email disabled] ${subject} -> ${to}\n${text}`);
+    }
+    return false;
+  }
 
   await transporter.sendMail({
     from: env.email.from,
@@ -25,4 +31,5 @@ export const sendEmail = async ({ to, subject, text }) => {
     subject,
     text,
   });
+  return true;
 };

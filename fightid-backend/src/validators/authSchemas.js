@@ -23,3 +23,9 @@ export const refreshSchema = z.object({
 });
 
 export const logoutSchema = refreshSchema;
+
+export const verifyEmailCodeSchema = z.object({
+  email: z.string().email().toLowerCase(),
+  code: z.string().regex(/^\d{6}$/, "Code must be 6 digits"),
+  purpose: z.enum(["LOGIN", "REGISTER"]),
+});

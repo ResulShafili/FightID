@@ -118,6 +118,11 @@ enum BadgeType {
   PLATFORM_PIONEER
 }
 
+enum EmailCodePurpose {
+  LOGIN
+  REGISTER
+}
+
 model User {
   id           String    @id @default(uuid()) @db.Uuid
   email        String    @unique
@@ -130,6 +135,7 @@ model User {
   federation      Federation?
   notifications   Notification[]
   refreshTokens   RefreshToken[]
+  emailCodes      EmailVerificationCode[]
   cardCollections CardCollection[]
   cornerMen        CornerMan[]
   gymsOwned        Gym[]              @relation("GymOwner")
@@ -137,6 +143,21 @@ model User {
   micCheckReactions MicCheckReaction[]
 
   @@index([role])
+}
+
+model EmailVerificationCode {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  codeHash  String
+  purpose   EmailCodePurpose
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, consumedAt])
+  @@index([expiresAt])
 }
 
 model RefreshToken {

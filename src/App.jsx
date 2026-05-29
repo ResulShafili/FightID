@@ -26,9 +26,7 @@ import {
   adminApi,
   authApi,
   badgeApi,
-  cardApi,
   challengeApi,
-  cornerManApi,
   fighterApi,
   gymApi,
   leaderboardApi,
@@ -1251,8 +1249,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
             <div className="flex items-center gap-3">
               <NotificationBell />
               <span className="max-w-[180px] truncate text-sm font-bold text-white">{getUserDisplayName(user)}</span>
-              <button onClick={() => setPage("My Collection")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">{t.cards}</button>
-              <button onClick={() => setPage("My Fighters")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">{t.myFighters}</button>
+              <button onClick={() => setPage("My Profile")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">My Profile</button>
               <button onClick={onLogout} className="rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
                 {t.logout}
               </button>
@@ -1354,6 +1351,15 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
                   <span className="text-sm font-bold text-white">{getUserDisplayName(user)}</span>
                   <NotificationBell />
                 </div>
+                <button
+                  onClick={() => {
+                    setPage("My Profile");
+                    setOpen(false);
+                  }}
+                  className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
+                >
+                  My Profile
+                </button>
                 <button
                   onClick={() => {
                     onLogout();
@@ -1859,12 +1865,169 @@ function SimpleFeaturePage({ title, badge, loader, renderItem, empty = "Nothing 
   );
 }
 
-function MyCollectionPage({ user, onLoginClick }) {
-  return <SimpleFeaturePage title="My Collection" badge="Fighter Cards" user={user} loginRequired onLoginClick={onLoginClick} loader={cardApi.myCollection} empty="No cards yet. Explore fighters and collect your first card." renderItem={(item) => <div key={item.id} className="rounded border border-yellow-400/30 bg-[#111113] p-5"><img src={getFighterImage(item.card.fighter.profilePhotoUrl)} className="h-52 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{item.card.fighter.fullName}</h3><Badge tone="red">{item.card.tier}</Badge></div>} />;
-}
+function MyProfilePage({ user, onLoginClick, onUserUpdate }) {
+  const profile = user?.fighterProfile;
+  const [form, setForm] = useState(() => ({
+    fullName: profile?.fullName || "",
+    nickname: profile?.nickname || "",
+    dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "",
+    country: profile?.country || "AZ",
+    weightClass: profile?.weightClass || "LIGHTWEIGHT",
+    gym: profile?.gym || "",
+    bio: profile?.bio || "",
+    instagramUrl: profile?.instagramUrl || "",
+    youtubeUrl: profile?.youtubeUrl || "",
+    coverPhotoUrl: profile?.coverPhotoUrl || "",
+  }));
+  const [photoFile, setPhotoFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-function MyFightersPage({ user, onLoginClick }) {
-  return <SimpleFeaturePage title="My Fighters" badge="Corner Men" user={user} loginRequired onLoginClick={onLoginClick} loader={cornerManApi.myFighters} empty="You are not cornering any fighters yet." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><img src={getFighterImage(item.fighter.profilePhotoUrl)} className="h-48 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><button onClick={() => cornerManApi.remove(item.fighter.id)} className="mt-4 rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Remove Corner</button></div>} />;
+  useEffect(() => {
+    if (!profile) return;
+    setForm({
+      fullName: profile.fullName || "",
+      nickname: profile.nickname || "",
+      dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "",
+      country: profile.country || "AZ",
+      weightClass: profile.weightClass || "LIGHTWEIGHT",
+      gym: profile.gym || "",
+      bio: profile.bio || "",
+      instagramUrl: profile.instagramUrl || "",
+      youtubeUrl: profile.youtubeUrl || "",
+      coverPhotoUrl: profile.coverPhotoUrl || "",
+    });
+  }, [profile]);
+
+  if (!user) {
+    return (
+      <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+        <div className="rounded-sm border border-white/10 bg-[#111113] p-8">
+          <Badge tone="red">Profile</Badge>
+          <h1 className="mt-5 font-display text-4xl font-black text-white">Login to edit your fighter profile</h1>
+          <button onClick={onLoginClick} className="mt-6 rounded-sm bg-blood px-5 py-3 font-black text-white">Login</button>
+        </div>
+      </main>
+    );
+  }
+
+  const inputClass = "w-full rounded-sm border border-white/10 bg-[#111113] px-4 py-3 text-sm font-semibold text-white outline-none placeholder:text-zinc-500 focus:border-blood";
+
+  const updateField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+
+  const saveProfile = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      let updatedProfile = await fighterApi.updateMe({
+        fullName: form.fullName,
+        nickname: form.nickname || null,
+        dateOfBirth: form.dateOfBirth || undefined,
+        country: (form.country || "AZ").toUpperCase(),
+        weightClass: form.weightClass || "LIGHTWEIGHT",
+        gym: form.gym || null,
+        bio: form.bio || null,
+        instagramUrl: form.instagramUrl || null,
+        youtubeUrl: form.youtubeUrl || null,
+        coverPhotoUrl: form.coverPhotoUrl || null,
+      });
+
+      if (photoFile) {
+        updatedProfile = await fighterApi.uploadPhoto(photoFile);
+        setPhotoFile(null);
+      }
+
+      const nextUser = { ...user, fighterProfile: { ...user.fighterProfile, ...updatedProfile } };
+      localStorage.setItem(userStorageKey, JSON.stringify(nextUser));
+      onUserUpdate(nextUser);
+      setMessage("Profile updated.");
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+        <aside className="self-start rounded-sm border border-zinc-800 bg-[#101113] p-5">
+          <Badge tone="red">Fighter Profile</Badge>
+          <img src={getFighterImage(profile?.profilePhotoUrl)} alt={form.fullName} className="mt-5 h-72 w-full rounded-sm border border-white/10 object-cover" />
+          <label className="mt-4 block rounded-sm border border-white/10 bg-white/[0.03] p-4 text-sm font-bold text-zinc-200">
+            Profile photo
+            <input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] || null)} className="mt-3 block w-full text-sm text-zinc-400 file:mr-4 file:rounded-sm file:border-0 file:bg-blood file:px-4 file:py-2 file:font-black file:text-white" />
+          </label>
+          <p className="mt-4 text-sm leading-6 text-zinc-400">Complete these details so your public fighter page looks real and useful.</p>
+        </aside>
+
+        <section className="rounded-sm border border-zinc-800 bg-[#101113] p-5 sm:p-6">
+          <div>
+            <Badge>My Profile</Badge>
+            <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-5xl">Edit Fighter Profile</h1>
+          </div>
+
+          {message && <div className="mt-6 rounded-sm border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-100">{message}</div>}
+          {error && <div className="mt-6 rounded-sm border border-blood/40 bg-blood/15 px-4 py-3 text-sm font-bold text-red-100">{error}</div>}
+
+          <form onSubmit={saveProfile} className="mt-6 grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Full name
+                <input required value={form.fullName} onChange={(event) => updateField("fullName", event.target.value)} className={inputClass} />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Nickname
+                <input value={form.nickname} onChange={(event) => updateField("nickname", event.target.value)} className={inputClass} placeholder="Optional" />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Date of birth
+                <input type="date" value={form.dateOfBirth} onChange={(event) => updateField("dateOfBirth", event.target.value)} className={inputClass} />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Country
+                <input value={form.country} onChange={(event) => updateField("country", event.target.value.toUpperCase())} className={inputClass} maxLength={2} />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Weight class
+                <select value={form.weightClass} onChange={(event) => updateField("weightClass", event.target.value)} className={inputClass}>
+                  {weightClassOptions.map((value) => <option key={value} value={value}>{formatWeightClass(value)}</option>)}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Gym / club
+                <input value={form.gym} onChange={(event) => updateField("gym", event.target.value)} className={inputClass} placeholder="Bakı Combat Club" />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200 sm:col-span-2">
+                Bio
+                <textarea value={form.bio} onChange={(event) => updateField("bio", event.target.value)} className={`${inputClass} min-h-28 resize-y`} placeholder="Short fighter bio" />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Instagram URL
+                <input value={form.instagramUrl} onChange={(event) => updateField("instagramUrl", event.target.value)} className={inputClass} placeholder="https://instagram.com/..." />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                YouTube URL
+                <input value={form.youtubeUrl} onChange={(event) => updateField("youtubeUrl", event.target.value)} className={inputClass} placeholder="https://youtube.com/..." />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200 sm:col-span-2">
+                Cover photo URL
+                <input value={form.coverPhotoUrl} onChange={(event) => updateField("coverPhotoUrl", event.target.value)} className={inputClass} placeholder="https://..." />
+              </label>
+            </div>
+
+            <button disabled={loading} className="rounded-sm bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:opacity-60">
+              {loading ? "Saving..." : "Save profile"}
+            </button>
+          </form>
+        </section>
+      </div>
+    </main>
+  );
 }
 
 function HeadToHead() {
@@ -2031,9 +2194,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const [weightRank, setWeightRank] = useState("Live");
   const [shareCopied, setShareCopied] = useState(false);
   const [badges, setBadges] = useState([]);
-  const [card, setCard] = useState(null);
   const [nationalChampion, setNationalChampion] = useState(null);
-  const [corner, setCorner] = useState({ count: 0, hasCornered: false });
   const [training, setTraining] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -2075,9 +2236,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   useEffect(() => {
     if (!profile) return;
     badgeApi.forFighter(profile.id).then(setBadges).catch(() => setBadges([]));
-    cardApi.getForFighter(profile.id).then(setCard).catch(() => setCard(null));
     leaderboardApi.isChampion(profile.id).then(setNationalChampion).catch(() => setNationalChampion(null));
-    cornerManApi.count(profile.id).then(setCorner).catch(() => setCorner({ count: 0, hasCornered: false }));
     trainingApi.forFighter(profile.id).then(setTraining).catch(() => setTraining(null));
   }, [profile]);
 
@@ -2111,25 +2270,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
     } catch {
       setShareCopied(false);
     }
-  };
-
-  const toggleCorner = async () => {
-    if (!user) {
-      onLoginRequired();
-      return;
-    }
-    if (corner.hasCornered) await cornerManApi.remove(profile.id);
-    else await cornerManApi.add(profile.id);
-    const next = await cornerManApi.count(profile.id);
-    setCorner(next);
-  };
-
-  const collectCard = async () => {
-    if (!user) {
-      onLoginRequired();
-      return;
-    }
-    if (card) await cardApi.collect(card.id);
   };
 
   return (
@@ -2166,11 +2306,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
                 <ArrowRight size={18} />
                 {shareCopied ? "Link copied!" : "Share Profile"}
               </button>
-              {user?.fighterProfile?.id !== profile.id && (
-                <button onClick={toggleCorner} className={`inline-flex items-center justify-center gap-2 rounded px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white ${corner.hasCornered ? "bg-blood" : "border border-white/15 bg-white/5 hover:bg-white/10"}`}>
-                  🧤 {corner.hasCornered ? "In Your Corner ✓" : "Corner This Fighter"} · {corner.count}
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -2296,16 +2431,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
           </div>
 
           <aside className="grid gap-5 self-start">
-            {card && (
-              <div className="rounded border border-yellow-400/30 bg-panel p-5 shadow-red">
-                <Badge tone="red">{card.tier}</Badge>
-                <h2 className="mt-4 font-display text-xl font-black text-white">Collectible Fighter Card</h2>
-                <img src={getFighterImage(profile.profilePhotoUrl)} alt={profile.fullName} className="mt-4 h-52 w-full rounded object-cover" />
-                <button disabled={user?.fighterProfile?.id === profile.id} onClick={collectCard} className="mt-4 w-full rounded bg-[#dc1f26] px-5 py-3 font-black text-white disabled:opacity-60">
-                  {user?.fighterProfile?.id === profile.id ? "Your Card" : "Collect"}
-                </button>
-              </div>
-            )}
             <div className="rounded border border-white/10 bg-panel p-5">
               <h2 className="font-display text-xl font-black text-white">Profile status</h2>
               <div className="mt-5 grid gap-3">
@@ -2798,7 +2923,17 @@ export default function App() {
       localStorage.removeItem(refreshTokenStorageKey);
       localStorage.removeItem(userStorageKey);
       setUser(null);
+      setPage("Home");
     }
+  };
+
+  const handleAuthSuccess = (nextUser) => {
+    setUser(nextUser);
+    setPage("My Profile");
+  };
+
+  const handleUserUpdate = (nextUser) => {
+    setUser(nextUser);
   };
 
   const pages = {
@@ -2809,8 +2944,7 @@ export default function App() {
     Tournaments: <TournamentHub user={user} />,
     Gyms: <GymHub />,
     "National Champions": <NationalChampions openProfile={openProfile} />,
-    "My Collection": <MyCollectionPage user={user} onLoginClick={() => openAuth("login")} />,
-    "My Fighters": <MyFightersPage user={user} onLoginClick={() => openAuth("login")} />,
+    "My Profile": <MyProfilePage user={user} onLoginClick={() => openAuth("login")} onUserUpdate={handleUserUpdate} />,
     "Fighter Profile": <FighterProfilePage fighterId={selectedFighterId} openProfile={openProfile} user={user} onLoginRequired={() => openAuth("login")} />,
     Rankings: <RankingsPage openProfile={openProfile} />,
   };
@@ -2829,7 +2963,7 @@ export default function App() {
         onLogout={handleLogout}
       />
       {pages[page] || pages.Home}
-      {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={setUser} />}
+      {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={handleAuthSuccess} />}
       <SettingsPanel open={settingsOpen} settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} t={t} />
       {toast && <div className="fixed bottom-5 right-5 z-[120] rounded border border-blood/40 bg-[#111113] px-5 py-4 font-bold text-white shadow-red">{toast}</div>}
       <footer className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-500">

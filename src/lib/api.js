@@ -41,6 +41,11 @@ export const fighterApi = {
   leaderboard: (params = {}) => apiRequest(`/fighters/leaderboard${toQueryString(params)}`),
   rivals: (id) => apiRequest(`/fighters/${id}/rivals`),
   updateMe: (payload) => apiRequest("/fighters/me", { method: "PUT", body: JSON.stringify(payload) }),
+  uploadPhoto: (file) => {
+    const fd = new FormData();
+    fd.append("photo", file);
+    return apiRequest("/fighters/me/photo", { method: "POST", body: fd, isFormData: true });
+  },
 };
 
 export const challengeApi = {

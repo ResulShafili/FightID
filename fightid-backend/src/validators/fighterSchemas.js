@@ -18,6 +18,7 @@ export const leaderboardQuerySchema = paginationQuerySchema.extend({
 export const updateProfileSchema = z.object({
   fullName: z.string().min(2).max(120).optional(),
   nickname: z.string().max(80).nullable().optional(),
+  dateOfBirth: z.coerce.date().optional(),
   country: z.string().min(2).max(2).toUpperCase().optional(),
   weightClass: weightClassSchema.optional(),
   gym: z.string().max(120).nullable().optional(),

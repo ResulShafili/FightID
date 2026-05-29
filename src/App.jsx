@@ -2439,7 +2439,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-canvas/80 text-bone">
+    <div className="min-h-screen overflow-x-hidden bg-transparent text-bone">
       <AppHeader
         page={page}
         setPage={setPage}

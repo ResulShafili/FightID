@@ -88,3 +88,76 @@ button {
   background: #383b45;
   border-radius: 999px;
 }
+
+@media (max-width: 640px) {
+  body:not(.fightid-home) main {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+    padding-top: 5.75rem !important;
+  }
+
+  body:not(.fightid-home) main h1 {
+    font-size: 2rem !important;
+    line-height: 1.04 !important;
+    margin-top: 0.75rem !important;
+  }
+
+  body:not(.fightid-home) main h2 {
+    font-size: 1.35rem !important;
+    line-height: 1.12 !important;
+  }
+
+  body:not(.fightid-home) main h3 {
+    font-size: 1.1rem !important;
+    line-height: 1.18 !important;
+  }
+
+  body:not(.fightid-home) main p {
+    line-height: 1.55 !important;
+  }
+
+  body:not(.fightid-home) main :where(.mt-10, .mt-8, .mt-6, .mt-5) {
+    margin-top: 1rem !important;
+  }
+
+  body:not(.fightid-home) main :where(.gap-5, .gap-4) {
+    gap: 0.75rem !important;
+  }
+
+  body:not(.fightid-home) main :where(.p-8, .p-6, .p-5) {
+    padding: 1rem !important;
+  }
+
+  body:not(.fightid-home) main :where(.px-6, .px-5) {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  body:not(.fightid-home) main :where(.py-5, .py-4) {
+    padding-bottom: 0.85rem !important;
+    padding-top: 0.85rem !important;
+  }
+
+  body:not(.fightid-home) main :where(.h-\[410px\], .h-64, .h-52, .h-48) {
+    height: 9rem !important;
+  }
+
+  body:not(.fightid-home) main .text-4xl {
+    font-size: 1.85rem !important;
+    line-height: 1.08 !important;
+  }
+
+  body:not(.fightid-home) main .text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 1.12 !important;
+  }
+
+  body:not(.fightid-home) main .text-2xl {
+    font-size: 1.2rem !important;
+    line-height: 1.18 !important;
+  }
+
+  body:not(.fightid-home) main .tracking-\[0\.16em\] {
+    letter-spacing: 0.1em !important;
+  }
+}

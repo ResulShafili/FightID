@@ -2,7 +2,6 @@ import {
   Activity,
   ArrowRight,
   Bell,
-  CalendarDays,
   CheckCircle2,
   ChevronRight,
   Dumbbell,
@@ -17,7 +16,6 @@ import {
   Settings,
   ShieldCheck,
   SlidersHorizontal,
-  Swords,
   Trophy,
   X,
   Zap,
@@ -51,15 +49,7 @@ const navGroups = [
   },
   {
     label: "Match",
-    items: ["Compare", "Challenges", "Fight Board", "Sparring"],
-  },
-  {
-    label: "Events",
-    items: ["Tournaments", "Mic Check 🎤"],
-  },
-  {
-    label: "Admin",
-    items: ["Federation"],
+    items: ["Compare", "Fight Board", "Tournaments"],
   },
 ];
 const fightIdLogo = "/assets/fightid-logo.svg";
@@ -1434,7 +1424,7 @@ function LandingPage({ setPage, openProfile }) {
             <Badge tone="red">MMA fighter database</Badge>
             <h1 className="mt-6 font-display text-5xl font-black leading-[0.96] text-white sm:text-7xl lg:text-8xl">Records. Rankings. Real matchups.</h1>
             <p className="mt-6 max-w-[calc(100vw-2rem)] break-words text-lg leading-8 text-zinc-300 sm:max-w-2xl sm:text-xl">
-              FightID is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and direct challenge tools for real matchmaking.
+              FightID is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and clean discovery tools for real matchmaking.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button onClick={() => setPage("Fighters")} className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-blood px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-ember sm:w-auto">
@@ -1451,7 +1441,7 @@ function LandingPage({ setPage, openProfile }) {
               <Stat value={stats.fights} label="Active" />
             </div>
             <div className="mt-8 flex max-w-3xl flex-wrap gap-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-300">
-              {["Verified records", "Challenge-ready profiles", "Live rankings", "Federation review"].map((item) => (
+              {["Verified records", "Amateur fighter index", "Live rankings", "Gym and country profiles"].map((item) => (
                 <span key={item} className="rounded-sm border border-white/10 bg-black/30 px-3 py-2 backdrop-blur">
                   {item}
                 </span>
@@ -1490,10 +1480,10 @@ function LandingPage({ setPage, openProfile }) {
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-4 lg:grid-cols-4">
           {[
-            [ShieldCheck, "Federation verified", "Pro badges are granted through admin and federation review, never self-declared."],
-            [Swords, "Challenge workflow", "Send, counter, accept, confirm, and escalate disputed results in one flow."],
+            [ShieldCheck, "Verified records", "Keep fighter identities, gyms, countries, and fight histories organized in one public database."],
+            [Activity, "Amateur-first profiles", "Give young and amateur fighters a clean profile page before they reach major promotions."],
             [Gauge, "Weighted rankings", "Opponent rank, activity, and status influence weekly leaderboard movement."],
-            [Bell, "Fight notifications", "Challenge and ranking changes trigger in-app and email-ready events."],
+            [Globe2, "Local discovery", "Search fighters by country, gym, weight class, rank, and activity without noisy extras."],
           ].map(([Icon, title, text]) => (
             <div key={title} className="rounded-sm border border-zinc-800 bg-[#101113] p-5">
               <Icon className="text-blood" size={24} />
@@ -1978,10 +1968,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const [profile, setProfile] = useState(null);
   const [countryRank, setCountryRank] = useState("Live");
   const [weightRank, setWeightRank] = useState("Live");
-  const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const [upcomingFight, setUpcomingFight] = useState(null);
-  const [upcomingStatus, setUpcomingStatus] = useState("Login to view your challenges");
   const [badges, setBadges] = useState([]);
   const [card, setCard] = useState(null);
   const [nationalChampion, setNationalChampion] = useState(null);
@@ -2026,36 +2013,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
 
   useEffect(() => {
     if (!profile) return;
-
-    const isOwnProfile = user?.fighterProfile?.id === profile.id;
-    if (!user || !isOwnProfile) {
-      setUpcomingFight(null);
-      setUpcomingStatus("Login to view your challenges");
-      return;
-    }
-
-    let ignore = false;
-    setUpcomingStatus("Loading challenges...");
-
-    challengeApi
-      .mine()
-      .then((challenges) => {
-        if (ignore) return;
-        const accepted = challenges.find((challenge) => challenge.status === "ACCEPTED");
-        setUpcomingFight(accepted || null);
-        setUpcomingStatus(accepted ? "" : "No upcoming fight scheduled");
-      })
-      .catch((caught) => {
-        if (!ignore) setUpcomingStatus(caught.message);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [profile, user]);
-
-  useEffect(() => {
-    if (!profile) return;
     badgeApi.forFighter(profile.id).then(setBadges).catch(() => setBadges([]));
     cardApi.getForFighter(profile.id).then(setCard).catch(() => setCard(null));
     leaderboardApi.isChampion(profile.id).then(setNationalChampion).catch(() => setNationalChampion(null));
@@ -2084,16 +2041,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const status = getStatus(profile);
   const record = profile.stats?.record || {};
   const fightHistory = profile.fights || [];
-  const upcomingOpponent = upcomingFight ? getChallengeOpponent(upcomingFight, user) : null;
-
-  const openChallenge = () => {
-    if (!user) {
-      onLoginRequired();
-      return;
-    }
-
-    setChallengeModalOpen(true);
-  };
 
   const shareProfile = async () => {
     try {
@@ -2126,7 +2073,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
 
   return (
     <main className="pt-20">
-      {challengeModalOpen && <ChallengeModal receiver={profile} onClose={() => setChallengeModalOpen(false)} />}
       <section className="relative min-h-[520px] overflow-hidden">
         <img src={profile.coverPhotoUrl || fallbackCover} alt={`${profile.fullName} cover`} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#07080a_0%,rgba(7,8,10,.78)_45%,rgba(7,8,10,.52)_100%)]" />
@@ -2140,7 +2086,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
               <Badge tone={status === "Pro" ? "red" : "dark"}><ShieldCheck className="mr-2" size={14} /> {status}</Badge>
               {profile.verifiedByFederation?.name && <Badge>{profile.verifiedByFederation.name}</Badge>}
               <Badge tone="light">🎖️ {badges.length} badges</Badge>
-              {profile.seekingSparring && <Badge tone="light">🥊 Seeking Sparring {profile.sparringLocation ? `· ${profile.sparringLocation}` : ""}</Badge>}
             </div>
             <h1 className="mt-5 font-display text-5xl font-black leading-none text-white sm:text-7xl">{profile.fullName}</h1>
             {nationalChampion?.isChampion && (
@@ -2156,10 +2101,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
               <span className="inline-flex items-center gap-2 rounded border border-white/10 bg-white/5 px-3 py-2"><Globe2 size={16} /> {profile.gym || "Independent"}</span>
             </div>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button onClick={openChallenge} className="inline-flex items-center justify-center gap-2 rounded bg-blood px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-ember">
-                <Swords size={18} />
-                Challenge this Fighter
-              </button>
               <button onClick={shareProfile} className="inline-flex items-center justify-center gap-2 rounded border border-white/15 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white/10">
                 <ArrowRight size={18} />
                 {shareCopied ? "Link copied!" : "Share Profile"}
@@ -2305,27 +2246,11 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
               </div>
             )}
             <div className="rounded border border-white/10 bg-panel p-5">
-              <h2 className="font-display text-xl font-black text-white">Upcoming fight</h2>
-              <div className="mt-5 rounded border border-blood/30 bg-blood/10 p-4">
-                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-red-100">
-                  <CalendarDays size={16} />
-                  {upcomingFight ? formatDate(upcomingFight.proposedDateFrom) : "Challenge schedule"}
-                </div>
-                <h3 className="mt-3 font-display text-2xl font-black text-white">{upcomingFight ? upcomingOpponent : upcomingStatus}</h3>
-                {upcomingFight && (
-                  <p className="mt-2 text-sm text-zinc-400">
-                    {formatResult(upcomingFight.ruleSet)} in {upcomingFight.location} from {formatDate(upcomingFight.proposedDateFrom)}.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded border border-white/10 bg-panel p-5">
-              <h2 className="font-display text-xl font-black text-white">Verification</h2>
+              <h2 className="font-display text-xl font-black text-white">Profile status</h2>
               <div className="mt-5 grid gap-3">
                 {[
                   `${status} status from backend`,
-                  profile.verifiedByFederation?.name || "Federation review pending",
+                  profile.verifiedByFederation?.name || "Public amateur profile",
                   profile.isVerifiedPro ? "Pro verification active" : "Amateur profile active",
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-3 text-sm font-semibold text-zinc-300">
@@ -2737,7 +2662,6 @@ export default function App() {
     };
     socket.on("fighter:won", () => showToast("Your fighter just won!"));
     socket.on("training:new", () => showToast("Your fighter just logged a training session 💪"));
-    socket.on("miccheck:new", () => showToast("Your opponent just dropped a Mic Check 🎤 — check it out!"));
     socket.on("notification:new", (notification) => showToast(notification.message));
     return () => socket.disconnect();
   }, [user]);
@@ -2821,17 +2745,13 @@ export default function App() {
     Fighters: <FightersPage openProfile={openProfile} />,
     Compare: <HeadToHead />,
     "Fight Board": <FightSeekBoard user={user} onLoginClick={() => openAuth("login")} />,
-    Sparring: <SparringFinder />,
     Tournaments: <TournamentHub user={user} />,
     Gyms: <GymHub />,
     "National Champions": <NationalChampions openProfile={openProfile} />,
-    "Mic Check 🎤": <MicCheckFeed user={user} />,
     "My Collection": <MyCollectionPage user={user} onLoginClick={() => openAuth("login")} />,
     "My Fighters": <MyFightersPage user={user} onLoginClick={() => openAuth("login")} />,
     "Fighter Profile": <FighterProfilePage fighterId={selectedFighterId} openProfile={openProfile} user={user} onLoginRequired={() => openAuth("login")} />,
     Rankings: <RankingsPage openProfile={openProfile} />,
-    Challenges: <ChallengesPage user={user} onLoginClick={() => openAuth("login")} />,
-    Federation: <FederationPanel user={user} onLoginClick={() => openAuth("login")} openProfile={openProfile} />,
   };
 
   return (
@@ -2847,7 +2767,7 @@ export default function App() {
         onRegisterClick={() => openAuth("register")}
         onLogout={handleLogout}
       />
-      {pages[page]}
+      {pages[page] || pages.Home}
       {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={setUser} />}
       <SettingsPanel open={settingsOpen} settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} t={t} />
       {toast && <div className="fixed bottom-5 right-5 z-[120] rounded border border-blood/40 bg-[#111113] px-5 py-4 font-bold text-white shadow-red">{toast}</div>}

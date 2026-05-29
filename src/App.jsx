@@ -46,19 +46,19 @@ import { createFightIdSocket } from "./lib/socket";
 const navGroups = [
   { label: "Home", page: "Home" },
   {
-    label: "Discover",
+    label: "Database",
     items: ["Fighters", "Rankings", "National Champions", "Gyms"],
   },
   {
-    label: "Fight Tools",
-    items: ["Compare", "Fight Board", "Sparring", "Tournaments"],
+    label: "Match",
+    items: ["Compare", "Challenges", "Fight Board", "Sparring"],
   },
   {
-    label: "Community",
-    items: ["Challenges", "Mic Check 🎤"],
+    label: "Events",
+    items: ["Tournaments", "Mic Check 🎤"],
   },
   {
-    label: "Manage",
+    label: "Admin",
     items: ["Federation"],
   },
 ];
@@ -1136,17 +1136,17 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
   );
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-canvas/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <button onClick={() => setPage("Home")} className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded bg-blood text-lg font-black text-white shadow-red">F</span>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-zinc-800 bg-[#09090b]/95 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-5">
+        <button onClick={() => setPage("Home")} className="flex shrink-0 items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-sm bg-blood text-lg font-black text-white shadow-red">F</span>
           <span>
             <span className="block font-display text-lg font-black uppercase text-white">FightID</span>
-            <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500 max-[420px]:hidden">Verified Combat Network</span>
+            <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500 max-[420px]:hidden">MMA records database</span>
           </span>
         </button>
 
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
           {navGroups.map((group) => {
             const isActive = group.page === page || group.items?.includes(page);
 
@@ -1155,8 +1155,8 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
                 <button
                   key={group.label}
                   onClick={() => setPage(group.page)}
-                  className={`rounded px-4 py-2 text-sm font-semibold transition ${
-                    isActive ? "bg-white text-black" : "text-zinc-300 hover:bg-white/10 hover:text-white"
+                  className={`rounded-sm border px-3 py-2 text-xs font-black uppercase tracking-[0.08em] transition xl:px-4 xl:text-sm ${
+                    isActive ? "border-white bg-white text-black" : "border-transparent text-zinc-300 hover:border-white/10 hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   {group.label}
@@ -1167,14 +1167,14 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
             return (
               <div key={group.label} className="group relative">
                 <button
-                  className={`inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-semibold transition ${
-                    isActive ? "bg-white text-black" : "text-zinc-300 hover:bg-white/10 hover:text-white"
+                  className={`inline-flex items-center gap-2 rounded-sm border px-3 py-2 text-xs font-black uppercase tracking-[0.08em] transition xl:px-4 xl:text-sm ${
+                    isActive ? "border-white bg-white text-black" : "border-transparent text-zinc-300 hover:border-white/10 hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   {group.label}
                   <ChevronRight className="rotate-90" size={14} />
                 </button>
-                <div className="invisible absolute left-0 top-full z-[70] min-w-56 translate-y-2 rounded border border-white/10 bg-[#111113] p-2 opacity-0 shadow-red transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                <div className="invisible absolute left-0 top-full z-[70] min-w-60 translate-y-2 rounded-sm border border-zinc-800 bg-[#111113] p-2 opacity-0 shadow-red transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                   {group.items.map((item) => (
                     <button
                       key={item}
@@ -1192,12 +1192,12 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
           })}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
-          <button onClick={() => setPage("Fighters")} className="inline-flex items-center gap-2 rounded border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <button onClick={() => setPage("Fighters")} className="inline-flex items-center gap-2 rounded-sm border border-white/15 px-3 py-2 text-sm font-bold text-white hover:bg-white/10">
             <Search size={16} />
             {t.search}
           </button>
-          <button onClick={onSettingsClick} className="inline-flex items-center gap-2 rounded border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
+          <button onClick={onSettingsClick} className="inline-flex items-center gap-2 rounded-sm border border-white/15 px-3 py-2 text-sm font-bold text-white hover:bg-white/10">
             <Settings size={16} />
             <span>{settings?.language?.toUpperCase() || "AZ"}</span>
           </button>
@@ -1213,10 +1213,10 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
             </div>
           ) : (
             <>
-              <button onClick={onLoginClick} className="inline-flex items-center gap-2 rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
+              <button onClick={onLoginClick} className="inline-flex items-center gap-2 rounded-sm border border-white/15 px-3 py-2 text-sm font-black text-white hover:bg-white/10">
                 {t.login}
               </button>
-              <button onClick={onRegisterClick} className="inline-flex items-center gap-2 rounded bg-blood px-4 py-2 text-sm font-black text-white shadow-red hover:bg-ember">
+              <button onClick={onRegisterClick} className="inline-flex items-center gap-2 rounded-sm bg-blood px-3 py-2 text-sm font-black text-white shadow-red hover:bg-ember">
                 {t.joinFightId}
                 <ArrowRight size={16} />
               </button>
@@ -1349,34 +1349,41 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
 
 function FighterCard({ fighter, onOpen }) {
   return (
-    <article className="group overflow-hidden rounded border border-white/10 bg-panel">
+    <article className="group overflow-hidden rounded-sm border border-zinc-800 bg-[#101113] shadow-[0_18px_45px_rgba(0,0,0,0.22)] transition hover:border-blood/50">
       <button onClick={() => onOpen?.(fighter.id)} className="block w-full text-left">
-        <div className="relative h-64 overflow-hidden">
-          <img src={fighter.image} alt={fighter.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-          <div className="absolute left-4 top-4 flex gap-2">
-            <Badge tone={fighter.status === "Pro" ? "red" : "dark"}>{fighter.status}</Badge>
-            <Badge tone="light">#{fighter.rank}</Badge>
+        <div className="flex gap-4 border-b border-zinc-800 p-4">
+          <div className="relative h-28 w-24 shrink-0 overflow-hidden rounded-sm border border-zinc-700 bg-black sm:h-32 sm:w-28">
+            <img src={fighter.image} alt={fighter.name} className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105" />
+            <div className="absolute inset-x-0 bottom-0 bg-blood/90 py-1 text-center text-[10px] font-black uppercase tracking-[0.16em] text-white">
+              #{fighter.rank}
+            </div>
           </div>
-          <div className="absolute bottom-4 left-4 right-4">
-            <div className="text-sm font-semibold text-zinc-300">{fighter.countryCode} | {fighter.country} | {fighter.weightClass}</div>
-            <h3 className="mt-1 font-display text-2xl font-black text-white">{fighter.name}</h3>
-            <p className="text-sm text-zinc-400">"{fighter.nickname}"</p>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={fighter.status === "Pro" ? "red" : "dark"}>{fighter.status}</Badge>
+              <span className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">{fighter.countryCode} / {fighter.weightClass}</span>
+            </div>
+            <h3 className="mt-3 truncate font-display text-2xl font-black text-white">{fighter.name}</h3>
+            <p className="mt-1 truncate text-sm font-semibold text-zinc-400">"{fighter.nickname}"</p>
+            <div className="mt-4 grid grid-cols-3 divide-x divide-zinc-800 rounded-sm border border-zinc-800 bg-black/25">
+              <div className="px-3 py-2">
+                <div className="text-lg font-black text-white">{fighter.record}</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Record</div>
+              </div>
+              <div className="px-3 py-2">
+                <div className="text-lg font-black text-white">{fighter.points}</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Points</div>
+              </div>
+              <div className="px-3 py-2">
+                <div className="truncate text-lg font-black text-white">{fighter.gym}</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Gym</div>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="grid grid-cols-3 divide-x divide-white/10 border-t border-white/10">
-          <div className="p-4">
-            <div className="text-xl font-black text-white">{fighter.record}</div>
-            <div className="text-xs uppercase tracking-[0.16em] text-zinc-500">Record</div>
-          </div>
-          <div className="p-4">
-            <div className="text-xl font-black text-white">{fighter.points}</div>
-            <div className="text-xs uppercase tracking-[0.16em] text-zinc-500">Points</div>
-          </div>
-          <div className="p-4">
-            <div className="truncate text-xl font-black text-white">{fighter.gym}</div>
-            <div className="text-xs uppercase tracking-[0.16em] text-zinc-500">Gym</div>
-          </div>
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">{fighter.country}</span>
+          <span className="text-xs font-black uppercase tracking-[0.14em] text-red-100">View profile</span>
         </div>
       </button>
     </article>
@@ -1417,25 +1424,25 @@ function LandingPage({ setPage, openProfile }) {
 
   return (
     <main>
-      <section className="relative min-h-[92vh] overflow-hidden pt-24">
+      <section className="relative min-h-[88vh] overflow-hidden pt-24">
         <img src="/assets/hero-arena.png" alt="MMA arena walkout" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#07080a_0%,rgba(7,8,10,.88)_34%,rgba(7,8,10,.36)_72%,rgba(7,8,10,.82)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,#07080a_0%,rgba(7,8,10,.94)_37%,rgba(7,8,10,.58)_70%,rgba(7,8,10,.92)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-canvas to-transparent" />
 
-        <div className="relative mx-auto flex min-h-[calc(92vh-6rem)] max-w-7xl items-center px-4 py-12 sm:px-6 lg:px-8">
+        <div className="relative mx-auto grid min-h-[calc(88vh-6rem)] max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:px-8">
           <div className="w-full max-w-[calc(100vw-2rem)] sm:max-w-3xl">
-            <Badge tone="red">Verified MMA Fighter Platform</Badge>
-            <h1 className="mt-6 font-display text-5xl font-black leading-[0.96] text-white sm:text-7xl lg:text-8xl">FightID</h1>
+            <Badge tone="red">MMA fighter database</Badge>
+            <h1 className="mt-6 font-display text-5xl font-black leading-[0.96] text-white sm:text-7xl lg:text-8xl">Records. Rankings. Real matchups.</h1>
             <p className="mt-6 max-w-[calc(100vw-2rem)] break-words text-lg leading-8 text-zinc-300 sm:max-w-2xl sm:text-xl">
-              Build a verified fighter identity, track real fight history, climb weight-class rankings, and challenge matched opponents through a confirmation-first fight system.
+              FightID is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and direct challenge tools for real matchmaking.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button onClick={() => setPage("Fighters")} className="inline-flex w-full items-center justify-center gap-2 rounded bg-blood px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-ember sm:w-auto">
-                View Fighters
+              <button onClick={() => setPage("Fighters")} className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-blood px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-ember sm:w-auto">
+                Search Database
                 <ChevronRight size={18} />
               </button>
-              <button onClick={() => setPage("Rankings")} className="inline-flex w-full items-center justify-center gap-2 rounded border border-white/15 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white/10 sm:w-auto">
-                Live Rankings
+              <button onClick={() => setPage("Rankings")} className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-white/15 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white/10 sm:w-auto">
+                Rankings
               </button>
             </div>
             <div className="mt-10 grid max-w-2xl grid-cols-3 gap-2 sm:gap-4">
@@ -1445,9 +1452,35 @@ function LandingPage({ setPage, openProfile }) {
             </div>
             <div className="mt-8 flex max-w-3xl flex-wrap gap-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-300">
               {["Verified records", "Challenge-ready profiles", "Live rankings", "Federation review"].map((item) => (
-                <span key={item} className="rounded-full border border-white/10 bg-black/30 px-3 py-2 backdrop-blur">
+                <span key={item} className="rounded-sm border border-white/10 bg-black/30 px-3 py-2 backdrop-blur">
                   {item}
                 </span>
+              ))}
+            </div>
+          </div>
+          <div className="hidden rounded-sm border border-zinc-800 bg-[#101113]/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur lg:block">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Database snapshot</div>
+                <h2 className="mt-1 font-display text-2xl font-black text-white">Top ranked fighters</h2>
+              </div>
+              <button onClick={() => setPage("Rankings")} className="rounded-sm border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-white hover:bg-white/10">
+                Full table
+              </button>
+            </div>
+            <div className="mt-3 divide-y divide-zinc-800">
+              {(fighters.length ? fighters : fallbackFeaturedFighters).slice(0, 5).map((fighter, index) => (
+                <button key={fighter.id} onClick={() => openProfile?.(fighter.id)} className="grid w-full grid-cols-[3rem_1fr_auto] items-center gap-3 py-3 text-left hover:bg-white/[0.03]">
+                  <div className="text-center font-display text-2xl font-black text-zinc-500">#{fighter.rank || index + 1}</div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-black text-white">{fighter.name}</div>
+                    <div className="mt-1 truncate text-xs font-bold uppercase tracking-[0.12em] text-zinc-500">{fighter.countryCode || fighter.country} / {fighter.weightClass}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-black text-white">{fighter.record}</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.12em] text-blood">{fighter.points} pts</div>
+                  </div>
+                </button>
               ))}
             </div>
           </div>
@@ -1462,7 +1495,7 @@ function LandingPage({ setPage, openProfile }) {
             [Gauge, "Weighted rankings", "Opponent rank, activity, and status influence weekly leaderboard movement."],
             [Bell, "Fight notifications", "Challenge and ranking changes trigger in-app and email-ready events."],
           ].map(([Icon, title, text]) => (
-            <div key={title} className="rounded border border-white/10 bg-panel p-5">
+            <div key={title} className="rounded-sm border border-zinc-800 bg-[#101113] p-5">
               <Icon className="text-blood" size={24} />
               <h3 className="mt-4 font-display text-lg font-bold text-white">{title}</h3>
               <p className="mt-2 text-sm leading-6 text-zinc-400">{text}</p>
@@ -1474,10 +1507,10 @@ function LandingPage({ setPage, openProfile }) {
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <Badge>Live top fighters</Badge>
+            <Badge>Fighter index</Badge>
             <h2 className="mt-4 font-display text-3xl font-black text-white sm:text-5xl">Ranked identities, real records.</h2>
           </div>
-          <button onClick={() => setPage("Rankings")} className="inline-flex w-fit items-center gap-2 rounded border border-white/15 px-4 py-3 text-sm font-bold text-white hover:bg-white/10">
+          <button onClick={() => setPage("Rankings")} className="inline-flex w-fit items-center gap-2 rounded-sm border border-white/15 px-4 py-3 text-sm font-bold text-white hover:bg-white/10">
             Full leaderboard
             <ArrowRight size={16} />
           </button>
@@ -1516,7 +1549,10 @@ function FightersPage({ openProfile }) {
         setFighters((result.data || []).map(normalizeCardFighter));
       })
       .catch((caught) => {
-        if (caught.name !== "AbortError") setError(caught.message);
+        if (caught.name !== "AbortError") {
+          setFighters(fallbackFeaturedFighters);
+          setError(caught.message);
+        }
       })
       .finally(() => setLoading(false));
 
@@ -1525,29 +1561,44 @@ function FightersPage({ openProfile }) {
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="border-b border-zinc-800 pb-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Badge tone="red">Live fighter database</Badge>
-          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Fighter List</h1>
+          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Fighter Database</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
+            Search records, gyms, countries, points and profile status in one compact combat-sports index.
+          </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by name, nickname, or gym"
-            className="rounded border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white outline-none placeholder:text-zinc-500 focus:border-blood"
+            className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none placeholder:text-zinc-500 focus:border-blood"
           />
-          <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded border border-white/10 bg-canvas px-4 py-3 text-sm font-semibold text-white outline-none focus:border-blood">
+          <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none focus:border-blood">
             <option value="">All roles</option>
             <option value="PRO">Pro</option>
             <option value="AMATEUR">Amateur</option>
           </select>
         </div>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-3 text-xs font-black uppercase tracking-[0.14em] text-zinc-500 sm:grid-cols-4">
+          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Verified profiles</div>
+          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Amateur records</div>
+          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Country ranks</div>
+          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Gym links</div>
+        </div>
       </div>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
         {loading && <div className="md:col-span-2 xl:col-span-3"><LoadingPanel label="Fetching fighters from /api/fighters" /></div>}
-        {error && <div className="md:col-span-2 xl:col-span-3"><ErrorPanel message={error} /></div>}
+        {error && (
+          <div className="lg:col-span-2 rounded-sm border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold text-zinc-300">
+            Live sync is reconnecting. Showing a polished preview while the fighter database comes back online.
+          </div>
+        )}
         {!loading && !error && fighters.length === 0 && <div className="md:col-span-2 xl:col-span-3"><LoadingPanel label="No fighters matched this filter" /></div>}
         {fighters.map((fighter) => (
           <FighterCard key={fighter.id} fighter={fighter} onOpen={openProfile} />

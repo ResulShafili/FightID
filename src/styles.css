@@ -22,9 +22,12 @@ body {
 
 body::before {
   background:
-    radial-gradient(circle at 18% 16%, rgba(220, 31, 38, 0.16), transparent 30%),
-    radial-gradient(circle at 84% 24%, rgba(255, 255, 255, 0.06), transparent 26%),
-    linear-gradient(180deg, rgba(7, 8, 10, 0.92), rgba(7, 8, 10, 0.98));
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at 18% 16%, rgba(220, 31, 38, 0.10), transparent 30%),
+    radial-gradient(circle at 84% 24%, rgba(255, 255, 255, 0.045), transparent 26%),
+    linear-gradient(180deg, rgba(7, 8, 10, 0.94), rgba(7, 8, 10, 0.99));
+  background-size: 48px 48px, 48px 48px, auto, auto, auto;
   content: "";
   inset: 0;
   opacity: 1;
@@ -73,6 +76,10 @@ button {
 ::selection {
   background: #e11d2e;
   color: white;
+}
+
+.font-display {
+  letter-spacing: 0;
 }
 
 ::-webkit-scrollbar {

@@ -1588,10 +1588,128 @@ function HeadToHead() {
   const [fighters, setFighters] = useState([]);
   const [left, setLeft] = useState(null);
   const [right, setRight] = useState(null);
-  useEffect(() => { const timer = window.setTimeout(() => fighterApi.list({ search: query, limit: 10 }).then((r) => setFighters(r.data || [])).catch(() => setFighters([])), 300); return () => window.clearTimeout(timer); }, [query]);
-  const selectFighter = async (id) => (left ? setRight(await fighterApi.get(id)) : setLeft(await fighterApi.get(id)));
+  const [activeSlot, setActiveSlot] = useState("left");
+  const [loadingPick, setLoadingPick] = useState("");
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      fighterApi
+        .list({ search: query, limit: 10 })
+        .then((r) => setFighters(r.data || []))
+        .catch(() => setFighters([]));
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  const selectFighter = async (id) => {
+    setLoadingPick(id);
+    try {
+      const selected = await fighterApi.get(id);
+      if (activeSlot === "left") {
+        setLeft(selected);
+        setActiveSlot("right");
+      } else {
+        setRight(selected);
+        setActiveSlot("left");
+      }
+      setQuery("");
+      setFighters([]);
+    } finally {
+      setLoadingPick("");
+    }
+  };
+
+  const clearSlot = (slot) => {
+    if (slot === "left") setLeft(null);
+    else setRight(null);
+    setActiveSlot(slot);
+  };
+
   const rows = left && right ? [["Record", recordFromStats(left.stats), recordFromStats(right.stats)], ["Points", left.points, right.points], ["KO/TKO wins", left.stats?.methods?.KO_TKO || 0, right.stats?.methods?.KO_TKO || 0], ["Submission wins", left.stats?.methods?.SUBMISSION || 0, right.stats?.methods?.SUBMISSION || 0], ["Decision wins", left.stats?.methods?.DECISION || 0, right.stats?.methods?.DECISION || 0], ["Weight class", formatWeightClass(left.weightClass), formatWeightClass(right.weightClass)], ["Status", getStatus(left), getStatus(right)], ["Country", left.country, right.country]] : [];
-  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Head to Head</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Compare Fighters</h1><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fighters" className="mt-8 w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" /><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{fighters.map((fighter) => <button key={fighter.id} onClick={() => selectFighter(fighter.id)} className="rounded border border-white/10 bg-[#111113] p-3 text-left text-white">{fighter.fullName}</button>)}</div><div className="mt-8 grid gap-5 md:grid-cols-2">{[left, right].map((fighter, index) => <div key={index} className="rounded border border-white/10 bg-[#111113] p-5">{fighter ? <><img src={getFighterImage(fighter.profilePhotoUrl)} className="h-64 w-full rounded object-cover" /><h2 className="mt-4 font-display text-3xl font-black text-white">{fighter.fullName}</h2></> : <p className="text-zinc-400">Select fighter {index + 1}</p>}</div>)}</div>{rows.length > 0 && <div className="mt-8 rounded border border-white/10 bg-[#111113] p-5">{rows.map(([label, l, r]) => <div key={label} className="grid grid-cols-3 border-b border-white/10 py-3 text-center text-white"><span>{l}</span><b>{label}</b><span>{r}</span></div>)}</div>}</main>;
+
+  const slots = [
+    { key: "left", label: "Fighter 1", fighter: left },
+    { key: "right", label: "Fighter 2", fighter: right },
+  ];
+
+  return (
+    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+      <Badge tone="red">Head to Head</Badge>
+      <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Compare Fighters</h1>
+      <p className="mt-3 max-w-2xl text-zinc-400">Tap Fighter 1 or Fighter 2, search, then choose a fighter for that slot.</p>
+
+      <div className="mt-8 grid gap-5 md:grid-cols-2">
+        {slots.map((slot) => (
+          <button
+            key={slot.key}
+            onClick={() => setActiveSlot(slot.key)}
+            className={`rounded border p-5 text-left transition ${
+              activeSlot === slot.key ? "border-blood bg-blood/10 shadow-red" : "border-white/10 bg-[#111113] hover:bg-white/10"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <Badge tone={activeSlot === slot.key ? "red" : "dark"}>{slot.label}</Badge>
+              {slot.fighter && (
+                <span
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    clearSlot(slot.key);
+                  }}
+                  className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10"
+                >
+                  Clear
+                </span>
+              )}
+            </div>
+            {slot.fighter ? (
+              <>
+                <img src={getFighterImage(slot.fighter.profilePhotoUrl)} className="mt-5 h-64 w-full rounded object-cover" />
+                <h2 className="mt-4 font-display text-3xl font-black text-white">{slot.fighter.fullName}</h2>
+                <p className="mt-1 text-sm text-zinc-400">{recordFromStats(slot.fighter.stats)} · {formatWeightClass(slot.fighter.weightClass)}</p>
+              </>
+            ) : (
+              <div className="mt-5 grid h-64 place-items-center rounded border border-dashed border-white/15 bg-white/[0.03] text-center text-zinc-400">
+                Select {slot.label}
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-8 rounded border border-white/10 bg-[#111113] p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-display text-2xl font-black text-white">Choose for {activeSlot === "left" ? "Fighter 1" : "Fighter 2"}</h2>
+            <p className="mt-1 text-sm text-zinc-400">Search by name, nickname, gym, or country.</p>
+          </div>
+          <button onClick={() => setActiveSlot(activeSlot === "left" ? "right" : "left")} className="rounded border border-white/15 px-4 py-3 text-sm font-black text-white hover:bg-white/10">
+            Switch slot
+          </button>
+        </div>
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fighters" className="mt-5 w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-blood" />
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {fighters.map((fighter) => (
+            <button key={fighter.id} disabled={loadingPick === fighter.id} onClick={() => selectFighter(fighter.id)} className="rounded border border-white/10 bg-white/[0.03] p-3 text-left text-white hover:bg-white/10 disabled:opacity-60">
+              <span className="block font-black">{fighter.fullName}</span>
+              <span className="mt-1 block text-xs text-zinc-500">{formatWeightClass(fighter.weightClass)} · {fighter.country}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {rows.length > 0 && (
+        <div className="mt-8 rounded border border-white/10 bg-[#111113] p-5">
+          {rows.map(([label, l, r]) => (
+            <div key={label} className="grid grid-cols-3 border-b border-white/10 py-3 text-center text-white">
+              <span>{l}</span>
+              <b>{label}</b>
+              <span>{r}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </main>
+  );
 }
 
 function FightSeekBoard() {
@@ -2276,6 +2394,8 @@ function PlaceholderPage({ title, icon: Icon }) {
 export default function App() {
   const [page, setPage] = useState("Home");
   const [selectedFighterId, setSelectedFighterId] = useState(null);
+  const historyReadyRef = useRef(false);
+  const handlingPopRef = useRef(false);
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem(userStorageKey);
     if (!stored) return null;
@@ -2394,6 +2514,34 @@ export default function App() {
     document.body.classList.toggle("fightid-home", page === "Home");
     return () => document.body.classList.remove("fightid-home");
   }, [page]);
+
+  useEffect(() => {
+    window.history.replaceState({ fightid: true, page, selectedFighterId }, "", window.location.href);
+    historyReadyRef.current = true;
+
+    const handlePopState = (event) => {
+      const state = event.state;
+      if (!state?.fightid) return;
+      handlingPopRef.current = true;
+      setPage(state.page || "Home");
+      setSelectedFighterId(state.selectedFighterId || null);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (!historyReadyRef.current) return;
+    if (handlingPopRef.current) {
+      handlingPopRef.current = false;
+      return;
+    }
+
+    const currentState = window.history.state;
+    if (currentState?.fightid && currentState.page === page && currentState.selectedFighterId === selectedFighterId) return;
+    window.history.pushState({ fightid: true, page, selectedFighterId }, "", window.location.href);
+  }, [page, selectedFighterId]);
 
   const openProfile = (fighterId) => {
     setSelectedFighterId(fighterId);

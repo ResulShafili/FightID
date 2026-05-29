@@ -1633,21 +1633,21 @@ function HeadToHead() {
   ];
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
+    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-28 sm:px-6 sm:pt-32 lg:px-8">
       <Badge tone="red">Head to Head</Badge>
-      <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Compare Fighters</h1>
-      <p className="mt-3 max-w-2xl text-zinc-400">Tap Fighter 1 or Fighter 2, search, then choose a fighter for that slot.</p>
+      <h1 className="mt-4 font-display text-3xl font-black text-white sm:text-6xl">Compare Fighters</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400 sm:mt-3 sm:text-base">Tap a slot, search, then choose a fighter.</p>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2">
+      <div className="mt-5 grid grid-cols-2 gap-3 md:mt-8 md:gap-5">
         {slots.map((slot) => (
           <button
             key={slot.key}
             onClick={() => setActiveSlot(slot.key)}
-            className={`rounded border p-5 text-left transition ${
+            className={`rounded border p-3 text-left transition sm:p-5 ${
               activeSlot === slot.key ? "border-blood bg-blood/10 shadow-red" : "border-white/10 bg-[#111113] hover:bg-white/10"
             }`}
           >
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-2">
               <Badge tone={activeSlot === slot.key ? "red" : "dark"}>{slot.label}</Badge>
               {slot.fighter && (
                 <span
@@ -1655,7 +1655,7 @@ function HeadToHead() {
                     event.stopPropagation();
                     clearSlot(slot.key);
                   }}
-                  className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10"
+                  className="rounded border border-white/15 px-2 py-1 text-[10px] font-black text-white hover:bg-white/10 sm:px-3 sm:py-2 sm:text-xs"
                 >
                   Clear
                 </span>
@@ -1663,12 +1663,12 @@ function HeadToHead() {
             </div>
             {slot.fighter ? (
               <>
-                <img src={getFighterImage(slot.fighter.profilePhotoUrl)} className="mt-5 h-64 w-full rounded object-cover" />
-                <h2 className="mt-4 font-display text-3xl font-black text-white">{slot.fighter.fullName}</h2>
-                <p className="mt-1 text-sm text-zinc-400">{recordFromStats(slot.fighter.stats)} · {formatWeightClass(slot.fighter.weightClass)}</p>
+                <img src={getFighterImage(slot.fighter.profilePhotoUrl)} className="mt-3 h-28 w-full rounded object-cover sm:mt-5 sm:h-64" />
+                <h2 className="mt-3 line-clamp-2 font-display text-lg font-black leading-tight text-white sm:mt-4 sm:text-3xl">{slot.fighter.fullName}</h2>
+                <p className="mt-1 text-xs text-zinc-400 sm:text-sm">{recordFromStats(slot.fighter.stats)} / {formatWeightClass(slot.fighter.weightClass)}</p>
               </>
             ) : (
-              <div className="mt-5 grid h-64 place-items-center rounded border border-dashed border-white/15 bg-white/[0.03] text-center text-zinc-400">
+              <div className="mt-3 grid h-28 place-items-center rounded border border-dashed border-white/15 bg-white/[0.03] px-2 text-center text-sm text-zinc-400 sm:mt-5 sm:h-64 sm:text-base">
                 Select {slot.label}
               </div>
             )}
@@ -1676,31 +1676,31 @@ function HeadToHead() {
         ))}
       </div>
 
-      <div className="mt-8 rounded border border-white/10 bg-[#111113] p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-5 rounded border border-white/10 bg-[#111113] p-4 sm:mt-8 sm:p-5">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="font-display text-2xl font-black text-white">Choose for {activeSlot === "left" ? "Fighter 1" : "Fighter 2"}</h2>
-            <p className="mt-1 text-sm text-zinc-400">Search by name, nickname, gym, or country.</p>
+            <h2 className="font-display text-xl font-black text-white sm:text-2xl">Choose {activeSlot === "left" ? "Fighter 1" : "Fighter 2"}</h2>
+            <p className="mt-1 hidden text-sm text-zinc-400 sm:block">Search by name, nickname, gym, or country.</p>
           </div>
-          <button onClick={() => setActiveSlot(activeSlot === "left" ? "right" : "left")} className="rounded border border-white/15 px-4 py-3 text-sm font-black text-white hover:bg-white/10">
-            Switch slot
+          <button onClick={() => setActiveSlot(activeSlot === "left" ? "right" : "left")} className="shrink-0 rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 sm:px-4 sm:py-3 sm:text-sm">
+            Switch
           </button>
         </div>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fighters" className="mt-5 w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-blood" />
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fighters" className="mt-4 w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-blood sm:mt-5" />
+        <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto pr-1 sm:mt-4 sm:grid-cols-2 sm:gap-3 sm:overflow-visible lg:grid-cols-5">
           {fighters.map((fighter) => (
             <button key={fighter.id} disabled={loadingPick === fighter.id} onClick={() => selectFighter(fighter.id)} className="rounded border border-white/10 bg-white/[0.03] p-3 text-left text-white hover:bg-white/10 disabled:opacity-60">
               <span className="block font-black">{fighter.fullName}</span>
-              <span className="mt-1 block text-xs text-zinc-500">{formatWeightClass(fighter.weightClass)} · {fighter.country}</span>
+              <span className="mt-1 block text-xs text-zinc-500">{formatWeightClass(fighter.weightClass)} / {fighter.country}</span>
             </button>
           ))}
         </div>
       </div>
 
       {rows.length > 0 && (
-        <div className="mt-8 rounded border border-white/10 bg-[#111113] p-5">
+        <div className="mt-5 rounded border border-white/10 bg-[#111113] p-4 sm:mt-8 sm:p-5">
           {rows.map(([label, l, r]) => (
-            <div key={label} className="grid grid-cols-3 border-b border-white/10 py-3 text-center text-white">
+            <div key={label} className="grid grid-cols-3 border-b border-white/10 py-3 text-center text-sm text-white sm:text-base">
               <span>{l}</span>
               <b>{label}</b>
               <span>{r}</span>
@@ -1711,7 +1711,6 @@ function HeadToHead() {
     </main>
   );
 }
-
 function FightSeekBoard() {
   return <SimpleFeaturePage title="Fight Board" badge="Fight Wanted" loader={() => seekApi.list({ limit: 30 })} empty="No fight listings for this weight class yet. Be the first to post." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><h3 className="font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><p className="mt-2 text-zinc-400">{formatWeightClass(item.weightClass)} · {formatResult(item.ruleSet)} · {item.location}</p><p className="mt-3 text-sm text-zinc-500">{item.message}</p></div>} />;
 }
@@ -2616,4 +2615,5 @@ export default function App() {
     </div>
   );
 }
+
 

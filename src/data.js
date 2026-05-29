@@ -12,7 +12,7 @@ export const topFighters = [
     status: "Pro",
     federation: "AMMAF",
     streak: "W4",
-    image: "/assets/fighter-portrait.png",
+    image: "/assets/fightid-logo.svg",
   },
   {
     id: "marco-santos",
@@ -27,7 +27,7 @@ export const topFighters = [
     status: "Pro",
     federation: "CBMMA",
     streak: "W6",
-    image: "/assets/fighter-portrait.png",
+    image: "/assets/fightid-logo.svg",
   },
   {
     id: "elias-kane",
@@ -42,7 +42,7 @@ export const topFighters = [
     status: "Amateur",
     federation: null,
     streak: "W2",
-    image: "/assets/fighter-portrait.png",
+    image: "/assets/fightid-logo.svg",
   },
 ];
 
@@ -77,7 +77,7 @@ export const profile = {
   points: 1840,
   countryRank: 1,
   weightRank: 4,
-  image: "/assets/fighter-portrait.png",
+  image: "/assets/fightid-logo.svg",
   cover: "/assets/hero-arena.png",
   bio: "Pressure striker with a southpaw switch, active cage wrestling, and a verified federation record dating back to 2021.",
   socials: {

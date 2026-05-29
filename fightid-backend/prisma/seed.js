@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const profilePhotoUrl = "https://thispersondoesnotexist.com/";
+const profilePhotoUrl = "/assets/fightid-logo.svg";
 const coverPhotoUrl = "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=1600&q=80";
 
 const federationSeeds = [

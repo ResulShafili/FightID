@@ -62,7 +62,8 @@ const navGroups = [
     items: ["Federation"],
   },
 ];
-const fallbackPortrait = "/assets/fighter-portrait.png";
+const fightIdLogo = "/assets/fightid-logo.svg";
+const fallbackPortrait = fightIdLogo;
 const fallbackCover = "/assets/hero-arena.png";
 const fallbackFeaturedFighters = [
   { id: "fallback-resad", name: "Rəşad Məmmədov", nickname: "Qartal", country: "Azerbaijan", countryCode: "AZ", weightClass: "Lightweight", record: "8-1-0", points: 1420, rank: 1, status: "Pro", gym: "Bakı Combat Club", image: fallbackPortrait },
@@ -240,6 +241,11 @@ const notificationApi = {
   markAllRead: () => apiRequest("/notifications/read-all", { method: "PUT" }),
 };
 
+function getFighterImage(url) {
+  if (!url || url.includes("thispersondoesnotexist.com") || url.includes("fighter-portrait.png")) return fightIdLogo;
+  return url;
+}
+
 const countryNames = {
   AZ: "Azerbaijan",
   BR: "Brazil",
@@ -304,7 +310,7 @@ function normalizeCardFighter(fighter, index = 0) {
     status: getStatus(fighter),
     federation: fighter.verifiedByFederation?.name || null,
     gym: fighter.gym || "Independent",
-    image: fighter.profilePhotoUrl || fallbackPortrait,
+    image: getFighterImage(fighter.profilePhotoUrl),
   };
 }
 
@@ -866,6 +872,15 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!open) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   const toggleNotifications = async () => {
     const nextOpen = !notificationsOpen;
     setNotificationsOpen(nextOpen);
@@ -945,7 +960,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
           <span className="grid h-10 w-10 place-items-center rounded bg-blood text-lg font-black text-white shadow-red">F</span>
           <span>
             <span className="block font-display text-lg font-black uppercase text-white">FightID</span>
-            <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Verified Combat Network</span>
+            <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500 max-[420px]:hidden">Verified Combat Network</span>
           </span>
         </button>
 
@@ -1043,6 +1058,13 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
               {t.login}
             </button>
           )}
+          <button
+            onClick={onSettingsClick}
+            className="rounded border border-white/15 p-2 text-white hover:bg-white/10"
+            aria-label="Open settings"
+          >
+            <Settings size={18} />
+          </button>
           <button className="rounded border border-white/15 p-2 text-white lg:hidden" onClick={() => setOpen(!open)} aria-label="Toggle navigation">
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -1050,7 +1072,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
       </div>
 
       {open && (
-        <div className="border-t border-white/10 bg-canvas px-4 py-3 lg:hidden">
+        <div className="fixed inset-x-0 top-[73px] max-h-[calc(100vh-73px)] overflow-y-auto overscroll-contain border-t border-white/10 bg-canvas/95 px-4 py-3 shadow-red backdrop-blur-xl lg:hidden">
           {navGroups.map((group) => (
             <div key={group.label} className="py-1">
               {group.page ? (
@@ -1554,11 +1576,11 @@ function SimpleFeaturePage({ title, badge, loader, renderItem, empty = "Nothing 
 }
 
 function MyCollectionPage({ user, onLoginClick }) {
-  return <SimpleFeaturePage title="My Collection" badge="Fighter Cards" user={user} loginRequired onLoginClick={onLoginClick} loader={cardApi.myCollection} empty="No cards yet. Explore fighters and collect your first card." renderItem={(item) => <div key={item.id} className="rounded border border-yellow-400/30 bg-[#111113] p-5"><img src={item.card.fighter.profilePhotoUrl || fallbackPortrait} className="h-52 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{item.card.fighter.fullName}</h3><Badge tone="red">{item.card.tier}</Badge></div>} />;
+  return <SimpleFeaturePage title="My Collection" badge="Fighter Cards" user={user} loginRequired onLoginClick={onLoginClick} loader={cardApi.myCollection} empty="No cards yet. Explore fighters and collect your first card." renderItem={(item) => <div key={item.id} className="rounded border border-yellow-400/30 bg-[#111113] p-5"><img src={getFighterImage(item.card.fighter.profilePhotoUrl)} className="h-52 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{item.card.fighter.fullName}</h3><Badge tone="red">{item.card.tier}</Badge></div>} />;
 }
 
 function MyFightersPage({ user, onLoginClick }) {
-  return <SimpleFeaturePage title="My Fighters" badge="Corner Men" user={user} loginRequired onLoginClick={onLoginClick} loader={cornerManApi.myFighters} empty="You are not cornering any fighters yet." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><img src={item.fighter.profilePhotoUrl || fallbackPortrait} className="h-48 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><button onClick={() => cornerManApi.remove(item.fighter.id)} className="mt-4 rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Remove Corner</button></div>} />;
+  return <SimpleFeaturePage title="My Fighters" badge="Corner Men" user={user} loginRequired onLoginClick={onLoginClick} loader={cornerManApi.myFighters} empty="You are not cornering any fighters yet." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><img src={getFighterImage(item.fighter.profilePhotoUrl)} className="h-48 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><button onClick={() => cornerManApi.remove(item.fighter.id)} className="mt-4 rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Remove Corner</button></div>} />;
 }
 
 function HeadToHead() {
@@ -1569,7 +1591,7 @@ function HeadToHead() {
   useEffect(() => { const timer = window.setTimeout(() => fighterApi.list({ search: query, limit: 10 }).then((r) => setFighters(r.data || [])).catch(() => setFighters([])), 300); return () => window.clearTimeout(timer); }, [query]);
   const selectFighter = async (id) => (left ? setRight(await fighterApi.get(id)) : setLeft(await fighterApi.get(id)));
   const rows = left && right ? [["Record", recordFromStats(left.stats), recordFromStats(right.stats)], ["Points", left.points, right.points], ["KO/TKO wins", left.stats?.methods?.KO_TKO || 0, right.stats?.methods?.KO_TKO || 0], ["Submission wins", left.stats?.methods?.SUBMISSION || 0, right.stats?.methods?.SUBMISSION || 0], ["Decision wins", left.stats?.methods?.DECISION || 0, right.stats?.methods?.DECISION || 0], ["Weight class", formatWeightClass(left.weightClass), formatWeightClass(right.weightClass)], ["Status", getStatus(left), getStatus(right)], ["Country", left.country, right.country]] : [];
-  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Head to Head</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Compare Fighters</h1><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fighters" className="mt-8 w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" /><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{fighters.map((fighter) => <button key={fighter.id} onClick={() => selectFighter(fighter.id)} className="rounded border border-white/10 bg-[#111113] p-3 text-left text-white">{fighter.fullName}</button>)}</div><div className="mt-8 grid gap-5 md:grid-cols-2">{[left, right].map((fighter, index) => <div key={index} className="rounded border border-white/10 bg-[#111113] p-5">{fighter ? <><img src={fighter.profilePhotoUrl || fallbackPortrait} className="h-64 w-full rounded object-cover" /><h2 className="mt-4 font-display text-3xl font-black text-white">{fighter.fullName}</h2></> : <p className="text-zinc-400">Select fighter {index + 1}</p>}</div>)}</div>{rows.length > 0 && <div className="mt-8 rounded border border-white/10 bg-[#111113] p-5">{rows.map(([label, l, r]) => <div key={label} className="grid grid-cols-3 border-b border-white/10 py-3 text-center text-white"><span>{l}</span><b>{label}</b><span>{r}</span></div>)}</div>}</main>;
+  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Head to Head</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Compare Fighters</h1><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fighters" className="mt-8 w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" /><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{fighters.map((fighter) => <button key={fighter.id} onClick={() => selectFighter(fighter.id)} className="rounded border border-white/10 bg-[#111113] p-3 text-left text-white">{fighter.fullName}</button>)}</div><div className="mt-8 grid gap-5 md:grid-cols-2">{[left, right].map((fighter, index) => <div key={index} className="rounded border border-white/10 bg-[#111113] p-5">{fighter ? <><img src={getFighterImage(fighter.profilePhotoUrl)} className="h-64 w-full rounded object-cover" /><h2 className="mt-4 font-display text-3xl font-black text-white">{fighter.fullName}</h2></> : <p className="text-zinc-400">Select fighter {index + 1}</p>}</div>)}</div>{rows.length > 0 && <div className="mt-8 rounded border border-white/10 bg-[#111113] p-5">{rows.map(([label, l, r]) => <div key={label} className="grid grid-cols-3 border-b border-white/10 py-3 text-center text-white"><span>{l}</span><b>{label}</b><span>{r}</span></div>)}</div>}</main>;
 }
 
 function FightSeekBoard() {
@@ -1577,7 +1599,7 @@ function FightSeekBoard() {
 }
 
 function SparringFinder() {
-  return <SimpleFeaturePage title="Sparring Finder" badge="Sparring" loader={() => fighterApi.list({ seekingSparring: "true", limit: 30 })} empty="No fighters are looking for sparring right now." renderItem={(fighter) => <div key={fighter.id} className="rounded border border-white/10 bg-[#111113] p-5"><img src={fighter.profilePhotoUrl || fallbackPortrait} className="h-48 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{fighter.fullName}</h3><p className="mt-2 text-zinc-400">{fighter.sparringLocation || fighter.country}</p><p className="mt-2 text-sm text-emerald-300">Seeking sparring partner</p></div>} />;
+  return <SimpleFeaturePage title="Sparring Finder" badge="Sparring" loader={() => fighterApi.list({ seekingSparring: "true", limit: 30 })} empty="No fighters are looking for sparring right now." renderItem={(fighter) => <div key={fighter.id} className="rounded border border-white/10 bg-[#111113] p-5"><img src={getFighterImage(fighter.profilePhotoUrl)} className="h-48 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{fighter.fullName}</h3><p className="mt-2 text-zinc-400">{fighter.sparringLocation || fighter.country}</p><p className="mt-2 text-sm text-emerald-300">Seeking sparring partner</p></div>} />;
 }
 
 function TournamentHub() {
@@ -1591,7 +1613,7 @@ function GymHub() {
 
 function MicCheckFeed({ user }) {
   const emojis = ["🔥", "💀", "😂", "🥶", "👊"];
-  return <SimpleFeaturePage title="Mic Check 🎤" badge="Fight Talk" loader={micCheckApi.feed} empty="No Mic Checks yet." user={user} renderItem={(item) => <div key={item.id} className="rounded border border-blood/30 bg-[#111113] p-5"><div className="flex gap-4"><img src={item.fighter.profilePhotoUrl || fallbackPortrait} className="h-20 w-20 rounded object-cover" /><div><h3 className="font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><p className="text-zinc-400">{formatWeightClass(item.challenge.weightClass)} · {formatResult(item.challenge.ruleSet)}</p></div></div><p className="mt-5 text-2xl font-black italic text-white">"{item.message}"</p><div className="mt-5 flex gap-2">{emojis.map((emoji) => <button key={emoji} onClick={() => user && micCheckApi.react(item.id, emoji)} className="rounded border border-white/10 px-3 py-2 text-white">{emoji} {item.reactionCounts?.[emoji] || 0}</button>)}</div></div>} />;
+  return <SimpleFeaturePage title="Mic Check 🎤" badge="Fight Talk" loader={micCheckApi.feed} empty="No Mic Checks yet." user={user} renderItem={(item) => <div key={item.id} className="rounded border border-blood/30 bg-[#111113] p-5"><div className="flex gap-4"><img src={getFighterImage(item.fighter.profilePhotoUrl)} className="h-20 w-20 rounded object-cover" /><div><h3 className="font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><p className="text-zinc-400">{formatWeightClass(item.challenge.weightClass)} · {formatResult(item.challenge.ruleSet)}</p></div></div><p className="mt-5 text-2xl font-black italic text-white">"{item.message}"</p><div className="mt-5 flex gap-2">{emojis.map((emoji) => <button key={emoji} onClick={() => user && micCheckApi.react(item.id, emoji)} className="rounded border border-white/10 px-3 py-2 text-white">{emoji} {item.reactionCounts?.[emoji] || 0}</button>)}</div></div>} />;
 }
 
 function NationalChampions({ openProfile }) {
@@ -1761,7 +1783,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-canvas to-transparent" />
         <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8">
           <div className="overflow-hidden rounded border border-white/10 bg-panel shadow-red">
-            <img src={profile.profilePhotoUrl || fallbackPortrait} alt={profile.fullName} className="h-[410px] w-full object-cover" />
+            <img src={getFighterImage(profile.profilePhotoUrl)} alt={profile.fullName} className="h-[410px] w-full object-cover" />
           </div>
           <div className="flex flex-col justify-end pb-4">
             <div className="flex flex-wrap gap-3">
@@ -1926,7 +1948,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
               <div className="rounded border border-yellow-400/30 bg-panel p-5 shadow-red">
                 <Badge tone="red">{card.tier}</Badge>
                 <h2 className="mt-4 font-display text-xl font-black text-white">Collectible Fighter Card</h2>
-                <img src={profile.profilePhotoUrl || fallbackPortrait} alt={profile.fullName} className="mt-4 h-52 w-full rounded object-cover" />
+                <img src={getFighterImage(profile.profilePhotoUrl)} alt={profile.fullName} className="mt-4 h-52 w-full rounded object-cover" />
                 <button disabled={user?.fighterProfile?.id === profile.id} onClick={collectCard} className="mt-4 w-full rounded bg-[#dc1f26] px-5 py-3 font-black text-white disabled:opacity-60">
                   {user?.fighterProfile?.id === profile.id ? "Your Card" : "Collect"}
                 </button>
@@ -2298,8 +2320,8 @@ export default function App() {
         --fightid-border: ${palette.border};
       }
       body { background: var(--fightid-canvas) !important; color: var(--fightid-text) !important; }
-      .bg-canvas,
-      .bg-canvas\\/80 { background-color: var(--fightid-canvas) !important; }
+      .bg-canvas { background-color: var(--fightid-canvas) !important; }
+      .bg-canvas\\/80 { background-color: color-mix(in srgb, var(--fightid-canvas), transparent 20%) !important; }
       .bg-panel,
       .bg-\\[\\#111113\\],
       .bg-\\[\\#0a0a0b\\] { background-color: var(--fightid-panel) !important; }
@@ -2417,7 +2439,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-canvas text-bone">
+    <div className="min-h-screen overflow-x-hidden bg-canvas/80 text-bone">
       <AppHeader
         page={page}
         setPage={setPage}
@@ -2441,3 +2463,4 @@ export default function App() {
     </div>
   );
 }
+

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="FightID logo">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
+      <stop offset="0%" stop-color="#dc1f26" stop-opacity="0.5"/>
+      <stop offset="55%" stop-color="#111113" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#050506"/>
+    </radialGradient>
+    <linearGradient id="slash" x1="130" x2="670" y1="100" y2="720">
+      <stop offset="0%" stop-color="#ff4750"/>
+      <stop offset="100%" stop-color="#a50812"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#glow)"/>
+  <rect x="98" y="98" width="604" height="604" rx="92" fill="#0b0b0d" stroke="#dc1f26" stroke-width="18"/>
+  <path d="M526 92 274 708h-72L454 92z" fill="url(#slash)" opacity="0.92"/>
+  <path d="M255 214h292v78H355v92h158v78H355v180H255z" fill="#fff"/>
+  <path d="M566 214h78v428h-78z" fill="#dc1f26"/>
+  <text x="400" y="706" text-anchor="middle" fill="#f4f0e8" font-family="Arial, Helvetica, sans-serif" font-size="46" font-weight="900" letter-spacing="10">FIGHTID</text>
+</svg>

@@ -20,6 +20,19 @@ body {
   overflow-x: hidden;
 }
 
+body::before {
+  background:
+    linear-gradient(180deg, rgba(7, 8, 10, 0.68), rgba(7, 8, 10, 0.96)),
+    radial-gradient(circle at 18% 12%, rgba(220, 31, 38, 0.2), transparent 32%),
+    url("/assets/hero-arena.png") center / cover fixed;
+  content: "";
+  inset: 0;
+  opacity: 0.32;
+  pointer-events: none;
+  position: fixed;
+  z-index: -1;
+}
+
 #root {
   overflow-x: hidden;
 }

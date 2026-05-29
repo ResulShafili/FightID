@@ -710,6 +710,8 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(null);
+  const [emailCode, setEmailCode] = useState("");
 
   useEffect(() => {
     setTab(initialTab);

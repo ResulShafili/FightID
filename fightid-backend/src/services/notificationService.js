@@ -19,7 +19,9 @@ export const createNotification = async ({ userId, type, message, relatedEntityI
 
   if (emailSubject) {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
-    await sendEmail({ to: user?.email, subject: emailSubject, text: message });
+    sendEmail({ to: user?.email, subject: emailSubject, text: message }).catch((error) => {
+      console.warn(`[notification email failed] ${emailSubject}: ${error.message}`);
+    });
   }
 
   return notification;

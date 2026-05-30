@@ -8,6 +8,9 @@ const createTransporter = () => {
     host: env.email.smtpHost,
     port: env.email.smtpPort,
     secure: env.email.smtpPort === 465,
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 10000,
     auth: {
       user: env.email.smtpUser,
       pass: env.email.smtpPass,
@@ -24,11 +27,16 @@ export const sendEmail = async ({ to, subject, text }) => {
     return false;
   }
 
-  await transporter.sendMail({
-    from: env.email.from,
-    to,
-    subject,
-    text,
-  });
-  return true;
+  try {
+    await transporter.sendMail({
+      from: env.email.from,
+      to,
+      subject,
+      text,
+    });
+    return true;
+  } catch (error) {
+    console.warn(`[email failed] ${subject} -> ${to}: ${error.message}`);
+    return false;
+  }
 };

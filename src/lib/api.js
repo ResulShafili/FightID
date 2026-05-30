@@ -9,15 +9,29 @@ export const setAccessToken = (token) => {
 export const apiRequest = async (path, options = {}, retry = true) => {
   const hasBody = options.body !== undefined;
   const isFormData = options.isFormData === true;
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      ...(hasBody && !isFormData ? { "Content-Type": "application/json" } : {}),
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...options.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 20000);
+  let response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      credentials: "include",
+      signal: options.signal || controller.signal,
+      headers: {
+        ...(hasBody && !isFormData ? { "Content-Type": "application/json" } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("Request timed out. Please check the backend deployment and try again.");
+    }
+    throw new Error(error.message || "Network request failed");
+  } finally {
+    window.clearTimeout(timeout);
+  }
 
   if (response.status === 401 && retry) {
     try {

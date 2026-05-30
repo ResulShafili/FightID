@@ -16,6 +16,7 @@ import { badgeRoutes, cardRoutes, cornerManRoutes, fightSeekRoutes, gymRoutes, l
 
 export const createApp = () => {
   const app = express();
+  app.set("trust proxy", 1);
   const missingEnv = [
     "DATABASE_URL",
     "JWT_SECRET",
@@ -35,7 +36,8 @@ export const createApp = () => {
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (!origin || env.clientUrls.includes(origin)) {
+        const isVercelPreview = origin && /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+        if (!origin || env.clientUrls.includes(origin) || isVercelPreview) {
           callback(null, true);
           return;
         }

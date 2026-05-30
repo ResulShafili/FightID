@@ -5,7 +5,7 @@ import { ApiError } from "../utils/apiError.js";
 import { hashToken, refreshExpiryDate, signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/tokens.js";
 import { upsertFighterCard } from "../services/cardService.js";
 import { evaluateBadges } from "../services/badgeService.js";
-import { isEmailConfigured, sendEmail } from "../services/emailService.js";
+import { isEmailConfigured, sendEmailWithResult } from "../services/emailService.js";
 
 const publicUser = (user) => ({
   id: user.id,
@@ -80,21 +80,21 @@ const sendEmailCode = async (user, purpose) => {
     },
   });
 
-  const emailSent = await sendEmail({
+  const emailResult = await sendEmailWithResult({
     to: user.email,
     subject: purpose === "REGISTER" ? "Your FightID registration code" : "Your FightID login code",
     text: `Your FightID verification code is ${code}. It expires in 10 minutes.`,
   });
 
-  if (!emailSent && process.env.NODE_ENV === "production") {
+  if (!emailResult.sent && process.env.NODE_ENV === "production") {
     const message = isEmailConfigured()
-      ? "Email could not be sent. Check Gmail App Password, SMTP_USER, SMTP_PASS and Railway logs."
+      ? `Email could not be sent: ${emailResult.error}. Check Gmail App Password, SMTP_USER, SMTP_PASS and Railway logs.`
       : "Email service is not configured. Set SMTP_HOST, SMTP_USER and SMTP_PASS in Railway backend variables.";
     throw new ApiError(503, message);
   }
 
   return {
-    emailSent,
+    emailSent: emailResult.sent,
     ...(process.env.NODE_ENV === "production" ? {} : { devCode: code }),
   };
 };

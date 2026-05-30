@@ -20,13 +20,14 @@ const createTransporter = () => {
 
 export const isEmailConfigured = () => Boolean(env.email.smtpHost && env.email.smtpUser && env.email.smtpPass);
 
-export const sendEmail = async ({ to, subject, text }) => {
+export const sendEmailWithResult = async ({ to, subject, text }) => {
   const transporter = createTransporter();
-  if (!to) return false;
+  if (!to) return { sent: false, error: "Recipient email is missing" };
   if (!transporter) {
-    console.warn(`[email disabled] SMTP is not configured. Would have sent "${subject}" to ${to}.`);
+    const error = "SMTP is not configured";
+    console.warn(`[email disabled] ${error}. Would have sent "${subject}" to ${to}.`);
     if (env.nodeEnv !== "production") console.info(text);
-    return false;
+    return { sent: false, error };
   }
 
   try {
@@ -36,9 +37,15 @@ export const sendEmail = async ({ to, subject, text }) => {
       subject,
       text,
     });
-    return true;
+    return { sent: true, error: null };
   } catch (error) {
-    console.warn(`[email failed] ${subject} -> ${to}: ${error.message}`);
-    return false;
+    const detail = error.response || error.message || "Unknown SMTP error";
+    console.warn(`[email failed] ${subject} -> ${to}: ${detail}`);
+    return { sent: false, error: detail };
   }
+};
+
+export const sendEmail = async ({ to, subject, text }) => {
+  const result = await sendEmailWithResult({ to, subject, text });
+  return result.sent;
 };

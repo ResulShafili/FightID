@@ -9,6 +9,9 @@ export const errorHandler = (error, _req, res, _next) => {
     if (error.code === "P2025") {
       return res.status(404).json({ message: "Resource not found" });
     }
+    if (error.code === "P2023") {
+      return res.status(400).json({ message: "Invalid identifier format" });
+    }
   }
 
   if (error instanceof ApiError) {

@@ -1,6 +1,7 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+const apiUrl = import.meta.env.VITE_API_URL || "https://fightid-production.up.railway.app/api";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || apiUrl.replace(/\/api\/?$/, "");
 
 export const createFightIdSocket = (userId) => {
   const socket = io(SOCKET_URL, {

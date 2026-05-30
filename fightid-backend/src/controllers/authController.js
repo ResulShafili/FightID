@@ -14,6 +14,36 @@ const publicUser = (user) => ({
   fighterProfile: user.fighterProfile,
 });
 
+const cookieOptions = (maxAge) => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge,
+});
+
+const parseCookies = (req) =>
+  Object.fromEntries(
+    (req.headers.cookie || "")
+      .split(";")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((item) => {
+        const [key, ...value] = item.split("=");
+        return [key, decodeURIComponent(value.join("="))];
+      }),
+  );
+
+const setAuthCookies = (res, tokens) => {
+  res.cookie("auth_token", tokens.accessToken, cookieOptions(15 * 60 * 1000));
+  res.cookie("refresh_token", tokens.refreshToken, cookieOptions(30 * 24 * 60 * 60 * 1000));
+};
+
+const clearAuthCookies = (res) => {
+  const options = cookieOptions(0);
+  res.clearCookie("auth_token", options);
+  res.clearCookie("refresh_token", options);
+};
+
 const issueTokens = async (user) => {
   const accessToken = signAccessToken(user);
   const refreshToken = signRefreshToken(user);
@@ -104,7 +134,8 @@ export const register = asyncHandler(async (req, res) => {
   await upsertFighterCard(user.fighterProfile);
   await evaluateBadges(user.fighterProfile.id);
   const tokens = await issueTokens(user);
-  res.status(201).json({ user: publicUser(user), ...tokens });
+  setAuthCookies(res, tokens);
+  res.status(201).json({ user: publicUser(user) });
 });
 
 export const login = asyncHandler(async (req, res) => {
@@ -145,7 +176,8 @@ export const verifyEmailCode = asyncHandler(async (req, res) => {
   });
 
   const tokens = await issueTokens(user);
-  res.json({ user: publicUser(user), ...tokens });
+  setAuthCookies(res, tokens);
+  res.json({ user: publicUser(user) });
 });
 
 export const me = asyncHandler(async (req, res) => {
@@ -162,7 +194,12 @@ export const me = asyncHandler(async (req, res) => {
 });
 
 export const refresh = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
+  const cookies = parseCookies(req);
+  const refreshToken = req.body?.refreshToken || cookies.refresh_token;
+  if (!refreshToken) {
+    throw new ApiError(401, "Refresh token is required");
+  }
+
   const payload = verifyRefreshToken(refreshToken);
   const tokenHash = hashToken(refreshToken);
 
@@ -181,16 +218,21 @@ export const refresh = asyncHandler(async (req, res) => {
     include: { fighterProfile: true },
   });
   const tokens = await issueTokens(updatedUser);
-  res.json({ user: publicUser(updatedUser), ...tokens });
+  setAuthCookies(res, tokens);
+  res.json({ user: publicUser(updatedUser) });
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
+  const cookies = parseCookies(req);
+  const refreshToken = req.body?.refreshToken || cookies.refresh_token;
 
-  await prisma.refreshToken.updateMany({
-    where: { tokenHash: hashToken(refreshToken), revokedAt: null },
-    data: { revokedAt: new Date() },
-  });
+  if (refreshToken) {
+    await prisma.refreshToken.updateMany({
+      where: { tokenHash: hashToken(refreshToken), revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
 
+  clearAuthCookies(res);
   res.status(204).send();
 });

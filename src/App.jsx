@@ -618,8 +618,6 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
   }, [initialTab]);
 
   const handleAuthSuccess = (result) => {
-    setAccessToken(result.accessToken);
-    localStorage.setItem(refreshTokenStorageKey, result.refreshToken);
     localStorage.setItem(userStorageKey, JSON.stringify(result.user));
     onSuccess(result.user);
     onClose();
@@ -2713,10 +2711,6 @@ export default function App() {
   }, [settings]);
 
   useEffect(() => {
-    const storedAccessToken = localStorage.getItem(accessTokenStorageKey);
-    const refreshToken = localStorage.getItem(refreshTokenStorageKey);
-    if (!storedAccessToken && !refreshToken) return;
-
     let ignore = false;
 
     const clearSession = () => {
@@ -2729,19 +2723,8 @@ export default function App() {
 
     const restoreSession = async () => {
       try {
-        if (storedAccessToken) {
-          setAccessToken(storedAccessToken);
-          const result = await authApi.me();
-          if (ignore) return;
-          localStorage.setItem(userStorageKey, JSON.stringify(result.user));
-          setUser(result.user);
-          return;
-        }
-
-        const result = await authApi.refresh(refreshToken);
+        const result = await authApi.me();
         if (ignore) return;
-        setAccessToken(result.accessToken);
-        localStorage.setItem(refreshTokenStorageKey, result.refreshToken);
         if (result.user) {
           localStorage.setItem(userStorageKey, JSON.stringify(result.user));
           setUser(result.user);
@@ -2819,10 +2802,8 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    const refreshToken = localStorage.getItem(refreshTokenStorageKey);
-
     try {
-      if (refreshToken) await authApi.logout(refreshToken);
+      await authApi.logout();
     } finally {
       setAccessToken(null);
       localStorage.removeItem(accessTokenStorageKey);

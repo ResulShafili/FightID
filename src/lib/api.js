@@ -1,12 +1,9 @@
 const API_URL = (import.meta.env.VITE_API_URL || "https://fightid-production.up.railway.app/api").replace(/\/$/, "");
-const accessTokenStorageKey = "fightidAccessToken";
 
-let accessToken = localStorage.getItem(accessTokenStorageKey);
+let accessToken = null;
 
 export const setAccessToken = (token) => {
   accessToken = token;
-  if (token) localStorage.setItem(accessTokenStorageKey, token);
-  else localStorage.removeItem(accessTokenStorageKey);
 };
 
 export const apiRequest = async (path, options = {}, retry = true) => {
@@ -14,6 +11,7 @@ export const apiRequest = async (path, options = {}, retry = true) => {
   const isFormData = options.isFormData === true;
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: "include",
     headers: {
       ...(hasBody && !isFormData ? { "Content-Type": "application/json" } : {}),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
@@ -22,27 +20,16 @@ export const apiRequest = async (path, options = {}, retry = true) => {
   });
 
   if (response.status === 401 && retry) {
-    const storedRefresh = localStorage.getItem("fightidRefreshToken");
-    if (storedRefresh) {
-      try {
-        const data = await apiRequest(
-          "/auth/refresh",
-          { method: "POST", body: JSON.stringify({ refreshToken: storedRefresh }) },
-          false,
-        );
-        if (data?.accessToken) {
-          setAccessToken(data.accessToken);
-          if (data.refreshToken) localStorage.setItem("fightidRefreshToken", data.refreshToken);
-          if (data.user) localStorage.setItem("fightidUser", JSON.stringify(data.user));
-          return apiRequest(path, options, false);
-        }
-      } catch {
-        setAccessToken(null);
-        localStorage.removeItem(accessTokenStorageKey);
-        localStorage.removeItem("fightidRefreshToken");
-        localStorage.removeItem("fightidUser");
-        window.dispatchEvent(new Event("auth:logout"));
-      }
+    try {
+      const data = await apiRequest("/auth/refresh", { method: "POST" }, false);
+      if (data?.user) localStorage.setItem("fightidUser", JSON.stringify(data.user));
+      return apiRequest(path, options, false);
+    } catch {
+      setAccessToken(null);
+      localStorage.removeItem("fightidAccessToken");
+      localStorage.removeItem("fightidRefreshToken");
+      localStorage.removeItem("fightidUser");
+      window.dispatchEvent(new Event("auth:logout"));
     }
   }
 
@@ -60,8 +47,8 @@ export const authApi = {
   login: (payload) => apiRequest("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
   verifyEmailCode: (payload) => apiRequest("/auth/verify-email-code", { method: "POST", body: JSON.stringify(payload) }),
   me: () => apiRequest("/auth/me"),
-  refresh: (refreshToken) => apiRequest("/auth/refresh", { method: "POST", body: JSON.stringify({ refreshToken }) }),
-  logout: (refreshToken) => apiRequest("/auth/logout", { method: "POST", body: JSON.stringify({ refreshToken }) }),
+  refresh: () => apiRequest("/auth/refresh", { method: "POST" }),
+  logout: () => apiRequest("/auth/logout", { method: "POST" }),
 };
 
 export const fighterApi = {

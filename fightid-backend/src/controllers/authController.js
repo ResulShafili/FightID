@@ -86,6 +86,10 @@ const sendEmailCode = async (user, purpose) => {
     text: `Your FightID verification code is ${code}. It expires in 10 minutes.`,
   });
 
+  if (!emailSent && process.env.NODE_ENV === "production") {
+    throw new ApiError(503, "Email service is not configured. Set SMTP_HOST, SMTP_USER and SMTP_PASS in Railway.");
+  }
+
   return {
     emailSent,
     ...(process.env.NODE_ENV === "production" ? {} : { devCode: code }),

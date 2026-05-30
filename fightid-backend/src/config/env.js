@@ -24,6 +24,6 @@ export const env = {
     smtpPort: Number(process.env.SMTP_PORT || 587),
     smtpUser: process.env.SMTP_USER,
     smtpPass: process.env.SMTP_PASS,
-    from: process.env.EMAIL_FROM || "FightID <notifications@fightid.app>",
+    from: process.env.EMAIL_FROM || (process.env.SMTP_USER ? `FightID <${process.env.SMTP_USER}>` : "FightID <notifications@fightid.app>"),
   },
 };

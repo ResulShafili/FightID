@@ -1727,15 +1727,23 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate }) {
         coverPhotoUrl: form.coverPhotoUrl || null,
       });
 
+      let uploadWarning = "";
       if (photoFile) {
-        updatedProfile = await fighterApi.uploadPhoto(photoFile);
-        setPhotoFile(null);
+        try {
+          updatedProfile = await fighterApi.uploadPhoto(photoFile);
+          setPhotoFile(null);
+        } catch (caught) {
+          uploadWarning = caught.message?.includes("Cloudinary")
+            ? "Photo upload skipped because Cloudinary storage is not configured on the server."
+            : `Photo upload failed: ${caught.message}`;
+          setPhotoFile(null);
+        }
       }
 
       const nextUser = { ...user, fighterProfile: { ...user.fighterProfile, ...updatedProfile } };
       localStorage.setItem(userStorageKey, JSON.stringify(nextUser));
       onUserUpdate(nextUser);
-      setMessage("Profile updated.");
+      setMessage(uploadWarning || "Profile updated.");
     } catch (caught) {
       setError(caught.message);
     } finally {

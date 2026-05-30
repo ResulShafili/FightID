@@ -163,8 +163,12 @@ export const refresh = asyncHandler(async (req, res) => {
     data: { revokedAt: new Date() },
   });
 
-  const tokens = await issueTokens(stored.user);
-  res.json(tokens);
+  const updatedUser = await prisma.user.findUnique({
+    where: { id: stored.userId },
+    include: { fighterProfile: true },
+  });
+  const tokens = await issueTokens(updatedUser);
+  res.json({ user: publicUser(updatedUser), ...tokens });
 });
 
 export const logout = asyncHandler(async (req, res) => {

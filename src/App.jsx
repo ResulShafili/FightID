@@ -21,16 +21,16 @@ import {
   Zap,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  apiRequest,
   adminApi,
   authApi,
   badgeApi,
-  challengeApi,
   fighterApi,
   gymApi,
   leaderboardApi,
   micCheckApi,
+  notificationApi,
   seekApi,
   setAccessToken,
   tournamentApi,
@@ -50,6 +50,31 @@ const navGroups = [
     items: ["Compare", "Fight Board", "Tournaments"],
   },
 ];
+const pagePaths = {
+  Home: "/",
+  Fighters: "/fighters",
+  Rankings: "/rankings",
+  Compare: "/compare",
+  "Fight Board": "/fight-board",
+  Tournaments: "/tournaments",
+  Gyms: "/gyms",
+  "National Champions": "/national-champions",
+  "My Profile": "/profile",
+  "Fighter Profile": "/fighters",
+};
+const pathToPage = (pathname) => {
+  if (pathname === "/") return "Home";
+  if (pathname.startsWith("/fighters/")) return "Fighter Profile";
+  if (pathname.startsWith("/fighters")) return "Fighters";
+  if (pathname.startsWith("/rankings")) return "Rankings";
+  if (pathname.startsWith("/compare")) return "Compare";
+  if (pathname.startsWith("/fight-board")) return "Fight Board";
+  if (pathname.startsWith("/tournaments")) return "Tournaments";
+  if (pathname.startsWith("/gyms")) return "Gyms";
+  if (pathname.startsWith("/national-champions")) return "National Champions";
+  if (pathname.startsWith("/profile")) return "My Profile";
+  return "";
+};
 const fightIdLogo = "/assets/fightid-logo.svg";
 const fallbackPortrait = fightIdLogo;
 const fallbackCover = "/assets/hero-arena.png";
@@ -375,7 +400,7 @@ const phraseTranslations = {
   },
 };
 const weightClassOptions = ["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"];
-const ruleSetOptions = ["MMA", "GRAPPLING", "BOXING", "MUAY_THAI"];
+const trainingTypeOptions = ["STRIKING", "GRAPPLING", "CONDITIONING", "SPARRING", "DRILLING", "RECOVERY", "OTHER"];
 const BADGE_META = {
   FIRST_WIN: { label: "First Blood", emoji: "🩸", desc: "Won their first fight" },
   FIRST_KO: { label: "Lights Out", emoji: "💡", desc: "First KO/TKO victory" },
@@ -393,12 +418,6 @@ const BADGE_META = {
   POINTS_1000: { label: "Gold Fighter", emoji: "🥇", desc: "Reached 1000 points" },
   POINTS_2000: { label: "Champion Class", emoji: "🏆", desc: "Reached 2000 points" },
   PLATFORM_PIONEER: { label: "Pioneer", emoji: "🚀", desc: "Among the first 100 fighters" },
-};
-
-const notificationApi = {
-  list: () => apiRequest("/notifications"),
-  markRead: (id) => apiRequest(`/notifications/${id}/read`, { method: "PUT" }),
-  markAllRead: () => apiRequest("/notifications/read-all", { method: "PUT" }),
 };
 
 function getFighterImage(url) {
@@ -575,122 +594,6 @@ function loadStoredSettings() {
     localStorage.removeItem(settingsStorageKey);
     return defaultSettings;
   }
-}
-
-function getChallengeOpponent(challenge, user) {
-  const profileId = user?.fighterProfile?.id;
-  if (!profileId) return challenge.receiver?.fullName || challenge.sender?.fullName || "Opponent";
-  return challenge.senderId === profileId ? challenge.receiver?.fullName : challenge.sender?.fullName;
-}
-
-function ChallengeModal({ receiver, onClose }) {
-  const [form, setForm] = useState({
-    proposedDateFrom: "",
-    proposedDateTo: "",
-    location: "",
-    weightClass: receiver?.weightClass || "LIGHTWEIGHT",
-    ruleSet: "MMA",
-    senderMessage: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [pendingVerification, setPendingVerification] = useState(null);
-  const [emailCode, setEmailCode] = useState("");
-  const [success, setSuccess] = useState("");
-
-  const inputClass = "w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-blood";
-
-  const submitChallenge = async (event) => {
-    event.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      await challengeApi.send({
-        receiverId: receiver.id,
-        proposedDateFrom: form.proposedDateFrom,
-        proposedDateTo: form.proposedDateTo,
-        location: form.location,
-        weightClass: form.weightClass,
-        ruleSet: form.ruleSet,
-        senderMessage: form.senderMessage || undefined,
-      });
-      setSuccess("Challenge sent!");
-      window.setTimeout(onClose, 2000);
-    } catch (caught) {
-      setError(caught.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/70 px-4 backdrop-blur">
-      <div className="mx-auto mt-20 max-w-lg rounded border border-white/10 bg-[#111113] p-5 shadow-red">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="font-display text-2xl font-black text-white">Challenge {receiver.fullName}</h2>
-            <p className="mt-1 text-sm text-zinc-400">Send a formal FightID challenge request.</p>
-          </div>
-          <button onClick={onClose} className="rounded border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Close challenge modal">
-            <X size={18} />
-          </button>
-        </div>
-
-        {error && <div className="mt-4 rounded border border-blood/40 bg-blood/15 px-4 py-3 text-sm font-semibold text-red-100">{error}</div>}
-        {success && <div className="mt-4 rounded border border-emerald-400/30 bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-200">{success}</div>}
-
-        <form onSubmit={submitChallenge} className="mt-5 grid gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-bold text-zinc-200">
-              Date from
-              <input required type="date" value={form.proposedDateFrom} onChange={(event) => setForm({ ...form, proposedDateFrom: event.target.value })} className={inputClass} />
-            </label>
-            <label className="grid gap-2 text-sm font-bold text-zinc-200">
-              Date to
-              <input required type="date" value={form.proposedDateTo} onChange={(event) => setForm({ ...form, proposedDateTo: event.target.value })} className={inputClass} />
-            </label>
-          </div>
-          <label className="grid gap-2 text-sm font-bold text-zinc-200">
-            Location
-            <input required minLength={2} value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} className={inputClass} placeholder="Baku, Azerbaijan" />
-          </label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-bold text-zinc-200">
-              Weight class
-              <select required value={form.weightClass} onChange={(event) => setForm({ ...form, weightClass: event.target.value })} className={inputClass}>
-                {weightClassOptions.map((value) => (
-                  <option key={value} value={value}>{formatWeightClass(value)}</option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm font-bold text-zinc-200">
-              Rule set
-              <select required value={form.ruleSet} onChange={(event) => setForm({ ...form, ruleSet: event.target.value })} className={inputClass}>
-                {ruleSetOptions.map((value) => (
-                  <option key={value} value={value}>{formatResult(value)}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <label className="grid gap-2 text-sm font-bold text-zinc-200">
-            Message
-            <textarea
-              maxLength={1000}
-              value={form.senderMessage}
-              onChange={(event) => setForm({ ...form, senderMessage: event.target.value })}
-              className={`${inputClass} min-h-28 resize-y`}
-              placeholder="Optional note to the fighter"
-            />
-          </label>
-          <button disabled={loading || success} className="rounded bg-[#dc1f26] px-5 py-3 font-black text-white hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
-            {loading ? "Sending..." : success || "Send Challenge"}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
 }
 
 function AuthModal({ initialTab = "login", onClose, onSuccess }) {
@@ -1592,16 +1495,20 @@ function FightersPage({ openProfile }) {
   const [fighters, setFighters] = useState([]);
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");
+  const [weightClass, setWeightClass] = useState("");
+  const [country, setCountry] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
+    const timer = window.setTimeout(() => {
     setLoading(true);
     setError("");
 
     fighterApi
-      .list({ limit: 24, search, role })
+      .list({ limit: 24, search, role, weightClass, country })
       .then((result) => {
         setFighters((result.data || []).map(normalizeCardFighter));
       })
@@ -1613,8 +1520,13 @@ function FightersPage({ openProfile }) {
       })
       .finally(() => setLoading(false));
 
-    return () => controller.abort();
-  }, [search, role]);
+    }, 300);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [search, role, weightClass, country]);
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
@@ -1639,8 +1551,29 @@ function FightersPage({ openProfile }) {
             <option value="PRO">Pro</option>
             <option value="AMATEUR">Amateur</option>
           </select>
+          <button onClick={() => setShowFilters((value) => !value)} className="inline-flex items-center justify-center gap-2 rounded-sm border border-white/15 px-4 py-3 text-sm font-black text-white hover:bg-white/10">
+            <Filter size={16} />
+            Filter
+          </button>
         </div>
         </div>
+        {showFilters && (
+          <div className="mt-5 grid gap-3 rounded-sm border border-zinc-800 bg-black/20 p-4 sm:grid-cols-4">
+            <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none focus:border-blood">
+              <option value="">All weight classes</option>
+              {weightClassOptions.map((item) => <option key={item} value={item}>{formatWeightClass(item)}</option>)}
+            </select>
+            <input value={country} onChange={(event) => setCountry(event.target.value.toUpperCase().slice(0, 2))} placeholder="Country e.g. AZ" className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none placeholder:text-zinc-500 focus:border-blood" />
+            <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none focus:border-blood">
+              <option value="">All roles</option>
+              <option value="PRO">Pro</option>
+              <option value="AMATEUR">Amateur</option>
+            </select>
+            <button onClick={() => { setSearch(""); setRole(""); setWeightClass(""); setCountry(""); }} className="rounded-sm border border-white/15 px-4 py-3 text-sm font-black text-white hover:bg-white/10">
+              Clear Filters
+            </button>
+          </div>
+        )}
         <div className="mt-5 grid grid-cols-2 gap-3 text-xs font-black uppercase tracking-[0.14em] text-zinc-500 sm:grid-cols-4">
           <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Verified profiles</div>
           <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Amateur records</div>
@@ -1677,148 +1610,6 @@ function MethodBar({ method, total }) {
         <div className={`h-full rounded-full ${method.color}`} style={{ width }} />
       </div>
     </div>
-  );
-}
-
-function ChallengeStatusBadge({ status }) {
-  const tones = {
-    PENDING: "border-yellow-400/30 bg-yellow-400/15 text-yellow-200",
-    ACCEPTED: "border-emerald-400/30 bg-emerald-400/15 text-emerald-200",
-    DECLINED: "border-blood/40 bg-blood/15 text-red-100",
-    COUNTERED: "border-blue-400/30 bg-blue-400/15 text-blue-200",
-    CANCELLED: "border-zinc-400/20 bg-zinc-400/10 text-zinc-300",
-    COMPLETED: "border-white/30 bg-white/15 text-white",
-  };
-
-  return <span className={`rounded border px-2 py-1 text-xs font-black ${tones[status] || tones.CANCELLED}`}>{status}</span>;
-}
-
-function ChallengesPage({ user, onLoginClick }) {
-  const [challenges, setChallenges] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState("");
-  const [error, setError] = useState("");
-
-  const loadChallenges = async () => {
-    if (!user) return;
-    setLoading(true);
-    setError("");
-
-    try {
-      setChallenges(await challengeApi.mine());
-    } catch (caught) {
-      setError(caught.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadChallenges();
-  }, [user]);
-
-  const runAction = async (id, action) => {
-    setActionLoading(id);
-    setError("");
-
-    try {
-      if (action === "accept") await challengeApi.accept(id);
-      if (action === "decline") await challengeApi.decline(id);
-      if (action === "cancel") await apiRequest(`/challenges/${id}/cancel`, { method: "PUT" });
-      await loadChallenges();
-    } catch (caught) {
-      setError(caught.message);
-    } finally {
-      setActionLoading("");
-    }
-  };
-
-  if (!user) {
-    return (
-      <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
-        <div className="rounded border border-white/10 bg-[#111113] p-8">
-          <Badge tone="red">Challenges</Badge>
-          <h1 className="mt-5 font-display text-4xl font-black text-white">Please login to view your challenges</h1>
-          <button onClick={onLoginClick} className="mt-6 rounded bg-[#dc1f26] px-5 py-3 font-black text-white">
-            Login
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Badge tone="red">Challenge Center</Badge>
-          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Challenges</h1>
-        </div>
-        <button onClick={loadChallenges} className="rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10">
-          Refresh
-        </button>
-      </div>
-
-      <div className="mt-8 overflow-hidden rounded border border-white/10 bg-[#111113]">
-        {loading && <div className="p-5"><LoadingPanel label="Loading your challenges" /></div>}
-        {error && <div className="m-5 rounded border border-blood/40 bg-blood/15 p-4 text-sm font-semibold text-red-100">{error}</div>}
-        {!loading && (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[920px] text-left text-sm">
-              <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.16em] text-zinc-500">
-                <tr>
-                  {["Opponent", "Status", "Rule Set", "Location", "Date Range", "Actions"].map((head) => (
-                    <th key={head} className="px-5 py-4 font-black">{head}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {challenges.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-8 text-center font-semibold text-zinc-400">No challenges yet.</td>
-                  </tr>
-                ) : (
-                  challenges.map((challenge) => {
-                    const isReceiver = challenge.receiverId === user.fighterProfile?.id;
-                    const isSender = challenge.senderId === user.fighterProfile?.id;
-
-                    return (
-                      <tr key={challenge.id} className="text-zinc-300">
-                        <td className="px-5 py-4 font-bold text-white">{getChallengeOpponent(challenge, user)}</td>
-                        <td className="px-5 py-4"><ChallengeStatusBadge status={challenge.status} /></td>
-                        <td className="px-5 py-4">{formatResult(challenge.ruleSet)}</td>
-                        <td className="px-5 py-4">{challenge.location}</td>
-                        <td className="px-5 py-4">{formatDate(challenge.proposedDateFrom)} - {formatDate(challenge.proposedDateTo)}</td>
-                        <td className="px-5 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            {challenge.status === "PENDING" && isReceiver && (
-                              <>
-                                <button disabled={actionLoading === challenge.id} onClick={() => runAction(challenge.id, "accept")} className="rounded bg-emerald-600 px-3 py-2 text-xs font-black text-white disabled:opacity-60">
-                                  Accept
-                                </button>
-                                <button disabled={actionLoading === challenge.id} onClick={() => runAction(challenge.id, "decline")} className="rounded bg-[#dc1f26] px-3 py-2 text-xs font-black text-white disabled:opacity-60">
-                                  Decline
-                                </button>
-                              </>
-                            )}
-                            {challenge.status === "PENDING" && isSender && (
-                              <button disabled={actionLoading === challenge.id} onClick={() => runAction(challenge.id, "cancel")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 disabled:opacity-60">
-                                Cancel
-                              </button>
-                            )}
-                            {challenge.status !== "PENDING" && <span className="text-xs font-semibold text-zinc-500">No actions</span>}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </main>
   );
 }
 
@@ -2196,6 +1987,15 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const [badges, setBadges] = useState([]);
   const [nationalChampion, setNationalChampion] = useState(null);
   const [training, setTraining] = useState(null);
+  const [trainingModalOpen, setTrainingModalOpen] = useState(false);
+  const [trainingForm, setTrainingForm] = useState({
+    type: "STRIKING",
+    durationMins: "60",
+    date: new Date().toISOString().slice(0, 10),
+    note: "",
+  });
+  const [trainingSaving, setTrainingSaving] = useState(false);
+  const [trainingError, setTrainingError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -2239,6 +2039,32 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
     leaderboardApi.isChampion(profile.id).then(setNationalChampion).catch(() => setNationalChampion(null));
     trainingApi.forFighter(profile.id).then(setTraining).catch(() => setTraining(null));
   }, [profile]);
+
+  const reloadTraining = async () => {
+    if (!profile?.id) return;
+    setTraining(await trainingApi.forFighter(profile.id));
+  };
+
+  const submitTraining = async (event) => {
+    event.preventDefault();
+    setTrainingSaving(true);
+    setTrainingError("");
+    try {
+      await trainingApi.log({
+        type: trainingForm.type,
+        durationMins: Number(trainingForm.durationMins),
+        date: trainingForm.date,
+        note: trainingForm.note || undefined,
+      });
+      await reloadTraining();
+      setTrainingModalOpen(false);
+      setTrainingForm({ type: "STRIKING", durationMins: "60", date: new Date().toISOString().slice(0, 10), note: "" });
+    } catch (caught) {
+      setTrainingError(caught.message);
+    } finally {
+      setTrainingSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -2354,10 +2180,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
                   <h2 className="font-display text-2xl font-black text-white">Fight history</h2>
                   <p className="mt-1 text-sm text-zinc-400">Confirmed bouts and federation-reviewed records.</p>
                 </div>
-                <button className="inline-flex items-center gap-2 rounded border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
-                  <Filter size={16} />
-                  Filter
-                </button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[760px] text-left text-sm">
@@ -2416,7 +2238,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
                     This month: {training?.summary?.totalSessionsThisMonth || 0} sessions · {Number(training?.summary?.totalHoursThisMonth || 0).toFixed(1)} hours
                   </p>
                 </div>
-                {user?.fighterProfile?.id === profile.id && <button className="rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Log Training Session</button>}
+                {user?.fighterProfile?.id === profile.id && <button onClick={() => setTrainingModalOpen(true)} className="rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Log Training Session</button>}
               </div>
               <div className="mt-5 grid gap-3">
                 {(training?.data || []).slice(0, 10).map((log) => (
@@ -2450,17 +2272,56 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
             <div className="rounded border border-white/10 bg-panel p-5">
               <h2 className="font-display text-xl font-black text-white">Social links</h2>
               <div className="mt-4 grid gap-3">
-                <a href={profile.instagramUrl || "#"} className="flex items-center justify-between rounded border border-white/10 px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10">
-                  Instagram <span className="text-zinc-400">{profile.instagramUrl ? "Open" : "Not set"}</span>
-                </a>
-                <a href={profile.youtubeUrl || "#"} className="flex items-center justify-between rounded border border-white/10 px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10">
-                  YouTube <span className="text-zinc-400">{profile.youtubeUrl ? "Open" : "Not set"}</span>
-                </a>
+                {profile.instagramUrl && (
+                  <a href={profile.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded border border-white/10 px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10">
+                    Instagram <span className="text-zinc-400">Open</span>
+                  </a>
+                )}
+                {profile.youtubeUrl && (
+                  <a href={profile.youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded border border-white/10 px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10">
+                    YouTube <span className="text-zinc-400">Open</span>
+                  </a>
+                )}
+                {!profile.instagramUrl && !profile.youtubeUrl && <p className="text-sm font-semibold text-zinc-500">No public social links yet.</p>}
               </div>
             </div>
           </aside>
         </div>
       </section>
+      {trainingModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 px-4 backdrop-blur">
+          <form onSubmit={submitTraining} className="mx-auto mt-20 max-w-lg rounded border border-white/10 bg-[#111113] p-6 shadow-red">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="font-display text-2xl font-black text-white">Log Training Session</h2>
+              <button type="button" onClick={() => setTrainingModalOpen(false)} className="rounded border border-white/15 p-2 text-white hover:bg-white/10"><X size={18} /></button>
+            </div>
+            {trainingError && <div className="mt-4 rounded border border-blood/40 bg-blood/15 p-3 text-sm font-semibold text-red-100">{trainingError}</div>}
+            <div className="mt-5 grid gap-4">
+              <label className="grid gap-2 text-sm font-bold text-white">
+                Type
+                <select value={trainingForm.type} onChange={(event) => setTrainingForm((form) => ({ ...form, type: event.target.value }))} className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white">
+                  {trainingTypeOptions.map((item) => <option key={item} value={item}>{formatResult(item)}</option>)}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-white">
+                Duration in minutes
+                <input type="number" min="1" max="480" value={trainingForm.durationMins} onChange={(event) => setTrainingForm((form) => ({ ...form, durationMins: event.target.value }))} className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" required />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-white">
+                Date
+                <input type="date" value={trainingForm.date} onChange={(event) => setTrainingForm((form) => ({ ...form, date: event.target.value }))} className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-white">
+                Note
+                <textarea value={trainingForm.note} onChange={(event) => setTrainingForm((form) => ({ ...form, note: event.target.value }))} maxLength={500} rows={4} className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" placeholder="Optional session note" />
+              </label>
+            </div>
+            <button disabled={trainingSaving} className="mt-5 w-full rounded bg-[#dc1f26] px-5 py-3 font-black text-white disabled:opacity-60">
+              {trainingSaving ? "Saving..." : "Save Training"}
+            </button>
+          </form>
+        </div>
+      )}
     </main>
   );
 }
@@ -2734,11 +2595,38 @@ function PlaceholderPage({ title, icon: Icon }) {
   );
 }
 
+function FighterProfileRoute({ openProfile, user, onLoginRequired }) {
+  const { id } = useParams();
+  return <FighterProfilePage fighterId={id} openProfile={openProfile} user={user} onLoginRequired={onLoginRequired} />;
+}
+
+function RequireAuth({ user, onLoginRequired, children }) {
+  useEffect(() => {
+    if (!user) onLoginRequired?.();
+  }, [user, onLoginRequired]);
+
+  if (!user) return <Navigate to="/" replace />;
+  return children;
+}
+
+function NotFoundPage() {
+  const navigate = useNavigate();
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 text-center text-white">
+      <div className="font-display text-8xl font-black text-blood">404</div>
+      <h1 className="mt-4 font-display text-3xl font-black">Page not found</h1>
+      <p className="mt-3 max-w-md text-zinc-400">The FightID page you opened does not exist yet.</p>
+      <button onClick={() => navigate("/")} className="mt-6 rounded border border-white/15 px-6 py-3 font-bold hover:bg-white/10">
+        Go Home
+      </button>
+    </main>
+  );
+}
+
 export default function App() {
-  const [page, setPage] = useState("Home");
-  const [selectedFighterId, setSelectedFighterId] = useState(null);
-  const historyReadyRef = useRef(false);
-  const handlingPopRef = useRef(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const page = pathToPage(location.pathname);
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem(userStorageKey);
     if (!stored) return null;
@@ -2755,6 +2643,7 @@ export default function App() {
   const [settings, setSettings] = useState(loadStoredSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const t = translations[settings.language] || translations.az;
+  const navigatePage = (nextPage) => navigate(pagePaths[nextPage] || "/");
 
   useEffect(() => {
     const palette = themePalettes[settings.theme] || themePalettes.dark;
@@ -2825,6 +2714,10 @@ export default function App() {
         if (ignore) return;
         setAccessToken(result.accessToken);
         localStorage.setItem(refreshTokenStorageKey, result.refreshToken);
+        if (result.user) {
+          localStorage.setItem(userStorageKey, JSON.stringify(result.user));
+          setUser(result.user);
+        }
       })
       .catch(() => {
         if (ignore) return;
@@ -2869,36 +2762,18 @@ export default function App() {
   }, [settings.language, page, authModal, settingsOpen, user]);
 
   useEffect(() => {
-    window.history.replaceState({ fightid: true, page, selectedFighterId }, "", window.location.href);
-    historyReadyRef.current = true;
-
-    const handlePopState = (event) => {
-      const state = event.state;
-      if (!state?.fightid) return;
-      handlingPopRef.current = true;
-      setPage(state.page || "Home");
-      setSelectedFighterId(state.selectedFighterId || null);
+    const handleForcedLogout = () => {
+      setAccessToken(null);
+      setUser(null);
+      navigate("/");
     };
 
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
-
-  useEffect(() => {
-    if (!historyReadyRef.current) return;
-    if (handlingPopRef.current) {
-      handlingPopRef.current = false;
-      return;
-    }
-
-    const currentState = window.history.state;
-    if (currentState?.fightid && currentState.page === page && currentState.selectedFighterId === selectedFighterId) return;
-    window.history.pushState({ fightid: true, page, selectedFighterId }, "", window.location.href);
-  }, [page, selectedFighterId]);
+    window.addEventListener("auth:logout", handleForcedLogout);
+    return () => window.removeEventListener("auth:logout", handleForcedLogout);
+  }, [navigate]);
 
   const openProfile = (fighterId) => {
-    setSelectedFighterId(fighterId);
-    setPage(fighterId ? "Fighter Profile" : "Fighters");
+    navigate(fighterId ? `/fighters/${fighterId}` : "/fighters");
   };
 
   const openAuth = (tab) => {
@@ -2923,37 +2798,24 @@ export default function App() {
       localStorage.removeItem(refreshTokenStorageKey);
       localStorage.removeItem(userStorageKey);
       setUser(null);
-      setPage("Home");
+      navigate("/");
     }
   };
 
   const handleAuthSuccess = (nextUser) => {
     setUser(nextUser);
-    setPage("My Profile");
+    navigate("/profile");
   };
 
   const handleUserUpdate = (nextUser) => {
     setUser(nextUser);
   };
 
-  const pages = {
-    Home: <LandingPage setPage={setPage} openProfile={openProfile} />,
-    Fighters: <FightersPage openProfile={openProfile} />,
-    Compare: <HeadToHead />,
-    "Fight Board": <FightSeekBoard user={user} onLoginClick={() => openAuth("login")} />,
-    Tournaments: <TournamentHub user={user} />,
-    Gyms: <GymHub />,
-    "National Champions": <NationalChampions openProfile={openProfile} />,
-    "My Profile": <MyProfilePage user={user} onLoginClick={() => openAuth("login")} onUserUpdate={handleUserUpdate} />,
-    "Fighter Profile": <FighterProfilePage fighterId={selectedFighterId} openProfile={openProfile} user={user} onLoginRequired={() => openAuth("login")} />,
-    Rankings: <RankingsPage openProfile={openProfile} />,
-  };
-
   return (
     <div className="min-h-screen overflow-x-hidden bg-transparent text-bone">
       <AppHeader
         page={page}
-        setPage={setPage}
+        setPage={navigatePage}
         user={user}
         settings={settings}
         t={t}
@@ -2962,7 +2824,28 @@ export default function App() {
         onRegisterClick={() => openAuth("register")}
         onLogout={handleLogout}
       />
-      {pages[page] || pages.Home}
+      <Routes>
+        <Route path="/" element={<LandingPage setPage={navigatePage} openProfile={openProfile} />} />
+        <Route path="/fighters" element={<FightersPage openProfile={openProfile} />} />
+        <Route path="/fighters/:id" element={<FighterProfileRoute openProfile={openProfile} user={user} onLoginRequired={() => openAuth("login")} />} />
+        <Route path="/rankings" element={<RankingsPage openProfile={openProfile} />} />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth user={user} onLoginRequired={() => openAuth("login")}>
+              <MyProfilePage user={user} onLoginClick={() => openAuth("login")} onUserUpdate={handleUserUpdate} />
+            </RequireAuth>
+          }
+        />
+        <Route path="/gyms" element={<GymHub />} />
+        <Route path="/gyms/:id" element={<GymHub />} />
+        <Route path="/tournaments" element={<TournamentHub user={user} />} />
+        <Route path="/tournaments/:id" element={<TournamentHub user={user} />} />
+        <Route path="/compare" element={<HeadToHead />} />
+        <Route path="/fight-board" element={<FightSeekBoard user={user} onLoginClick={() => openAuth("login")} />} />
+        <Route path="/national-champions" element={<NationalChampions openProfile={openProfile} />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
       {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={handleAuthSuccess} />}
       <SettingsPanel open={settingsOpen} settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} t={t} />
       {toast && <div className="fixed bottom-5 right-5 z-[120] rounded border border-blood/40 bg-[#111113] px-5 py-4 font-bold text-white shadow-red">{toast}</div>}

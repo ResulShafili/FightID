@@ -16,6 +16,19 @@ import { badgeRoutes, cardRoutes, cornerManRoutes, fightSeekRoutes, gymRoutes, l
 
 export const createApp = () => {
   const app = express();
+  const missingEnv = [
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "JWT_REFRESH_SECRET",
+    "CLIENT_URLS",
+    "CLOUDINARY_CLOUD_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_API_SECRET",
+  ].filter((key) => !process.env[key]);
+
+  if (missingEnv.length > 0) {
+    console.warn("[FightID] Missing env vars:", missingEnv.join(", "));
+  }
 
   app.use(helmet());
   app.use(compression());

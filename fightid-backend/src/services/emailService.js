@@ -19,9 +19,8 @@ export const sendEmail = async ({ to, subject, text }) => {
   const transporter = createTransporter();
   if (!to) return false;
   if (!transporter) {
-    if (env.nodeEnv !== "production") {
-      console.info(`[email disabled] ${subject} -> ${to}\n${text}`);
-    }
+    console.warn(`[email disabled] SMTP is not configured. Would have sent "${subject}" to ${to}.`);
+    if (env.nodeEnv !== "production") console.info(text);
     return false;
   }
 

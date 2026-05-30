@@ -6,9 +6,9 @@ export const setAccessToken = (token) => {
   accessToken = token;
 };
 
-export const apiRequest = async (path, options = {}) => {
+export const apiRequest = async (path, options = {}, retry = true) => {
   const hasBody = options.body !== undefined;
-  const isFormData = options.isFormData;
+  const isFormData = options.isFormData === true;
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
@@ -17,6 +17,30 @@ export const apiRequest = async (path, options = {}) => {
       ...options.headers,
     },
   });
+
+  if (response.status === 401 && retry) {
+    const storedRefresh = localStorage.getItem("fightidRefreshToken");
+    if (storedRefresh) {
+      try {
+        const data = await apiRequest(
+          "/auth/refresh",
+          { method: "POST", body: JSON.stringify({ refreshToken: storedRefresh }) },
+          false,
+        );
+        if (data?.accessToken) {
+          setAccessToken(data.accessToken);
+          if (data.refreshToken) localStorage.setItem("fightidRefreshToken", data.refreshToken);
+          if (data.user) localStorage.setItem("fightidUser", JSON.stringify(data.user));
+          return apiRequest(path, options, false);
+        }
+      } catch {
+        setAccessToken(null);
+        localStorage.removeItem("fightidRefreshToken");
+        localStorage.removeItem("fightidUser");
+        window.dispatchEvent(new Event("auth:logout"));
+      }
+    }
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: "Request failed" }));
@@ -53,6 +77,12 @@ export const challengeApi = {
   send: (payload) => apiRequest("/challenges", { method: "POST", body: JSON.stringify(payload) }),
   accept: (id) => apiRequest(`/challenges/${id}/accept`, { method: "PUT" }),
   decline: (id) => apiRequest(`/challenges/${id}/decline`, { method: "PUT" }),
+};
+
+export const notificationApi = {
+  list: () => apiRequest("/notifications"),
+  markRead: (id) => apiRequest(`/notifications/${id}/read`, { method: "PUT" }),
+  markAllRead: () => apiRequest("/notifications/read-all", { method: "PUT" }),
 };
 
 export const cardApi = {

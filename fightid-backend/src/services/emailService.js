@@ -18,6 +18,8 @@ const createTransporter = () => {
   });
 };
 
+export const isEmailConfigured = () => Boolean(env.email.smtpHost && env.email.smtpUser && env.email.smtpPass);
+
 export const sendEmail = async ({ to, subject, text }) => {
   const transporter = createTransporter();
   if (!to) return false;

@@ -5,7 +5,7 @@ import { ApiError } from "../utils/apiError.js";
 import { hashToken, refreshExpiryDate, signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/tokens.js";
 import { upsertFighterCard } from "../services/cardService.js";
 import { evaluateBadges } from "../services/badgeService.js";
-import { sendEmail } from "../services/emailService.js";
+import { isEmailConfigured, sendEmail } from "../services/emailService.js";
 
 const publicUser = (user) => ({
   id: user.id,
@@ -87,7 +87,10 @@ const sendEmailCode = async (user, purpose) => {
   });
 
   if (!emailSent && process.env.NODE_ENV === "production") {
-    throw new ApiError(503, "Email service is not configured. Set SMTP_HOST, SMTP_USER and SMTP_PASS in Railway.");
+    const message = isEmailConfigured()
+      ? "Email could not be sent. Check Gmail App Password, SMTP_USER, SMTP_PASS and Railway logs."
+      : "Email service is not configured. Set SMTP_HOST, SMTP_USER and SMTP_PASS in Railway backend variables.";
+    throw new ApiError(503, message);
   }
 
   return {

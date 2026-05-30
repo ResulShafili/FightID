@@ -23,19 +23,16 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  adminApi,
   authApi,
   badgeApi,
   fighterApi,
   gymApi,
   leaderboardApi,
-  micCheckApi,
   notificationApi,
   seekApi,
   setAccessToken,
   tournamentApi,
   trainingApi,
-  verificationApi,
 } from "./lib/api";
 import { createFightIdSocket } from "./lib/socket";
 
@@ -1966,10 +1963,6 @@ function FightSeekBoard() {
   return <SimpleFeaturePage title="Fight Board" badge="Fight Wanted" loader={() => seekApi.list({ limit: 30 })} empty="No fight listings for this weight class yet. Be the first to post." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><h3 className="font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><p className="mt-2 text-zinc-400">{formatWeightClass(item.weightClass)} · {formatResult(item.ruleSet)} · {item.location}</p><p className="mt-3 text-sm text-zinc-500">{item.message}</p></div>} />;
 }
 
-function SparringFinder() {
-  return <SimpleFeaturePage title="Sparring Finder" badge="Sparring" loader={() => fighterApi.list({ seekingSparring: "true", limit: 30 })} empty="No fighters are looking for sparring right now." renderItem={(fighter) => <div key={fighter.id} className="rounded border border-white/10 bg-[#111113] p-5"><img src={getFighterImage(fighter.profilePhotoUrl)} className="h-48 w-full rounded object-cover" /><h3 className="mt-4 font-display text-2xl font-black text-white">{fighter.fullName}</h3><p className="mt-2 text-zinc-400">{fighter.sparringLocation || fighter.country}</p><p className="mt-2 text-sm text-emerald-300">Seeking sparring partner</p></div>} />;
-}
-
 function TournamentHub() {
   return <SimpleFeaturePage title="Tournaments" badge="Bracket Hub" loader={() => tournamentApi.list({ limit: 30 })} empty="No tournaments yet." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><Badge tone="red">{item.status}</Badge><h3 className="mt-4 font-display text-2xl font-black text-white">{item.name}</h3><p className="mt-2 text-zinc-400">{formatWeightClass(item.weightClass)} · {formatResult(item.ruleSet)} · {item.size} slots</p></div>} />;
 }
@@ -1977,11 +1970,6 @@ function TournamentHub() {
 function GymHub() {
   const [tab, setTab] = useState("gyms");
   return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Gym Network</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Gyms</h1><div className="mt-6 flex gap-3"><button onClick={() => setTab("gyms")} className="rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Gyms</button><button onClick={() => setTab("leaderboard")} className="rounded border border-white/10 px-5 py-3 font-black text-white">Gym Leaderboard</button></div><SimpleFeaturePage title="" badge="" loader={tab === "gyms" ? () => gymApi.list({ limit: 30 }) : gymApi.leaderboard} empty="No gyms yet." renderItem={(gym) => <div key={gym.id} className="rounded border border-white/10 bg-[#111113] p-5"><h3 className="font-display text-2xl font-black text-white">{gym.name}</h3><p className="mt-2 text-zinc-400">{gym.city}, {gym.country}</p><p className="mt-2 text-sm text-zinc-500">{gym.fighterCount || 0} fighters · {gym.totalPoints || 0} points</p></div>} /></main>;
-}
-
-function MicCheckFeed({ user }) {
-  const emojis = ["🔥", "💀", "😂", "🥶", "👊"];
-  return <SimpleFeaturePage title="Mic Check 🎤" badge="Fight Talk" loader={micCheckApi.feed} empty="No Mic Checks yet." user={user} renderItem={(item) => <div key={item.id} className="rounded border border-blood/30 bg-[#111113] p-5"><div className="flex gap-4"><img src={getFighterImage(item.fighter.profilePhotoUrl)} className="h-20 w-20 rounded object-cover" /><div><h3 className="font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><p className="text-zinc-400">{formatWeightClass(item.challenge.weightClass)} · {formatResult(item.challenge.ruleSet)}</p></div></div><p className="mt-5 text-2xl font-black italic text-white">"{item.message}"</p><div className="mt-5 flex gap-2">{emojis.map((emoji) => <button key={emoji} onClick={() => user && micCheckApi.react(item.id, emoji)} className="rounded border border-white/10 px-3 py-2 text-white">{emoji} {item.reactionCounts?.[emoji] || 0}</button>)}</div></div>} />;
 }
 
 function NationalChampions({ openProfile }) {

@@ -618,6 +618,8 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
   }, [initialTab]);
 
   const handleAuthSuccess = (result) => {
+    if (result.accessToken) setAccessToken(result.accessToken);
+    if (result.refreshToken) localStorage.setItem(refreshTokenStorageKey, result.refreshToken);
     localStorage.setItem(userStorageKey, JSON.stringify(result.user));
     onSuccess(result.user);
     onClose();
@@ -1350,6 +1352,10 @@ function LandingPage({ setPage, openProfile }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const storedAccessToken = localStorage.getItem(accessTokenStorageKey);
+    const storedRefreshToken = localStorage.getItem(refreshTokenStorageKey);
+    if (storedAccessToken) setAccessToken(storedAccessToken);
+
     let ignore = false;
 
     Promise.all([fighterApi.leaderboard({ limit: 3 }), fighterApi.list({ limit: 100 })])
@@ -2723,8 +2729,11 @@ export default function App() {
 
     const restoreSession = async () => {
       try {
-        const result = await authApi.me();
+        let result = await authApi.me();
+        if (!result?.user && storedRefreshToken) result = await authApi.refresh(storedRefreshToken);
         if (ignore) return;
+        if (result.accessToken) setAccessToken(result.accessToken);
+        if (result.refreshToken) localStorage.setItem(refreshTokenStorageKey, result.refreshToken);
         if (result.user) {
           localStorage.setItem(userStorageKey, JSON.stringify(result.user));
           setUser(result.user);

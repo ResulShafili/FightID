@@ -142,7 +142,7 @@ export const register = asyncHandler(async (req, res) => {
   await evaluateBadges(user.fighterProfile.id);
   const tokens = await issueTokens(user);
   setAuthCookies(res, tokens);
-  res.status(201).json({ user: publicUser(user) });
+  res.status(201).json({ user: publicUser(user), ...tokens });
 });
 
 export const login = asyncHandler(async (req, res) => {
@@ -184,7 +184,7 @@ export const verifyEmailCode = asyncHandler(async (req, res) => {
 
   const tokens = await issueTokens(user);
   setAuthCookies(res, tokens);
-  res.json({ user: publicUser(user) });
+  res.json({ user: publicUser(user), ...tokens });
 });
 
 export const me = asyncHandler(async (req, res) => {
@@ -226,7 +226,7 @@ export const refresh = asyncHandler(async (req, res) => {
   });
   const tokens = await issueTokens(updatedUser);
   setAuthCookies(res, tokens);
-  res.json({ user: publicUser(updatedUser) });
+  res.json({ user: publicUser(updatedUser), ...tokens });
 });
 
 export const logout = asyncHandler(async (req, res) => {

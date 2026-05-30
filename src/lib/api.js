@@ -1,9 +1,13 @@
 const API_URL = (import.meta.env.VITE_API_URL || "https://fightid-production.up.railway.app/api").replace(/\/$/, "");
+const accessTokenStorageKey = "fightidAccessToken";
+const refreshTokenStorageKey = "fightidRefreshToken";
 
-let accessToken = null;
+let accessToken = localStorage.getItem(accessTokenStorageKey);
 
 export const setAccessToken = (token) => {
   accessToken = token;
+  if (token) localStorage.setItem(accessTokenStorageKey, token);
+  else localStorage.removeItem(accessTokenStorageKey);
 };
 
 export const apiRequest = async (path, options = {}, retry = true) => {
@@ -35,13 +39,22 @@ export const apiRequest = async (path, options = {}, retry = true) => {
 
   if (response.status === 401 && retry) {
     try {
-      const data = await apiRequest("/auth/refresh", { method: "POST" }, false);
+      const storedRefresh = localStorage.getItem(refreshTokenStorageKey);
+      const data = await apiRequest(
+        "/auth/refresh",
+        {
+          method: "POST",
+          ...(storedRefresh ? { body: JSON.stringify({ refreshToken: storedRefresh }) } : {}),
+        },
+        false,
+      );
+      if (data?.accessToken) setAccessToken(data.accessToken);
+      if (data?.refreshToken) localStorage.setItem(refreshTokenStorageKey, data.refreshToken);
       if (data?.user) localStorage.setItem("fightidUser", JSON.stringify(data.user));
       return apiRequest(path, options, false);
     } catch {
       setAccessToken(null);
-      localStorage.removeItem("fightidAccessToken");
-      localStorage.removeItem("fightidRefreshToken");
+      localStorage.removeItem(refreshTokenStorageKey);
       localStorage.removeItem("fightidUser");
       window.dispatchEvent(new Event("auth:logout"));
     }
@@ -61,7 +74,7 @@ export const authApi = {
   login: (payload) => apiRequest("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
   verifyEmailCode: (payload) => apiRequest("/auth/verify-email-code", { method: "POST", body: JSON.stringify(payload) }),
   me: () => apiRequest("/auth/me"),
-  refresh: () => apiRequest("/auth/refresh", { method: "POST" }),
+  refresh: (refreshToken) => apiRequest("/auth/refresh", { method: "POST", ...(refreshToken ? { body: JSON.stringify({ refreshToken }) } : {}) }),
   logout: () => apiRequest("/auth/logout", { method: "POST" }),
 };
 

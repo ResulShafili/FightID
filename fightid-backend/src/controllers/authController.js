@@ -148,6 +148,19 @@ export const verifyEmailCode = asyncHandler(async (req, res) => {
   res.json({ user: publicUser(user), ...tokens });
 });
 
+export const me = asyncHandler(async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    include: { fighterProfile: true },
+  });
+
+  if (!user) {
+    throw new ApiError(401, "Authenticated user no longer exists");
+  }
+
+  res.json({ user: publicUser(user) });
+});
+
 export const refresh = asyncHandler(async (req, res) => {
   const { refreshToken } = req.body;
   const payload = verifyRefreshToken(refreshToken);

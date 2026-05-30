@@ -84,6 +84,7 @@ const fallbackFeaturedFighters = [
   { id: "fallback-kamran", name: "Kamran Əliyev", nickname: "Iron", country: "Azerbaijan", countryCode: "AZ", weightClass: "Middleweight", record: "6-1-1", points: 1185, rank: 3, status: "Amateur", gym: "Neftçi Fight Team", image: fallbackPortrait },
 ];
 const refreshTokenStorageKey = "fightidRefreshToken";
+const accessTokenStorageKey = "fightidAccessToken";
 const userStorageKey = "fightidUser";
 const settingsStorageKey = "fightidSettings";
 const defaultSettings = {
@@ -2712,13 +2713,32 @@ export default function App() {
   }, [settings]);
 
   useEffect(() => {
+    const storedAccessToken = localStorage.getItem(accessTokenStorageKey);
     const refreshToken = localStorage.getItem(refreshTokenStorageKey);
-    if (!refreshToken) return;
+    if (!storedAccessToken && !refreshToken) return;
 
     let ignore = false;
-    authApi
-      .refresh(refreshToken)
-      .then((result) => {
+
+    const clearSession = () => {
+      setAccessToken(null);
+      localStorage.removeItem(accessTokenStorageKey);
+      localStorage.removeItem(refreshTokenStorageKey);
+      localStorage.removeItem(userStorageKey);
+      setUser(null);
+    };
+
+    const restoreSession = async () => {
+      try {
+        if (storedAccessToken) {
+          setAccessToken(storedAccessToken);
+          const result = await authApi.me();
+          if (ignore) return;
+          localStorage.setItem(userStorageKey, JSON.stringify(result.user));
+          setUser(result.user);
+          return;
+        }
+
+        const result = await authApi.refresh(refreshToken);
         if (ignore) return;
         setAccessToken(result.accessToken);
         localStorage.setItem(refreshTokenStorageKey, result.refreshToken);
@@ -2726,14 +2746,13 @@ export default function App() {
           localStorage.setItem(userStorageKey, JSON.stringify(result.user));
           setUser(result.user);
         }
-      })
-      .catch(() => {
+      } catch {
         if (ignore) return;
-        setAccessToken(null);
-        localStorage.removeItem(refreshTokenStorageKey);
-        localStorage.removeItem(userStorageKey);
-        setUser(null);
-      });
+        clearSession();
+      }
+    };
+
+    restoreSession();
 
     return () => {
       ignore = true;
@@ -2772,6 +2791,9 @@ export default function App() {
   useEffect(() => {
     const handleForcedLogout = () => {
       setAccessToken(null);
+      localStorage.removeItem(accessTokenStorageKey);
+      localStorage.removeItem(refreshTokenStorageKey);
+      localStorage.removeItem(userStorageKey);
       setUser(null);
       navigate("/");
     };
@@ -2803,6 +2825,7 @@ export default function App() {
       if (refreshToken) await authApi.logout(refreshToken);
     } finally {
       setAccessToken(null);
+      localStorage.removeItem(accessTokenStorageKey);
       localStorage.removeItem(refreshTokenStorageKey);
       localStorage.removeItem(userStorageKey);
       setUser(null);

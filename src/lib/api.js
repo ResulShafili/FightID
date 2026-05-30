@@ -1,9 +1,12 @@
 const API_URL = (import.meta.env.VITE_API_URL || "https://fightid-production.up.railway.app/api").replace(/\/$/, "");
+const accessTokenStorageKey = "fightidAccessToken";
 
-let accessToken = null;
+let accessToken = localStorage.getItem(accessTokenStorageKey);
 
 export const setAccessToken = (token) => {
   accessToken = token;
+  if (token) localStorage.setItem(accessTokenStorageKey, token);
+  else localStorage.removeItem(accessTokenStorageKey);
 };
 
 export const apiRequest = async (path, options = {}, retry = true) => {
@@ -35,6 +38,7 @@ export const apiRequest = async (path, options = {}, retry = true) => {
         }
       } catch {
         setAccessToken(null);
+        localStorage.removeItem(accessTokenStorageKey);
         localStorage.removeItem("fightidRefreshToken");
         localStorage.removeItem("fightidUser");
         window.dispatchEvent(new Event("auth:logout"));
@@ -55,6 +59,7 @@ export const authApi = {
   register: (payload) => apiRequest("/auth/register", { method: "POST", body: JSON.stringify(payload) }),
   login: (payload) => apiRequest("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
   verifyEmailCode: (payload) => apiRequest("/auth/verify-email-code", { method: "POST", body: JSON.stringify(payload) }),
+  me: () => apiRequest("/auth/me"),
   refresh: (refreshToken) => apiRequest("/auth/refresh", { method: "POST", body: JSON.stringify({ refreshToken }) }),
   logout: (refreshToken) => apiRequest("/auth/logout", { method: "POST", body: JSON.stringify({ refreshToken }) }),
 };

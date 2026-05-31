@@ -1,6 +1,6 @@
-# FightID
+# FightBase
 
-FightID is a full-stack MMA fighter platform for verified fighter profiles, fight records, rankings, challenges, federation review, notifications, and public discovery.
+FightBase is a full-stack MMA fighter platform for verified fighter profiles, fight records, rankings, challenges, federation review, notifications, and public discovery.
 
 ## Project Structure
 
@@ -188,7 +188,7 @@ Password123!
 
 Useful accounts:
 
-- `admin@fightid.app`
-- `rep.az@fightid.app`
-- `darya@fightid.app`
-- `elias@fightid.app`
+- `admin@fightbase.app`
+- `rep.az@fightbase.app`
+- `darya@fightbase.app`
+- `elias@fightbase.app`

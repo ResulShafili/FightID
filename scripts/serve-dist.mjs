@@ -27,5 +27,5 @@ createServer((req, res) => {
   res.setHeader("Content-Type", types[extname(file)] || "application/octet-stream");
   createReadStream(file).pipe(res);
 }).listen(port, host, () => {
-  console.log(`FightID preview running at http://${host}:${port}`);
+  console.log(`FightBase preview running at http://${host}:${port}`);
 });

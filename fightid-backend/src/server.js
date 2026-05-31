@@ -35,7 +35,7 @@ cron.schedule("0 * * * *", async () => {
 });
 
 server.listen(env.port, () => {
-  console.log(`FightID backend running on port ${env.port}`);
+  console.log(`FightBase backend running on port ${env.port}`);
 });
 
 const shutdown = async () => {

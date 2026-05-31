@@ -30,7 +30,7 @@ export const createApp = () => {
   ].filter((key) => !process.env[key]);
 
   if (missingEnv.length > 0) {
-    console.warn("[FightID] Missing env vars:", missingEnv.join(", "));
+    console.warn("[FightBase] Missing env vars:", missingEnv.join(", "));
   }
 
   app.use(helmet());
@@ -60,7 +60,7 @@ export const createApp = () => {
   });
 
   app.get("/health", (_req, res) => {
-    res.json({ status: "ok", service: "fightid-backend" });
+    res.json({ status: "ok", service: "fightbase-backend" });
   });
 
   app.use("/api/auth", authLimiter, authRoutes);

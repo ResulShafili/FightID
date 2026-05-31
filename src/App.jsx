@@ -100,7 +100,7 @@ const languageOptions = [
   { value: "ru", label: "RU", name: "Русский" },
 ];
 const themeOptions = [
-  { value: "dark", label: "Dark", description: "Classic FightID charcoal" },
+  { value: "dark", label: "Dark", description: "Classic FightBase charcoal" },
   { value: "midnight", label: "Midnight", description: "Deeper black arena look" },
   { value: "contrast", label: "High Contrast", description: "Sharper text and panels" },
 ];
@@ -118,7 +118,7 @@ const themePalettes = {
 const translations = {
   az: {
     settings: "Ayarlar",
-    fightIdControls: "FightID idarə paneli",
+    fightIdControls: "FightBase idarə paneli",
     settingsDescription: "Bu brauzer üçün tema, dil, bildiriş və rahatlıq ayarları.",
     language: "Dil",
     theme: "Tema",
@@ -128,7 +128,7 @@ const translations = {
     search: "Axtarış",
     login: "Giriş",
     logout: "Çıxış",
-    joinFightId: "FightID-ə qoşul",
+    joinFightId: "FightBase-ə qoşul",
     notifications: "Bildirişlər",
     markAllRead: "Hamısını oxunmuş et",
     noNotifications: "Hələ bildiriş yoxdur.",
@@ -145,7 +145,7 @@ const translations = {
   },
   en: {
     settings: "Settings",
-    fightIdControls: "FightID controls",
+    fightIdControls: "FightBase controls",
     settingsDescription: "Theme, language, notification, and comfort settings for this browser.",
     language: "Language",
     theme: "Theme",
@@ -155,7 +155,7 @@ const translations = {
     search: "Search",
     login: "Login",
     logout: "Logout",
-    joinFightId: "Join FightID",
+    joinFightId: "Join FightBase",
     notifications: "Notifications",
     markAllRead: "Mark all read",
     noNotifications: "No notifications yet.",
@@ -172,7 +172,7 @@ const translations = {
   },
   tr: {
     settings: "Ayarlar",
-    fightIdControls: "FightID kontrolleri",
+    fightIdControls: "FightBase kontrolleri",
     settingsDescription: "Bu tarayıcı için tema, dil, bildirim ve kullanım ayarları.",
     language: "Dil",
     theme: "Tema",
@@ -182,7 +182,7 @@ const translations = {
     search: "Arama",
     login: "Giriş",
     logout: "Çıkış",
-    joinFightId: "FightID'e katıl",
+    joinFightId: "FightBase'e katıl",
     notifications: "Bildirimler",
     markAllRead: "Tümünü okundu yap",
     noNotifications: "Henüz bildirim yok.",
@@ -199,7 +199,7 @@ const translations = {
   },
   ru: {
     settings: "Настройки",
-    fightIdControls: "Панель FightID",
+    fightIdControls: "Панель FightBase",
     settingsDescription: "Тема, язык, уведомления и параметры удобства для этого браузера.",
     language: "Язык",
     theme: "Тема",
@@ -277,10 +277,10 @@ const phraseTranslations = {
   "Live rankings": { az: "Canlı reytinqlər", tr: "Canlı sıralamalar", ru: "Живые рейтинги" },
   Countries: { az: "Ölkələr", tr: "Ülkeler", ru: "Страны" },
   Active: { az: "Aktiv", tr: "Aktif", ru: "Активно" },
-  "FightID is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and clean discovery tools for real matchmaking.": {
-    az: "FightID ciddi döyüş idmanı bazası kimi qurulub: təsdiqli döyüşçü profilləri, axtarıla bilən həvəskar rekordları, çəki reytinqləri, zal bağlantıları və real uyğunlaşma üçün təmiz kəşf alətləri.",
-    tr: "FightID ciddi bir dövüş sporları veritabanı gibi kuruldu: doğrulanmış dövüşçü profilleri, aranabilir amatör kayıtları, kilo sıralamaları, salon bağlantıları ve gerçek eşleşme için temiz keşif araçları.",
-    ru: "FightID построен как серьезная база единоборств: проверенные профили бойцов, поиск любительских рекордов, рейтинги по весам, связи с залами и чистые инструменты поиска для реального матчмейкинга.",
+  "FightBase is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and clean discovery tools for real matchmaking.": {
+    az: "FightBase ciddi döyüş idmanı bazası kimi qurulub: təsdiqli döyüşçü profilləri, axtarıla bilən həvəskar rekordları, çəki reytinqləri, zal bağlantıları və real uyğunlaşma üçün təmiz kəşf alətləri.",
+    tr: "FightBase ciddi bir dövüş sporları veritabanı gibi kuruldu: doğrulanmış dövüşçü profilleri, aranabilir amatör kayıtları, kilo sıralamaları, salon bağlantıları ve gerçek eşleşme için temiz keşif araçları.",
+    ru: "FightBase построен как серьезная база единоборств: проверенные профили бойцов, поиск любительских рекордов, рейтинги по весам, связи с залами и чистые инструменты поиска для реального матчмейкинга.",
   },
   "Build a verified fighter identity, track real fight history, climb weight-class rankings, and challenge matched opponents through a confirmation-first fight system.": {
     az: "Təsdiqli döyüşçü kimliyi yarat, real döyüş tarixçəsini izlə, çəki reytinqlərində yüksəl və uyğun rəqiblərə çağırış göndər.",
@@ -383,7 +383,7 @@ const phraseTranslations = {
   Reject: { az: "Rədd et", tr: "Reddet", ru: "Отклонить" },
   "Make Pro": { az: "Pro et", tr: "Pro yap", ru: "Сделать Pro" },
   "Admin only": { az: "Yalnız admin", tr: "Sadece admin", ru: "Только админ" },
-  "Loading live FightID data": { az: "Canlı FightID məlumatları yüklənir", tr: "Canlı FightID verileri yükleniyor", ru: "Загрузка данных FightID" },
+  "Loading live FightBase data": { az: "Canlı FightBase məlumatları yüklənir", tr: "Canlı FightBase verileri yükleniyor", ru: "Загрузка данных FightBase" },
   "Live data unavailable": { az: "Canlı məlumat əlçatan deyil", tr: "Canlı veri kullanılamıyor", ru: "Данные недоступны" },
   "Failed to fetch": { az: "Bağlantı alınmadı", tr: "Veri alınamadı", ru: "Не удалось загрузить" },
   "Live sync is reconnecting. Showing a polished preview while the fight database comes back online.": {
@@ -558,7 +558,7 @@ function Stat({ value, label }) {
   );
 }
 
-function LoadingPanel({ label = "Loading live FightID data" }) {
+function LoadingPanel({ label = "Loading live FightBase data" }) {
   return (
     <div className="rounded border border-white/10 bg-panel p-6 text-sm font-semibold text-zinc-300">
       {label}...
@@ -695,7 +695,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
       <div className="w-full max-w-2xl overflow-hidden rounded border border-white/10 bg-[#111113] shadow-red">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div>
-            <h2 className="font-display text-2xl font-black text-white">FightID Access</h2>
+            <h2 className="font-display text-2xl font-black text-white">FightBase Access</h2>
             <p className="mt-1 text-sm text-zinc-400">Log in or register your fighter account.</p>
           </div>
           <button onClick={onClose} className="rounded border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Close auth modal">
@@ -734,7 +734,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
               <div className="rounded border border-white/10 bg-white/[0.03] p-4">
                 <h3 className="font-display text-xl font-black text-white">Email verification</h3>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  We sent a 6-digit FightID code to <span className="font-bold text-white">{pendingVerification.email}</span>. Enter it here to finish login.
+                  We sent a 6-digit FightBase code to <span className="font-bold text-white">{pendingVerification.email}</span>. Enter it here to finish login.
                 </p>
                 {!pendingVerification.emailSent && pendingVerification.devCode && (
                   <p className="mt-3 rounded border border-yellow-400/30 bg-yellow-400/10 px-3 py-2 text-sm font-bold text-yellow-100">
@@ -780,7 +780,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                   value={loginForm.email}
                   onChange={(event) => setLoginForm({ ...loginForm, email: event.target.value })}
                   className={inputClass}
-                  placeholder="fighter@fightid.app"
+                  placeholder="fighter@fightbase.app"
                 />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
@@ -819,7 +819,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                     value={registerForm.email}
                     onChange={(event) => setRegisterForm({ ...registerForm, email: event.target.value })}
                     className={inputClass}
-                    placeholder="fighter@fightid.app"
+                    placeholder="fighter@fightbase.app"
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-bold text-zinc-200">
@@ -859,7 +859,7 @@ function SettingsPanel({ open, settings, onChange, onClose, t }) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[110] bg-black/70 backdrop-blur" role="dialog" aria-modal="true" aria-label="FightID settings">
+    <div className="fixed inset-0 z-[110] bg-black/70 backdrop-blur" role="dialog" aria-modal="true" aria-label="FightBase settings">
       <button className="absolute inset-0 cursor-default" onClick={onClose} aria-label="Close settings" />
       <aside className="relative ml-auto flex h-full w-full max-w-md flex-col border-l border-white/10 bg-[#111113] shadow-red">
         <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
@@ -1086,7 +1086,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
         <button onClick={() => setPage("Home")} className="flex shrink-0 items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-sm bg-blood text-lg font-black text-white shadow-red">F</span>
           <span>
-            <span className="block font-display text-lg font-black uppercase text-white">FightID</span>
+            <span className="block font-display text-lg font-black uppercase text-white">FightBase</span>
             <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500 max-[420px]:hidden">MMA records database</span>
           </span>
         </button>
@@ -1391,7 +1391,7 @@ function LandingPage({ setPage, openProfile }) {
             <Badge tone="red">MMA fighter database</Badge>
             <h1 className="mt-6 max-w-4xl font-display text-5xl font-black leading-[1.02] text-white sm:text-7xl lg:text-7xl xl:text-8xl">Fight Records Database</h1>
             <p className="mt-6 max-w-[calc(100vw-2rem)] break-words text-lg leading-8 text-zinc-300 sm:max-w-2xl sm:text-xl">
-              FightID is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and clean discovery tools for real matchmaking.
+              FightBase is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and clean discovery tools for real matchmaking.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button onClick={() => setPage("Fighters")} className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-blood px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-ember sm:w-auto">
@@ -2122,7 +2122,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
               </div>
             )}
             <p className="mt-3 text-2xl font-bold text-zinc-300">"{profile.nickname || "No nickname"}"</p>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-300">{profile.bio || "Verified FightID fighter profile."}</p>
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-300">{profile.bio || "Verified FightBase fighter profile."}</p>
             <div className="mt-7 flex flex-wrap gap-3 text-sm font-bold text-zinc-300">
               <span className="inline-flex items-center gap-2 rounded border border-white/10 bg-white/5 px-3 py-2"><Flag size={16} /> {profile.country} {countryNames[profile.country] || profile.country}</span>
               <span className="inline-flex items-center gap-2 rounded border border-white/10 bg-white/5 px-3 py-2"><Dumbbell size={16} /> {formatWeightClass(profile.weightClass)}</span>
@@ -2589,7 +2589,7 @@ function PlaceholderPage({ title, icon: Icon }) {
         <Icon className="text-blood" size={34} />
         <h1 className="mt-5 font-display text-4xl font-black text-white">{title}</h1>
         <p className="mt-3 max-w-2xl text-zinc-400">
-          This section is queued for the next FightID build phase. The live fighter, profile, and leaderboard API integrations are now connected.
+          This section is queued for the next FightBase build phase. The live fighter, profile, and leaderboard API integrations are now connected.
         </p>
       </div>
     </main>
@@ -2616,7 +2616,7 @@ function NotFoundPage() {
     <main className="flex min-h-screen flex-col items-center justify-center px-4 text-center text-white">
       <div className="font-display text-8xl font-black text-blood">404</div>
       <h1 className="mt-4 font-display text-3xl font-black">Page not found</h1>
-      <p className="mt-3 max-w-md text-zinc-400">The FightID page you opened does not exist yet.</p>
+      <p className="mt-3 max-w-md text-zinc-400">The FightBase page you opened does not exist yet.</p>
       <button onClick={() => navigate("/")} className="mt-6 rounded border border-white/15 px-6 py-3 font-bold hover:bg-white/10">
         Go Home
       </button>
@@ -2859,7 +2859,7 @@ export default function App() {
       <SettingsPanel open={settingsOpen} settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} t={t} />
       {toast && <div className="fixed bottom-5 right-5 z-[120] rounded border border-blood/40 bg-[#111113] px-5 py-4 font-bold text-white shadow-red">{toast}</div>}
       <footer className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-500">
-        <span className="font-black uppercase tracking-[0.18em] text-zinc-300">FightID</span>
+        <span className="font-black uppercase tracking-[0.18em] text-zinc-300">FightBase</span>
         <span className="mx-3 text-zinc-700">/</span>
         Verified combat network for fighters, federations, and fight fans.
       </footer>

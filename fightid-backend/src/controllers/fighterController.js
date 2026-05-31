@@ -107,7 +107,7 @@ export const updateMe = asyncHandler(async (req, res) => {
 
 export const uploadProfilePhoto = asyncHandler(async (req, res) => {
   const profile = await getProfileForUser(req.user.id);
-  const profilePhotoUrl = await uploadBufferToCloudinary(req.file, "fightid/profile-photos");
+  const profilePhotoUrl = await uploadBufferToCloudinary(req.file, "fightbase/profile-photos");
 
   const updated = await prisma.fighterProfile.update({
     where: { id: profile.id },

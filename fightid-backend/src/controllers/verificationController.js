@@ -13,7 +13,7 @@ const canReviewFederation = (user, request) => {
 
 export const applyForPro = asyncHandler(async (req, res) => {
   const fighter = await getProfileForUser(req.user.id);
-  const documentUrl = await uploadBufferToCloudinary(req.file, "fightid/verification-documents");
+  const documentUrl = await uploadBufferToCloudinary(req.file, "fightbase/verification-documents");
 
   const request = await prisma.proVerificationRequest.create({
     data: {
@@ -69,7 +69,7 @@ export const approveRequest = asyncHandler(async (req, res) => {
     type: "PRO_APPROVED",
     message: `Your Pro verification was approved by ${request.federation.name}.`,
     relatedEntityId: request.id,
-    emailSubject: "FightID Pro verification approved",
+    emailSubject: "FightBase Pro verification approved",
   });
 
   res.json(updated);
@@ -93,7 +93,7 @@ export const rejectRequest = asyncHandler(async (req, res) => {
     type: "PRO_REJECTED",
     message: `Your Pro verification was rejected. Note: ${req.body.adminNote}`,
     relatedEntityId: request.id,
-    emailSubject: "FightID Pro verification update",
+    emailSubject: "FightBase Pro verification update",
   });
 
   res.json(updated);

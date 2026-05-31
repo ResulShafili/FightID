@@ -274,7 +274,7 @@ export const updateGym = asyncHandler(async (req, res) => {
 
 export const uploadGymLogo = asyncHandler(async (req, res) => {
   await assertGymOwner(req.params.id, req.user.id);
-  const logoUrl = await uploadBufferToCloudinary(req.file, "fightid/gym-logos");
+  const logoUrl = await uploadBufferToCloudinary(req.file, "fightbase/gym-logos");
   res.json(await prisma.gym.update({ where: { id: req.params.id }, data: { logoUrl } }));
 });
 

@@ -71,7 +71,7 @@ export const evaluateBadges = async (fighterId) => {
       type: "BADGE_EARNED",
       message: `You earned a new badge: ${badgeLabels[type]}!`,
       relatedEntityId: badge.id,
-      emailSubject: "New FightID badge earned",
+      emailSubject: "New FightBase badge earned",
     });
   }
 

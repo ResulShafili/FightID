@@ -36,7 +36,7 @@ export const sendChallenge = asyncHandler(async (req, res) => {
     type: "CHALLENGE_RECEIVED",
     message: `${sender.fullName} challenged you to a ${challenge.ruleSet} fight in ${challenge.location}.`,
     relatedEntityId: challenge.id,
-    emailSubject: "New FightID challenge received",
+    emailSubject: "New FightBase challenge received",
   });
 
   res.status(201).json(challenge);
@@ -71,7 +71,7 @@ export const acceptChallenge = asyncHandler(async (req, res) => {
     type: "CHALLENGE_ACCEPTED",
     message: `${profile.fullName} accepted your challenge.`,
     relatedEntityId: challenge.id,
-    emailSubject: "Your FightID challenge was accepted",
+    emailSubject: "Your FightBase challenge was accepted",
   });
 
   res.json(updated);

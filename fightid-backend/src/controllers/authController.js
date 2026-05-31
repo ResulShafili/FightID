@@ -82,9 +82,9 @@ const sendEmailCode = async (user, purpose) => {
 
   const emailResult = await sendEmailWithResult({
     to: user.email,
-    subject: purpose === "REGISTER" ? "FightID qeydiyyat kodu" : "FightID giriş kodu",
-    text: `Your FightID verification code is ${code}. It expires in 10 minutes.`,
-    html: `<p>FightID kodunuz: <strong>${code}</strong></p><p>Bu kod 10 dəqiqə ərzində keçərlidir.</p>`,
+    subject: purpose === "REGISTER" ? "FightBase qeydiyyat kodu" : "FightBase giriş kodu",
+    text: `Your FightBase verification code is ${code}. It expires in 10 minutes.`,
+    html: `<p>FightBase kodunuz: <strong>${code}</strong></p><p>Bu kod 10 dəqiqə ərzində keçərlidir.</p>`,
   });
 
   if (!emailResult.sent && process.env.NODE_ENV === "production") {

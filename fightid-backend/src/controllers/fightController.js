@@ -47,7 +47,7 @@ export const verifyFight = asyncHandler(async (req, res) => {
     type: "FIGHT_CONFIRMED",
     message: `${fight.eventName} result has been verified.`,
     relatedEntityId: fight.id,
-    emailSubject: "Your FightID result was verified",
+    emailSubject: "Your FightBase result was verified",
   });
 
   if (fight.result === "WIN") {

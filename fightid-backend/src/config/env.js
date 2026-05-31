@@ -20,6 +20,6 @@ export const env = {
   },
   email: {
     resendApiKey: process.env.RESEND_API_KEY,
-    from: process.env.EMAIL_FROM || "FightID <notifications@fightid.app>",
+    from: process.env.EMAIL_FROM || "FightBase <notifications@fightbase.app>",
   },
 };

@@ -8,14 +8,14 @@ const profilePhotoUrl = "/assets/fightid-logo.svg";
 const coverPhotoUrl = "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=1600&q=80";
 
 const federationSeeds = [
-  ["rep.amf@fightid.app", "Azerbaijan MMA Federation", "AZ"],
-  ["rep.caspian@fightid.app", "Caspian Combat League", "AZ"],
-  ["rep.bfa@fightid.app", "Baku Fight Association", "AZ"],
+  ["rep.amf@fightbase.app", "Azerbaijan MMA Federation", "AZ"],
+  ["rep.caspian@fightbase.app", "Caspian Combat League", "AZ"],
+  ["rep.bfa@fightbase.app", "Baku Fight Association", "AZ"],
 ];
 
 const fighterSeeds = [
   {
-    email: "reshad.mammadov@fightid.app",
+    email: "reshad.mammadov@fightbase.app",
     fullName: "Rəşad Məmmədov",
     nickname: "Qartal",
     dateOfBirth: "1996-03-14",
@@ -25,7 +25,7 @@ const fighterSeeds = [
     points: 1420,
   },
   {
-    email: "tural.hasanov@fightid.app",
+    email: "tural.hasanov@fightbase.app",
     fullName: "Tural Həsənov",
     nickname: "Xəzər",
     dateOfBirth: "1994-08-22",
@@ -35,7 +35,7 @@ const fighterSeeds = [
     points: 1360,
   },
   {
-    email: "elnur.quliyev@fightid.app",
+    email: "elnur.quliyev@fightbase.app",
     fullName: "Elnur Quliyev",
     nickname: "Şimşək",
     dateOfBirth: "1998-01-09",
@@ -45,7 +45,7 @@ const fighterSeeds = [
     points: 980,
   },
   {
-    email: "kamran.aliyev@fightid.app",
+    email: "kamran.aliyev@fightbase.app",
     fullName: "Kamran Əliyev",
     nickname: "Daş Yumruq",
     dateOfBirth: "1995-11-30",
@@ -55,7 +55,7 @@ const fighterSeeds = [
     points: 1285,
   },
   {
-    email: "nicat.huseynov@fightid.app",
+    email: "nicat.huseynov@fightbase.app",
     fullName: "Nicat Hüseynov",
     nickname: "Aslan",
     dateOfBirth: "1999-06-18",
@@ -65,7 +65,7 @@ const fighterSeeds = [
     points: 910,
   },
   {
-    email: "mushfiq.babayev@fightid.app",
+    email: "mushfiq.babayev@fightbase.app",
     fullName: "Müşfiq Babayev",
     nickname: "Səssiz",
     dateOfBirth: "1993-04-05",
@@ -75,7 +75,7 @@ const fighterSeeds = [
     points: 1510,
   },
   {
-    email: "terlan.ismayilov@fightid.app",
+    email: "terlan.ismayilov@fightbase.app",
     fullName: "Tərlan İsmayılov",
     nickname: "Qara Kəmər",
     dateOfBirth: "1997-09-12",
@@ -85,7 +85,7 @@ const fighterSeeds = [
     points: 870,
   },
   {
-    email: "orxan.necefov@fightid.app",
+    email: "orxan.necefov@fightbase.app",
     fullName: "Orxan Nəcəfov",
     nickname: "Kaspi",
     dateOfBirth: "1992-12-27",
@@ -95,7 +95,7 @@ const fighterSeeds = [
     points: 1335,
   },
   {
-    email: "behruz.ahmadov@fightid.app",
+    email: "behruz.ahmadov@fightbase.app",
     fullName: "Bəhruz Əhmədov",
     nickname: "Polad",
     dateOfBirth: "2000-02-21",
@@ -105,7 +105,7 @@ const fighterSeeds = [
     points: 760,
   },
   {
-    email: "ferid.rzayev@fightid.app",
+    email: "ferid.rzayev@fightbase.app",
     fullName: "Fərid Rzayev",
     nickname: "Alov",
     dateOfBirth: "1996-07-07",
@@ -122,14 +122,14 @@ const fightSeeds = [
   [0, 9, "Azerbaijan Fight Series", "2025-02-08", "LOSS", "SUBMISSION", 2, "4:02", true],
   [1, 4, "Baku Warriors 9", "2024-02-10", "WIN", "KO_TKO", 1, "2:41", true],
   [1, 7, "Caspian Combat League 18", "2024-09-14", "DRAW", "DECISION", 3, "5:00", true],
-  [1, 4, "FightID Showcase Baku", "2025-04-19", "WIN", "DECISION", 3, "5:00", true],
+  [1, 4, "FightBase Showcase Baku", "2025-04-19", "WIN", "DECISION", 3, "5:00", true],
   [2, 5, "Neftçi Fight Open", "2024-01-28", "LOSS", "DECISION", 3, "5:00", true],
   [2, 8, "Baku Amateur Cup", "2024-05-25", "WIN", "SUBMISSION", 2, "3:55", true],
   [2, 5, "Caspian Trials", "2025-01-18", "LOSS", "KO_TKO", 1, "4:12", false],
   [3, 6, "Baku Combat Night", "2023-11-11", "WIN", "SUBMISSION", 1, "4:44", true],
   [3, 9, "Caspian Cage Night 15", "2024-10-05", "LOSS", "DECISION", 3, "5:00", true],
   [4, 7, "Xəzər MMA Open", "2024-04-13", "LOSS", "KO_TKO", 2, "1:59", true],
-  [4, 1, "FightID Showcase Baku", "2025-04-19", "LOSS", "DECISION", 3, "5:00", true],
+  [4, 1, "FightBase Showcase Baku", "2025-04-19", "LOSS", "DECISION", 3, "5:00", true],
   [5, 8, "Neftçi Fight League", "2024-07-20", "WIN", "KO_TKO", 2, "2:26", true],
   [5, 2, "Caspian Trials", "2025-01-18", "WIN", "KO_TKO", 1, "4:12", false],
   [6, 0, "Caspian Cage Night 12", "2024-06-22", "LOSS", "KO_TKO", 2, "3:18", true],
@@ -187,7 +187,7 @@ async function main() {
   const passwordHash = await bcrypt.hash("Password123!", 12);
 
   const admin = await prisma.user.create({
-    data: { email: "admin@fightid.app", passwordHash, role: "ADMIN" },
+    data: { email: "admin@fightbase.app", passwordHash, role: "ADMIN" },
   });
 
   const federations = [];
@@ -329,7 +329,7 @@ async function main() {
       {
         userId: admin.id,
         type: "RANK_CHANGE",
-        message: "Azerbaijani FightID seed data loaded successfully.",
+        message: "Azerbaijani FightBase seed data loaded successfully.",
       },
       {
         userId: profiles[9].userId,
@@ -343,7 +343,7 @@ async function main() {
 main()
   .then(async () => {
     await prisma.$disconnect();
-    console.log("FightID Azerbaijani seed data created.");
+    console.log("FightBase Azerbaijani seed data created.");
   })
   .catch(async (error) => {
     console.error(error);

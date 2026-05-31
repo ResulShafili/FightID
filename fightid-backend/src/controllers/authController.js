@@ -82,14 +82,15 @@ const sendEmailCode = async (user, purpose) => {
 
   const emailResult = await sendEmailWithResult({
     to: user.email,
-    subject: purpose === "REGISTER" ? "Your FightID registration code" : "Your FightID login code",
+    subject: purpose === "REGISTER" ? "FightID qeydiyyat kodu" : "FightID giriş kodu",
     text: `Your FightID verification code is ${code}. It expires in 10 minutes.`,
+    html: `<p>FightID kodunuz: <strong>${code}</strong></p><p>Bu kod 10 dəqiqə ərzində keçərlidir.</p>`,
   });
 
   if (!emailResult.sent && process.env.NODE_ENV === "production") {
     const message = isEmailConfigured()
-      ? `Email could not be sent: ${emailResult.error}. Check Gmail App Password, SMTP_USER, SMTP_PASS and Railway logs.`
-      : "Email service is not configured. Set SMTP_HOST, SMTP_USER and SMTP_PASS in Railway backend variables.";
+      ? `Email could not be sent: ${emailResult.error}. Check RESEND_API_KEY, EMAIL_FROM and Railway logs.`
+      : "Email service is not configured. Set RESEND_API_KEY and EMAIL_FROM in Railway backend variables.";
     throw new ApiError(503, message);
   }
 

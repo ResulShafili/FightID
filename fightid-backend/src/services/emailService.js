@@ -1,51 +1,55 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { env } from "../config/env.js";
 
-const createTransporter = () => {
-  if (!env.email.smtpHost || !env.email.smtpUser || !env.email.smtpPass) return null;
-
-  return nodemailer.createTransport({
-    host: env.email.smtpHost,
-    port: env.email.smtpPort,
-    secure: env.email.smtpPort === 465,
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 10000,
-    auth: {
-      user: env.email.smtpUser,
-      pass: env.email.smtpPass,
-    },
-  });
+const createClient = () => {
+  if (!env.email.resendApiKey) return null;
+  return new Resend(env.email.resendApiKey);
 };
 
-export const isEmailConfigured = () => Boolean(env.email.smtpHost && env.email.smtpUser && env.email.smtpPass);
+const escapeHtml = (value = "") =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
-export const sendEmailWithResult = async ({ to, subject, text }) => {
-  const transporter = createTransporter();
+export const isEmailConfigured = () => Boolean(env.email.resendApiKey && env.email.from);
+
+export const sendEmailWithResult = async ({ to, subject, text, html }) => {
+  const resend = createClient();
   if (!to) return { sent: false, error: "Recipient email is missing" };
-  if (!transporter) {
-    const error = "SMTP is not configured";
+  if (!resend) {
+    const error = "Resend is not configured";
     console.warn(`[email disabled] ${error}. Would have sent "${subject}" to ${to}.`);
     if (env.nodeEnv !== "production") console.info(text);
     return { sent: false, error };
   }
 
   try {
-    await transporter.sendMail({
+    const { error } = await resend.emails.send({
       from: env.email.from,
       to,
       subject,
+      html: html || `<p>${escapeHtml(text).replace(/\n/g, "<br>")}</p>`,
       text,
     });
+
+    if (error) {
+      const detail = error.message || "Unknown Resend error";
+      console.warn(`[email failed] ${subject} -> ${to}: ${detail}`);
+      return { sent: false, error: detail };
+    }
+
     return { sent: true, error: null };
   } catch (error) {
-    const detail = error.response || error.message || "Unknown SMTP error";
+    const detail = error.message || "Unknown Resend error";
     console.warn(`[email failed] ${subject} -> ${to}: ${detail}`);
     return { sent: false, error: detail };
   }
 };
 
-export const sendEmail = async ({ to, subject, text }) => {
-  const result = await sendEmailWithResult({ to, subject, text });
+export const sendEmail = async ({ to, subject, text, html }) => {
+  const result = await sendEmailWithResult({ to, subject, text, html });
   return result.sent;
 };

@@ -54,11 +54,12 @@ CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 RESEND_API_KEY=
+EMAIL_FROM=
 CLIENT_URL=http://localhost:3000
 PORT=5000
 ```
 
-For local email, configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS`. If SMTP is not configured, email delivery is skipped while in-app and Socket.io notifications still work.
+Email is sent through Resend. Set `RESEND_API_KEY` and a verified `EMAIL_FROM` sender in Railway. If Resend is not configured, email delivery is skipped in local development while in-app and Socket.io notifications still work.
 
 ## Railway Deployment
 

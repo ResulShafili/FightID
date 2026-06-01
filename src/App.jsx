@@ -2464,10 +2464,11 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
 
 function RankingsPage({ openProfile }) {
   const [fighters, setFighters] = useState([]);
-  const [role, setRole] = useState("");
-  const [weightClass, setWeightClass] = useState("");
+  const [role, setRole] = useState("AMATEUR");
+  const [weightClass, setWeightClass] = useState("LIGHTWEIGHT");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const rankingTitle = role === "PRO" ? "Pro Reytinqi" : "Həvəskar Reytinqi";
 
   useEffect(() => {
     setLoading(true);
@@ -2486,21 +2487,19 @@ function RankingsPage({ openProfile }) {
     <main className="min-h-screen pt-[73px]">
       <section className="border-b border-zinc-800 bg-[#090a0c]/95 px-4 py-16 shadow-[0_22px_60px_rgba(0,0,0,0.28)] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Live Rankings</div>
+          <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Ayri reytinqler</div>
           <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="font-display text-5xl font-black uppercase leading-none text-white sm:text-7xl">İdmançı Reytinqləri</h1>
-              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-400">Clean live standings from the FightBase database. Filter by status or weight class.</p>
+              <h1 className="font-display text-5xl font-black uppercase leading-none text-white sm:text-7xl">{rankingTitle}</h1>
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-400">Pro ve heveskar doyuscusler ayri siralanir. Her reytinq yalniz secilmis ceki derecesine aiddir.</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-white outline-none focus:border-blood">
-                <option value="">All roles</option>
                 <option value="PRO">Pro</option>
-                <option value="AMATEUR">Amateur</option>
+                <option value="AMATEUR">Heveskar</option>
               </select>
               <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-white outline-none focus:border-blood">
-                <option value="">Bütün çəkilər</option>
-                {["LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT"].map((value) => (
+                {weightClassOptions.map((value) => (
                   <option key={value} value={value}>{formatWeightClass(value)}</option>
                 ))}
               </select>
@@ -2510,10 +2509,17 @@ function RankingsPage({ openProfile }) {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        {loading && <LoadingPanel label="Fetching rankings from /api/fighters/leaderboard" />}
+        <div className="mb-6 flex flex-col gap-2 border-b border-zinc-800 pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.16em] text-blood">{formatWeightClass(weightClass)}</div>
+            <h2 className="mt-1 font-display text-3xl font-black uppercase text-white">{rankingTitle}</h2>
+          </div>
+          <div className="text-sm font-bold text-zinc-500">{fighters.length} doyuscu</div>
+        </div>
+        {loading && <LoadingPanel label="Reytinq yuklenir" />}
         {error && <ErrorPanel message={error} />}
         {!loading && !error && fighters.length === 0 && (
-          <div className="rounded-sm border border-zinc-800 bg-[#101113] p-8 text-center text-sm font-bold text-zinc-400">No ranked fighters yet.</div>
+          <div className="rounded-sm border border-zinc-800 bg-[#101113] p-8 text-center text-sm font-bold text-zinc-400">Bu bolmede hele reytinqe dusen doyuscu yoxdur.</div>
         )}
         {!loading && !error && fighters.length > 0 && (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -2997,5 +3003,6 @@ export default function App() {
     </div>
   );
 }
+
 
 

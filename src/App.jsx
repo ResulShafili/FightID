@@ -73,13 +73,7 @@ const pathToPage = (pathname) => {
   return "";
 };
 const fightIdLogo = "/assets/fightid-logo.svg";
-const fallbackPortrait = fightIdLogo;
 const fallbackCover = "/assets/hero-arena.png";
-const fallbackFeaturedFighters = [
-  { id: "fallback-resad", name: "Rəşad Məmmədov", nickname: "Qartal", country: "Azerbaijan", countryCode: "AZ", weightClass: "Lightweight", record: "8-1-0", points: 1420, rank: 1, status: "Pro", gym: "Bakı Combat Club", image: fallbackPortrait },
-  { id: "fallback-tural", name: "Tural Həsənov", nickname: "Wolf", country: "Azerbaijan", countryCode: "AZ", weightClass: "Welterweight", record: "7-2-0", points: 1280, rank: 2, status: "Pro", gym: "Xəzər MMA", image: fallbackPortrait },
-  { id: "fallback-kamran", name: "Kamran Əliyev", nickname: "Iron", country: "Azerbaijan", countryCode: "AZ", weightClass: "Middleweight", record: "6-1-1", points: 1185, rank: 3, status: "Amateur", gym: "Neftçi Fight Team", image: fallbackPortrait },
-];
 const refreshTokenStorageKey = "fightidRefreshToken";
 const accessTokenStorageKey = "fightidAccessToken";
 const userStorageKey = "fightidUser";
@@ -386,10 +380,10 @@ const phraseTranslations = {
   "Loading live FightBase data": { az: "Canlı FightBase məlumatları yüklənir", tr: "Canlı FightBase verileri yükleniyor", ru: "Загрузка данных FightBase" },
   "Live data unavailable": { az: "Canlı məlumat əlçatan deyil", tr: "Canlı veri kullanılamıyor", ru: "Данные недоступны" },
   "Failed to fetch": { az: "Bağlantı alınmadı", tr: "Veri alınamadı", ru: "Не удалось загрузить" },
-  "Live sync is reconnecting. Showing a polished preview while the fight database comes back online.": {
-    az: "Canlı bağlantı yenidən qurulur. Döyüş bazası qayıdana qədər səliqəli preview göstərilir.",
-    tr: "Canlı bağlantı yeniden kuruluyor. Dövüş veritabanı dönene kadar düzenli bir önizleme gösteriliyor.",
-    ru: "Живое подключение восстанавливается. Пока база возвращается, показан аккуратный preview.",
+  "Live sync is reconnecting. No mock fighters are shown.": {
+    az: "Canlı bağlantı yenidən qurulur. Mock döyüşçü göstərilmir.",
+    tr: "Canlı bağlantı yeniden kuruluyor. Mock dövüşçü gösterilmiyor.",
+    ru: "Живое подключение восстанавливается. Mock-бойцы не показываются.",
   },
   "Verified combat network for fighters, federations, and fight fans.": {
     az: "Döyüşçülər, federasiyalar və fanatlar üçün təsdiqli döyüş şəbəkəsi.",
@@ -808,7 +802,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                     value={registerForm.fullName}
                     onChange={(event) => setRegisterForm({ ...registerForm, fullName: event.target.value })}
                     className={inputClass}
-                    placeholder="Rəşad Məmmədov"
+                    placeholder="Ad Soyad"
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-bold text-zinc-200">
@@ -1369,8 +1363,8 @@ function LandingPage({ setPage, openProfile }) {
       })
       .catch((caught) => {
         if (ignore) return;
-        setFighters(fallbackFeaturedFighters);
-        setStats({ fighters: "10+", fights: "Active", countries: "1+" });
+        setFighters([]);
+        setStats({ fighters: 0, fights: "Active", countries: 0 });
         setError(caught.message);
       });
 
@@ -1414,7 +1408,12 @@ function LandingPage({ setPage, openProfile }) {
               </button>
             </div>
             <div className="mt-3 divide-y divide-zinc-800">
-              {(fighters.length ? fighters : fallbackFeaturedFighters).slice(0, 5).map((fighter, index) => (
+              {fighters.length === 0 && (
+                <div className="py-8 text-sm font-semibold text-zinc-400">
+                  No live fighters yet. New registrations will appear here.
+                </div>
+              )}
+              {fighters.slice(0, 5).map((fighter, index) => (
                 <button key={fighter.id} onClick={() => openProfile?.(fighter.id)} className="grid w-full grid-cols-[3rem_1fr_auto] items-center gap-3 py-3 text-left hover:bg-white/[0.03]">
                   <div className="text-center font-display text-2xl font-black text-zinc-500">#{fighter.rank || index + 1}</div>
                   <div className="min-w-0">
@@ -1480,10 +1479,14 @@ function LandingPage({ setPage, openProfile }) {
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {error && (
             <div className="md:col-span-3 rounded border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold text-zinc-300">
-              Live sync is reconnecting. Showing a polished preview while the fight database comes back online.
+              Live sync is reconnecting. No mock fighters are shown.
             </div>
           )}
-          {!error && fighters.length === 0 && <div className="md:col-span-3"><LoadingPanel /></div>}
+          {!error && fighters.length === 0 && (
+            <div className="md:col-span-3 rounded-sm border border-zinc-800 bg-[#101113] p-6 text-sm font-semibold text-zinc-400">
+              No fighters are registered yet.
+            </div>
+          )}
           {fighters.map((fighter) => (
             <FighterCard key={fighter.id} fighter={fighter} onOpen={openProfile} />
           ))}
@@ -1516,7 +1519,7 @@ function FightersPage({ openProfile }) {
       })
       .catch((caught) => {
         if (caught.name !== "AbortError") {
-          setFighters(fallbackFeaturedFighters);
+          setFighters([]);
           setError(caught.message);
         }
       })
@@ -1588,10 +1591,14 @@ function FightersPage({ openProfile }) {
         {loading && <div className="md:col-span-2 xl:col-span-3"><LoadingPanel label="Fetching fighters from /api/fighters" /></div>}
         {error && (
           <div className="lg:col-span-2 rounded-sm border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold text-zinc-300">
-            Live sync is reconnecting. Showing a polished preview while the fighter database comes back online.
+            Live sync is reconnecting. No mock fighters are shown.
           </div>
         )}
-        {!loading && !error && fighters.length === 0 && <div className="md:col-span-2 xl:col-span-3"><LoadingPanel label="No fighters matched this filter" /></div>}
+        {!loading && !error && fighters.length === 0 && (
+          <div className="md:col-span-2 xl:col-span-3 rounded-sm border border-zinc-800 bg-[#101113] p-6 text-sm font-semibold text-zinc-400">
+            No fighters found. New registered fighters will appear here.
+          </div>
+        )}
         {fighters.map((fighter) => (
           <FighterCard key={fighter.id} fighter={fighter} onOpen={openProfile} />
         ))}
@@ -1801,7 +1808,7 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate }) {
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
                 Gym / club
-                <input value={form.gym} onChange={(event) => updateField("gym", event.target.value)} className={inputClass} placeholder="Bakı Combat Club" />
+                <input value={form.gym} onChange={(event) => updateField("gym", event.target.value)} className={inputClass} placeholder="Zal / club adı" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200 sm:col-span-2">
                 Bio

@@ -1306,7 +1306,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
 
 function FighterCard({ fighter, onOpen }) {
   return (
-    <article className="group overflow-hidden rounded-sm border border-zinc-800 bg-[#101113] shadow-[0_18px_45px_rgba(0,0,0,0.22)] transition hover:border-blood/50">
+    <article className="group overflow-hidden rounded-sm border border-zinc-800 bg-[#101113] shadow-[0_18px_45px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-blood/60 hover:shadow-[0_24px_55px_rgba(0,0,0,0.32)]">
       <button onClick={() => onOpen?.(fighter.id)} className="block w-full text-left">
         <div className="flex gap-4 border-b border-zinc-800 p-4">
           <div className="relative h-28 w-24 shrink-0 overflow-hidden rounded-sm border border-zinc-700 bg-black sm:h-32 sm:w-28">
@@ -1320,7 +1320,7 @@ function FighterCard({ fighter, onOpen }) {
               <Badge tone={fighter.status === "Pro" ? "red" : "dark"}>{fighter.status}</Badge>
               <span className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">{fighter.countryCode} / {fighter.weightClass}</span>
             </div>
-            <h3 className="mt-3 truncate font-display text-2xl font-black text-white">{fighter.name}</h3>
+            <h3 className="mt-3 truncate font-display text-2xl font-black uppercase text-white group-hover:text-red-100">{fighter.name}</h3>
             <p className="mt-1 truncate text-sm font-semibold text-zinc-400">"{fighter.nickname}"</p>
             <div className="mt-4 grid grid-cols-3 divide-x divide-zinc-800 rounded-sm border border-zinc-800 bg-black/25">
               <div className="px-3 py-2">
@@ -1660,17 +1660,19 @@ function SimpleFeaturePage({ title, badge, loader, renderItem, empty = "Nothing 
   }, [user, loginRequired]);
 
   if (loginRequired && !user) {
-    return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><div className="rounded border border-white/10 bg-[#111113] p-8"><Badge tone="red">{badge}</Badge><h1 className="mt-5 font-display text-4xl font-black text-white">Please login to continue</h1><button onClick={onLoginClick} className="mt-6 rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Login</button></div></main>;
+    return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-28 sm:px-6 sm:pt-32 lg:px-8"><div className="rounded-sm border border-white/10 bg-[#111113] p-6 sm:p-8"><Badge tone="red">{badge}</Badge><h1 className="mt-5 font-display text-4xl font-black uppercase text-white">Please login to continue</h1><button onClick={onLoginClick} className="mt-6 rounded-sm bg-blood px-5 py-3 font-black text-white shadow-red">Login</button></div></main>;
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
-      {badge && <Badge tone="red">{badge}</Badge>}
-      {title && <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">{title}</h1>}
+    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-28 sm:px-6 sm:pt-32 lg:px-8">
+      <div className="border-b border-zinc-800 pb-6">
+        {badge && <Badge tone="red">{badge}</Badge>}
+        {title && <h1 className="mt-4 font-display text-4xl font-black uppercase leading-none text-white sm:text-6xl">{title}</h1>}
+      </div>
       {loading && <div className="mt-8"><LoadingPanel /></div>}
       {error && <div className="mt-8"><ErrorPanel message={error} /></div>}
-      {!loading && !error && items.length === 0 && <div className="mt-8 rounded border border-white/10 bg-[#111113] p-8 text-zinc-400">{empty}</div>}
-      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">{items.map(renderItem)}</div>
+      {!loading && !error && items.length === 0 && <div className="mt-8 rounded-sm border border-white/10 bg-[#111113] p-6 text-sm font-semibold text-zinc-400">{empty}</div>}
+      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{items.map(renderItem)}</div>
     </main>
   );
 }

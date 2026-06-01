@@ -982,7 +982,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
   );
 }
 
-function SettingsPanel({ open, settings, onChange, onClose, t }) {
+function SettingsPanel({ open, settings, onChange, onClose, t, user, onLogout }) {
   if (!open) return null;
 
   const toggleRows = [
@@ -1093,10 +1093,21 @@ function SettingsPanel({ open, settings, onChange, onClose, t }) {
           </section>
         </div>
 
-        <div className="border-t border-white/10 p-5">
+        <div className="grid gap-3 border-t border-white/10 p-5">
           <button onClick={() => onChange(defaultSettings)} className="w-full rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10">
             {t.resetSettings}
           </button>
+          {user && (
+            <button
+              onClick={async () => {
+                await onLogout?.();
+                onClose();
+              }}
+              className="w-full rounded bg-blood px-5 py-3 text-sm font-black text-white shadow-red hover:bg-ember"
+            >
+              {t.logout}
+            </button>
+          )}
         </div>
       </aside>
     </div>
@@ -1285,9 +1296,6 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
               <NotificationBell />
               <span className="max-w-[180px] truncate text-sm font-bold text-white">{getUserDisplayName(user)}</span>
                 <button onClick={() => setPage("My Profile")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">Profilim</button>
-              <button onClick={onLogout} className="rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
-                {t.logout}
-              </button>
             </div>
           ) : (
             <>
@@ -1394,15 +1402,6 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
                   className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
                 >
                   Profilim
-                </button>
-                <button
-                  onClick={() => {
-                    onLogout();
-                    setOpen(false);
-                  }}
-                  className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
-                >
-                  {t.logout}
                 </button>
               </>
             ) : (
@@ -2987,7 +2986,15 @@ export default function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={handleAuthSuccess} />}
-      <SettingsPanel open={settingsOpen} settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} t={t} />
+      <SettingsPanel
+        open={settingsOpen}
+        settings={settings}
+        onChange={updateSettings}
+        onClose={() => setSettingsOpen(false)}
+        t={t}
+        user={user}
+        onLogout={handleLogout}
+      />
       {toast && <div className="fixed bottom-5 right-5 z-[120] rounded border border-blood/40 bg-[#111113] px-5 py-4 font-bold text-white shadow-red">{toast}</div>}
       <footer className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-500">
         <span className="font-black uppercase tracking-[0.18em] text-zinc-300">FightBase</span>

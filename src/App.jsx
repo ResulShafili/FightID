@@ -2375,22 +2375,22 @@ function RankingsPage({ openProfile }) {
   }, [role, weightClass]);
 
   return (
-    <main className="sports-panel min-h-screen pt-[73px]">
-      <section className="bg-white px-4 py-16 shadow-[0_22px_60px_rgba(0,0,0,0.08)] sm:px-6 lg:px-8">
+    <main className="min-h-screen pt-[73px]">
+      <section className="border-b border-zinc-800 bg-[#090a0c]/95 px-4 py-16 shadow-[0_22px_60px_rgba(0,0,0,0.28)] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Live Rankings</div>
           <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="font-display text-5xl font-black uppercase leading-none text-black sm:text-7xl">Athlete Rankings</h1>
-              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-600">Clean live standings from the FightBase database. Filter by status or weight class.</p>
+              <h1 className="font-display text-5xl font-black uppercase leading-none text-white sm:text-7xl">Athlete Rankings</h1>
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-400">Clean live standings from the FightBase database. Filter by status or weight class.</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <select value={role} onChange={(event) => setRole(event.target.value)} className="border border-zinc-300 bg-white px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-black outline-none focus:border-blood">
+              <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-white outline-none focus:border-blood">
                 <option value="">All roles</option>
                 <option value="PRO">Pro</option>
                 <option value="AMATEUR">Amateur</option>
               </select>
-              <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} className="border border-zinc-300 bg-white px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-black outline-none focus:border-blood">
+              <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-white outline-none focus:border-blood">
                 <option value="">All weights</option>
                 {["LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT"].map((value) => (
                   <option key={value} value={value}>{formatWeightClass(value)}</option>
@@ -2405,20 +2405,20 @@ function RankingsPage({ openProfile }) {
         {loading && <LoadingPanel label="Fetching rankings from /api/fighters/leaderboard" />}
         {error && <ErrorPanel message={error} />}
         {!loading && !error && fighters.length === 0 && (
-          <div className="border border-zinc-200 bg-white p-8 text-center text-sm font-bold text-zinc-600">No ranked fighters yet.</div>
+          <div className="rounded-sm border border-zinc-800 bg-[#101113] p-8 text-center text-sm font-bold text-zinc-400">No ranked fighters yet.</div>
         )}
         {!loading && !error && fighters.length > 0 && (
           <div className="grid gap-4 lg:grid-cols-2">
             {fighters.map((fighter) => (
-              <button key={fighter.id} onClick={() => openProfile(fighter.id)} className="group grid grid-cols-[76px_1fr_auto] items-center gap-4 border border-zinc-200 bg-white p-4 text-left shadow-[0_12px_30px_rgba(0,0,0,0.05)] transition hover:border-blood hover:shadow-[0_18px_45px_rgba(0,0,0,0.1)]">
-                <div className="font-display text-4xl font-black text-black">#{fighter.rank}</div>
+              <button key={fighter.id} onClick={() => openProfile(fighter.id)} className="group grid grid-cols-[76px_1fr_auto] items-center gap-4 rounded-sm border border-zinc-800 bg-[#101113] p-4 text-left shadow-[0_18px_45px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-blood/60 hover:shadow-[0_24px_55px_rgba(0,0,0,0.34)]">
+                <div className="font-display text-4xl font-black text-zinc-500 group-hover:text-white">#{fighter.rank}</div>
                 <div className="min-w-0">
                   <div className="text-xs font-black uppercase tracking-[0.16em] text-blood">{fighter.weightClass}</div>
-                  <div className="mt-1 truncate font-display text-2xl font-black uppercase text-black group-hover:text-blood">{fighter.name}</div>
+                  <div className="mt-1 truncate font-display text-2xl font-black uppercase text-white group-hover:text-red-100">{fighter.name}</div>
                   <div className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-zinc-500">{fighter.country} / {fighter.gym}</div>
                 </div>
                 <div className="hidden text-right sm:block">
-                  <div className="font-display text-2xl font-black text-black">{fighter.record}</div>
+                  <div className="font-display text-2xl font-black text-white">{fighter.record}</div>
                   <div className="text-xs font-black uppercase tracking-[0.12em] text-zinc-500">{fighter.points} pts</div>
                 </div>
               </button>

@@ -12,6 +12,7 @@ import {
   Languages,
   Menu,
   Palette,
+  Pencil,
   Search,
   Settings,
   ShieldCheck,
@@ -32,7 +33,6 @@ import {
   seekApi,
   setAccessToken,
   tournamentApi,
-  trainingApi,
 } from "./lib/api";
 import { createFightIdSocket } from "./lib/socket";
 
@@ -392,7 +392,6 @@ const phraseTranslations = {
   },
 };
 const weightClassOptions = ["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"];
-const trainingTypeOptions = ["STRIKING", "GRAPPLING", "CONDITIONING", "SPARRING", "DRILLING", "RECOVERY", "OTHER"];
 const BADGE_META = {
   FIRST_WIN: { label: "First Blood", emoji: "🩸", desc: "Won their first fight" },
   FIRST_KO: { label: "Lights Out", emoji: "💡", desc: "First KO/TKO victory" },
@@ -1711,8 +1710,9 @@ function SimpleFeaturePage({ title, badge, loader, renderItem, empty = "Nothing 
   );
 }
 
-function MyProfilePage({ user, onLoginClick, onUserUpdate }) {
+function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
   const profile = user?.fighterProfile;
+  const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState(() => ({
     fullName: profile?.fullName || "",
     nickname: profile?.nickname || "",
@@ -1799,12 +1799,28 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate }) {
       localStorage.setItem(userStorageKey, JSON.stringify(nextUser));
       onUserUpdate(nextUser);
       setMessage(uploadWarning || "Profile updated.");
+      setEditMode(false);
     } catch (caught) {
       setError(caught.message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (!editMode) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setEditMode(true)}
+          className="fixed right-4 top-24 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-[#111113] text-white shadow-red transition hover:border-blood hover:bg-blood"
+          title="Profili redaktə et"
+        >
+          <Pencil size={18} />
+        </button>
+        <FighterProfilePage fighterId={profile?.id} openProfile={openProfile} user={user} onLoginRequired={onLoginClick} />
+      </div>
+    );
+  }
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
@@ -1822,7 +1838,10 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate }) {
         <section className="rounded-sm border border-zinc-800 bg-[#101113] p-5 sm:p-6">
           <div>
             <Badge>Profilim</Badge>
-            <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-5xl">Edit Fighter Profile</h1>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-5xl">Profili redaktə et</h1>
+              <button type="button" onClick={() => setEditMode(false)} className="rounded-sm border border-white/15 px-4 py-3 text-sm font-black text-white hover:bg-white/10">Profilə qayıt</button>
+            </div>
           </div>
 
           {message && <div className="mt-6 rounded-sm border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-100">{message}</div>}
@@ -2089,16 +2108,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const [shareCopied, setShareCopied] = useState(false);
   const [badges, setBadges] = useState([]);
   const [nationalChampion, setNationalChampion] = useState(null);
-  const [training, setTraining] = useState(null);
-  const [trainingModalOpen, setTrainingModalOpen] = useState(false);
-  const [trainingForm, setTrainingForm] = useState({
-    type: "STRIKING",
-    durationMins: "60",
-    date: new Date().toISOString().slice(0, 10),
-    note: "",
-  });
-  const [trainingSaving, setTrainingSaving] = useState(false);
-  const [trainingError, setTrainingError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -2140,34 +2149,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
     if (!profile) return;
     badgeApi.forFighter(profile.id).then(setBadges).catch(() => setBadges([]));
     leaderboardApi.isChampion(profile.id).then(setNationalChampion).catch(() => setNationalChampion(null));
-    trainingApi.forFighter(profile.id).then(setTraining).catch(() => setTraining(null));
   }, [profile]);
-
-  const reloadTraining = async () => {
-    if (!profile?.id) return;
-    setTraining(await trainingApi.forFighter(profile.id));
-  };
-
-  const submitTraining = async (event) => {
-    event.preventDefault();
-    setTrainingSaving(true);
-    setTrainingError("");
-    try {
-      await trainingApi.log({
-        type: trainingForm.type,
-        durationMins: Number(trainingForm.durationMins),
-        date: trainingForm.date,
-        note: trainingForm.note || undefined,
-      });
-      await reloadTraining();
-      setTrainingModalOpen(false);
-      setTrainingForm({ type: "STRIKING", durationMins: "60", date: new Date().toISOString().slice(0, 10), note: "" });
-    } catch (caught) {
-      setTrainingError(caught.message);
-    } finally {
-      setTrainingSaving(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -2341,26 +2323,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
               </div>
             </div>
 
-            <div className="rounded border border-white/10 bg-panel p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-black text-white">Training Activity</h2>
-                  <p className="mt-1 text-sm text-zinc-400">
-                    This month: {training?.summary?.totalSessionsThisMonth || 0} sessions · {Number(training?.summary?.totalHoursThisMonth || 0).toFixed(1)} hours
-                  </p>
-                </div>
-                {user?.fighterProfile?.id === profile.id && <button onClick={() => setTrainingModalOpen(true)} className="rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Log Training Session</button>}
-              </div>
-              <div className="mt-5 grid gap-3">
-                {(training?.data || []).slice(0, 10).map((log) => (
-                  <div key={log.id} className="rounded border border-white/10 bg-white/5 p-4 text-sm text-zinc-300">
-                    <b className="text-white">{formatResult(log.type)}</b> · {log.durationMins} mins · {formatDate(log.date)}
-                    {log.note && <p className="mt-1 text-zinc-400">{log.note}</p>}
-                  </div>
-                ))}
-                {(!training?.data || training.data.length === 0) && <p className="text-sm text-zinc-500">No training logs yet.</p>}
-              </div>
-            </div>
           </div>
 
           <aside className="grid gap-5 self-start">
@@ -2399,40 +2361,6 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
           </aside>
         </div>
       </section>
-      {trainingModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 px-4 backdrop-blur">
-          <form onSubmit={submitTraining} className="mx-auto mt-20 max-w-lg rounded border border-white/10 bg-[#111113] p-6 shadow-red">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="font-display text-2xl font-black text-white">Log Training Session</h2>
-              <button type="button" onClick={() => setTrainingModalOpen(false)} className="rounded border border-white/15 p-2 text-white hover:bg-white/10"><X size={18} /></button>
-            </div>
-            {trainingError && <div className="mt-4 rounded border border-blood/40 bg-blood/15 p-3 text-sm font-semibold text-red-100">{trainingError}</div>}
-            <div className="mt-5 grid gap-4">
-              <label className="grid gap-2 text-sm font-bold text-white">
-                Type
-                <select value={trainingForm.type} onChange={(event) => setTrainingForm((form) => ({ ...form, type: event.target.value }))} className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white">
-                  {trainingTypeOptions.map((item) => <option key={item} value={item}>{formatResult(item)}</option>)}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm font-bold text-white">
-                Duration in minutes
-                <input type="number" min="1" max="480" value={trainingForm.durationMins} onChange={(event) => setTrainingForm((form) => ({ ...form, durationMins: event.target.value }))} className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" required />
-              </label>
-              <label className="grid gap-2 text-sm font-bold text-white">
-                Date
-                <input type="date" value={trainingForm.date} onChange={(event) => setTrainingForm((form) => ({ ...form, date: event.target.value }))} className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" />
-              </label>
-              <label className="grid gap-2 text-sm font-bold text-white">
-                Note
-                <textarea value={trainingForm.note} onChange={(event) => setTrainingForm((form) => ({ ...form, note: event.target.value }))} maxLength={500} rows={4} className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white" placeholder="Optional session note" />
-              </label>
-            </div>
-            <button disabled={trainingSaving} className="mt-5 w-full rounded bg-[#dc1f26] px-5 py-3 font-black text-white disabled:opacity-60">
-              {trainingSaving ? "Saving..." : "Save Training"}
-            </button>
-          </form>
-        </div>
-      )}
     </main>
   );
 }
@@ -2854,7 +2782,6 @@ export default function App() {
       window.setTimeout(() => setToast(null), 3000);
     };
     socket.on("fighter:won", () => showToast("Your fighter just won!"));
-    socket.on("training:new", () => showToast("Your fighter just logged a training session 💪"));
     socket.on("notification:new", (notification) => showToast(notification.message));
     return () => socket.disconnect();
   }, [user]);
@@ -2949,7 +2876,7 @@ export default function App() {
           path="/profile"
           element={
             <RequireAuth user={user} onLoginRequired={() => openAuth("login")}>
-              <MyProfilePage user={user} onLoginClick={() => openAuth("login")} onUserUpdate={handleUserUpdate} />
+              <MyProfilePage user={user} onLoginClick={() => openAuth("login")} onUserUpdate={handleUserUpdate} openProfile={openProfile} />
             </RequireAuth>
           }
         />

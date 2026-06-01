@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&family=Sora:wght@700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -81,7 +81,17 @@ button {
 }
 
 .font-display {
+  font-family: "Oswald", "Sora", "Inter", sans-serif;
   letter-spacing: 0;
+}
+
+.sports-panel {
+  background: #f7f7f7;
+  color: #111217;
+}
+
+.sports-panel .font-display {
+  color: #08090b;
 }
 
 ::-webkit-scrollbar {

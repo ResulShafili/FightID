@@ -552,6 +552,16 @@ function Stat({ value, label }) {
   );
 }
 
+function AthleteMetric({ value, label }) {
+  return (
+    <div className="border-r border-white/10 px-4 py-3 text-center last:border-r-0 sm:px-7">
+      <div className="font-display text-5xl font-black leading-none text-white sm:text-6xl">{value}</div>
+      <div className="mx-auto mt-3 h-1 w-12 bg-blood" />
+      <div className="mt-3 text-[11px] font-black uppercase leading-4 tracking-[0.12em] text-zinc-300">{label}</div>
+    </div>
+  );
+}
+
 function LoadingPanel({ label = "Loading live FightBase data" }) {
   return (
     <div className="rounded border border-white/10 bg-panel p-6 text-sm font-semibold text-zinc-300">
@@ -1075,17 +1085,17 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
   );
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-zinc-800 bg-[#09090b]/95 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-5">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-zinc-900 bg-black/95 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+      <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 sm:px-6 lg:px-5">
         <button onClick={() => setPage("Home")} className="flex shrink-0 items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-sm bg-blood text-lg font-black text-white shadow-red">F</span>
+          <span className="grid h-10 w-10 place-items-center rounded-sm bg-blood text-lg font-black text-white shadow-red">FB</span>
           <span>
-            <span className="block font-display text-lg font-black uppercase text-white">FightBase</span>
+            <span className="block font-display text-xl font-black uppercase leading-none text-white">FightBase</span>
             <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500 max-[420px]:hidden">MMA records database</span>
           </span>
         </button>
 
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
+        <nav className="hidden min-w-0 items-center justify-center gap-3 lg:flex">
           {navGroups.map((group) => {
             const isActive = group.page === page || group.items?.includes(page);
 
@@ -1094,8 +1104,8 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
                 <button
                   key={group.label}
                   onClick={() => setPage(group.page)}
-                  className={`rounded-sm border px-3 py-2 text-xs font-black uppercase tracking-[0.08em] transition xl:px-4 xl:text-sm ${
-                    isActive ? "border-white bg-white text-black" : "border-transparent text-zinc-300 hover:border-white/10 hover:bg-white/10 hover:text-white"
+                  className={`relative px-2 py-4 text-xs font-black uppercase tracking-[0.12em] transition xl:px-3 xl:text-sm ${
+                    isActive ? "text-white after:absolute after:inset-x-2 after:bottom-0 after:h-[3px] after:bg-blood" : "text-zinc-300 hover:text-white"
                   }`}
                 >
                   {group.label}
@@ -1106,8 +1116,8 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
             return (
               <div key={group.label} className="group relative">
                 <button
-                  className={`inline-flex items-center gap-2 rounded-sm border px-3 py-2 text-xs font-black uppercase tracking-[0.08em] transition xl:px-4 xl:text-sm ${
-                    isActive ? "border-white bg-white text-black" : "border-transparent text-zinc-300 hover:border-white/10 hover:bg-white/10 hover:text-white"
+                  className={`relative inline-flex items-center gap-2 px-2 py-4 text-xs font-black uppercase tracking-[0.12em] transition xl:px-3 xl:text-sm ${
+                    isActive ? "text-white after:absolute after:inset-x-2 after:bottom-0 after:h-[3px] after:bg-blood" : "text-zinc-300 hover:text-white"
                   }`}
                 >
                   {group.label}
@@ -2107,41 +2117,49 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   };
 
   return (
-    <main className="pt-20">
-      <section className="relative min-h-[520px] overflow-hidden">
-        <img src={profile.coverPhotoUrl || fallbackCover} alt={`${profile.fullName} cover`} className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#07080a_0%,rgba(7,8,10,.78)_45%,rgba(7,8,10,.52)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-canvas to-transparent" />
-        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8">
-          <div className="overflow-hidden rounded border border-white/10 bg-panel shadow-red">
-            <img src={getFighterImage(profile.profilePhotoUrl)} alt={profile.fullName} className="h-[410px] w-full object-cover" />
-          </div>
-          <div className="flex flex-col justify-end pb-4">
-            <div className="flex flex-wrap gap-3">
-              <Badge tone={status === "Pro" ? "red" : "dark"}><ShieldCheck className="mr-2" size={14} /> {status}</Badge>
-              {profile.verifiedByFederation?.name && <Badge>{profile.verifiedByFederation.name}</Badge>}
-              <Badge tone="light">🎖️ {badges.length} badges</Badge>
+    <main className="pt-[73px]">
+      <section className="relative overflow-hidden bg-[#18191f]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.08),transparent_28%),linear-gradient(90deg,#18191f_0%,#18191f_55%,#101115_100%)]" />
+        <div className="relative mx-auto grid min-h-[640px] max-w-7xl items-end gap-8 px-4 pt-12 sm:px-6 lg:grid-cols-[1fr_420px_360px] lg:px-8">
+          <div className="z-10 pb-10 lg:pb-16">
+            <div className="flex flex-wrap gap-2">
+              <Badge tone={status === "Pro" ? "red" : "dark"}>{formatWeightClass(profile.weightClass)}</Badge>
+              <Badge tone="light">#{weightRank} weight rank</Badge>
+              <Badge tone="light">{status}</Badge>
             </div>
-            <h1 className="mt-5 font-display text-5xl font-black leading-none text-white sm:text-7xl">{profile.fullName}</h1>
+            <h1 className="mt-7 max-w-xl font-display text-5xl font-black uppercase leading-[0.95] text-white sm:text-7xl">{profile.fullName}</h1>
+            <p className="mt-5 text-lg font-black uppercase tracking-[0.08em] text-zinc-300">{formatWeightClass(profile.weightClass)}</p>
+            <p className="mt-2 font-display text-2xl font-black text-white">{record.wins || 0}-{record.losses || 0}-{record.draws || 0} (W-L-D)</p>
             {nationalChampion?.isChampion && (
-              <div className="mt-5 rounded border border-yellow-300/40 bg-yellow-400/20 px-5 py-4 text-lg font-black text-yellow-100">
-                🥇 {profile.country} National Champion · {formatWeightClass(profile.weightClass)}
+              <div className="mt-5 inline-flex rounded-sm border border-yellow-300/40 bg-yellow-400/20 px-4 py-3 text-sm font-black uppercase tracking-[0.1em] text-yellow-100">
+                🥇 {profile.country} National Champion
               </div>
             )}
-            <p className="mt-3 text-2xl font-bold text-zinc-300">"{profile.nickname || "No nickname"}"</p>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-300">{profile.bio || "Verified FightBase fighter profile."}</p>
-            <div className="mt-7 flex flex-wrap gap-3 text-sm font-bold text-zinc-300">
-              <span className="inline-flex items-center gap-2 rounded border border-white/10 bg-white/5 px-3 py-2"><Flag size={16} /> {profile.country} {countryNames[profile.country] || profile.country}</span>
-              <span className="inline-flex items-center gap-2 rounded border border-white/10 bg-white/5 px-3 py-2"><Dumbbell size={16} /> {formatWeightClass(profile.weightClass)}</span>
-              <span className="inline-flex items-center gap-2 rounded border border-white/10 bg-white/5 px-3 py-2"><Globe2 size={16} /> {profile.gym || "Independent"}</span>
-            </div>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button onClick={shareProfile} className="inline-flex items-center justify-center gap-2 rounded border border-white/15 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white/10">
-                <ArrowRight size={18} />
-                {shareCopied ? "Link copied!" : "Share Profile"}
-              </button>
+            <div className="mt-9 grid max-w-xl grid-cols-3 divide-x divide-white/10 border-y border-white/10 py-2">
+              <AthleteMetric value={record.wins || 0} label="Fight wins" />
+              <AthleteMetric value={profile.stats?.methods?.KO_TKO || 0} label="Wins by knockout" />
+              <AthleteMetric value={profile.stats?.methods?.SUBMISSION || 0} label="Wins by submission" />
             </div>
           </div>
+
+          <div className="order-first z-10 mx-auto w-full max-w-[360px] self-end lg:order-none lg:max-w-none">
+            <img src={getFighterImage(profile.profilePhotoUrl)} alt={profile.fullName} className="mx-auto h-[360px] w-full object-contain object-bottom drop-shadow-[0_28px_55px_rgba(0,0,0,0.55)] sm:h-[520px]" />
+          </div>
+
+          <aside className="z-10 mb-10 grid gap-4 self-center lg:mb-0">
+            <div className="border border-white/10 bg-[#24252b] p-5">
+              <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-400">Athlete profile</div>
+              <p className="mt-3 text-sm leading-6 text-zinc-300">{profile.bio || "Verified FightBase fighter profile."}</p>
+              <div className="mt-5 grid gap-3 text-sm font-bold text-zinc-300">
+                <span className="inline-flex items-center gap-2"><Flag size={16} /> {profile.country} {countryNames[profile.country] || profile.country}</span>
+                <span className="inline-flex items-center gap-2"><Globe2 size={16} /> {profile.gym || "Independent"}</span>
+                <span className="inline-flex items-center gap-2"><Trophy size={16} /> {badges.length} badges</span>
+              </div>
+            </div>
+            <button onClick={shareProfile} className="border-2 border-white px-6 py-4 text-center text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white hover:text-black">
+              {shareCopied ? "Link copied!" : "Share Profile"}
+            </button>
+          </aside>
         </div>
       </section>
 
@@ -2355,60 +2373,57 @@ function RankingsPage({ openProfile }) {
   }, [role, weightClass]);
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Badge tone="red">Live Rankings</Badge>
-          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Rankings</h1>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded border border-white/10 bg-canvas px-4 py-3 text-sm font-semibold text-white outline-none focus:border-blood">
-            <option value="">All roles</option>
-            <option value="PRO">Pro</option>
-            <option value="AMATEUR">Amateur</option>
-          </select>
-          <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} className="rounded border border-white/10 bg-canvas px-4 py-3 text-sm font-semibold text-white outline-none focus:border-blood">
-            <option value="">All weights</option>
-            {["LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT"].map((value) => (
-              <option key={value} value={value}>{formatWeightClass(value)}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="mt-8 overflow-hidden rounded border border-white/10 bg-panel">
-        {loading && <div className="p-5"><LoadingPanel label="Fetching rankings from /api/fighters/leaderboard" /></div>}
-        {error && <div className="p-5"><ErrorPanel message={error} /></div>}
-        {!loading && !error && (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[840px] text-left text-sm">
-              <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.16em] text-zinc-500">
-                <tr>
-                  {["Rank", "Fighter", "Status", "Country", "Weight", "Gym", "Points"].map((head) => (
-                    <th key={head} className="px-5 py-4 font-black">{head}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {fighters.map((fighter) => (
-                  <tr key={fighter.id} className="text-zinc-300">
-                    <td className="px-5 py-4 font-display text-2xl font-black text-white">#{fighter.rank}</td>
-                    <td className="px-5 py-4">
-                      <button onClick={() => openProfile(fighter.id)} className="font-bold text-white hover:text-red-100">{fighter.name}</button>
-                      <div className="text-xs text-zinc-500">"{fighter.nickname}"</div>
-                    </td>
-                    <td className="px-5 py-4"><Badge tone={fighter.status === "Pro" ? "red" : "dark"}>{fighter.status}</Badge></td>
-                    <td className="px-5 py-4">{fighter.country}</td>
-                    <td className="px-5 py-4">{fighter.weightClass}</td>
-                    <td className="px-5 py-4">{fighter.gym}</td>
-                    <td className="px-5 py-4 font-black text-white">{fighter.points}</td>
-                  </tr>
+    <main className="sports-panel min-h-screen pt-[73px]">
+      <section className="bg-white px-4 py-16 shadow-[0_22px_60px_rgba(0,0,0,0.08)] sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Live Rankings</div>
+          <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="font-display text-5xl font-black uppercase leading-none text-black sm:text-7xl">Athlete Rankings</h1>
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-600">Clean live standings from the FightBase database. Filter by status or weight class.</p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <select value={role} onChange={(event) => setRole(event.target.value)} className="border border-zinc-300 bg-white px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-black outline-none focus:border-blood">
+                <option value="">All roles</option>
+                <option value="PRO">Pro</option>
+                <option value="AMATEUR">Amateur</option>
+              </select>
+              <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} className="border border-zinc-300 bg-white px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-black outline-none focus:border-blood">
+                <option value="">All weights</option>
+                {["LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT"].map((value) => (
+                  <option key={value} value={value}>{formatWeightClass(value)}</option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {loading && <LoadingPanel label="Fetching rankings from /api/fighters/leaderboard" />}
+        {error && <ErrorPanel message={error} />}
+        {!loading && !error && fighters.length === 0 && (
+          <div className="border border-zinc-200 bg-white p-8 text-center text-sm font-bold text-zinc-600">No ranked fighters yet.</div>
+        )}
+        {!loading && !error && fighters.length > 0 && (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {fighters.map((fighter) => (
+              <button key={fighter.id} onClick={() => openProfile(fighter.id)} className="group grid grid-cols-[76px_1fr_auto] items-center gap-4 border border-zinc-200 bg-white p-4 text-left shadow-[0_12px_30px_rgba(0,0,0,0.05)] transition hover:border-blood hover:shadow-[0_18px_45px_rgba(0,0,0,0.1)]">
+                <div className="font-display text-4xl font-black text-black">#{fighter.rank}</div>
+                <div className="min-w-0">
+                  <div className="text-xs font-black uppercase tracking-[0.16em] text-blood">{fighter.weightClass}</div>
+                  <div className="mt-1 truncate font-display text-2xl font-black uppercase text-black group-hover:text-blood">{fighter.name}</div>
+                  <div className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-zinc-500">{fighter.country} / {fighter.gym}</div>
+                </div>
+                <div className="hidden text-right sm:block">
+                  <div className="font-display text-2xl font-black text-black">{fighter.record}</div>
+                  <div className="text-xs font-black uppercase tracking-[0.12em] text-zinc-500">{fighter.points} pts</div>
+                </div>
+              </button>
+            ))}
           </div>
         )}
-      </div>
+      </section>
     </main>
   );
 }

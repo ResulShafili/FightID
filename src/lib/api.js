@@ -72,6 +72,8 @@ export const apiRequest = async (path, options = {}, retry = true) => {
 export const authApi = {
   register: (payload) => apiRequest("/auth/register", { method: "POST", body: JSON.stringify(payload) }),
   login: (payload) => apiRequest("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+  requestPasswordReset: (payload) => apiRequest("/auth/request-password-reset", { method: "POST", body: JSON.stringify(payload) }),
+  resetPassword: (payload) => apiRequest("/auth/reset-password", { method: "POST", body: JSON.stringify(payload) }),
   verifyEmailCode: (payload) => apiRequest("/auth/verify-email-code", { method: "POST", body: JSON.stringify(payload) }),
   me: () => apiRequest("/auth/me"),
   refresh: (refreshToken) => apiRequest("/auth/refresh", { method: "POST", ...(refreshToken ? { body: JSON.stringify({ refreshToken }) } : {}) }),

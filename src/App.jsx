@@ -632,12 +632,17 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
   const [error, setError] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
   const [emailCode, setEmailCode] = useState("");
+  const [resetMode, setResetMode] = useState(false);
+  const [resetStep, setResetStep] = useState("request");
+  const [resetForm, setResetForm] = useState({ email: "", code: "", password: "" });
 
   useEffect(() => {
     setTab(initialTab);
     setError("");
     setPendingVerification(null);
     setEmailCode("");
+    setResetMode(false);
+    setResetStep("request");
   }, [initialTab]);
 
   const handleAuthSuccess = (result) => {
@@ -655,12 +660,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
 
     try {
       const result = await authApi.login(loginForm);
-      if (result.requiresEmailCode) {
-        setPendingVerification(result);
-        setEmailCode(result.devCode || "");
-      } else {
-        handleAuthSuccess(result);
-      }
+      handleAuthSuccess(result);
     } catch (caught) {
       setError(caught.message);
     } finally {
@@ -681,12 +681,38 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
 
     try {
       const result = await authApi.register(payload);
-      if (result.requiresEmailCode) {
-        setPendingVerification(result);
-        setEmailCode(result.devCode || "");
-      } else {
-        handleAuthSuccess(result);
-      }
+      handleAuthSuccess(result);
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const requestPasswordReset = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await authApi.requestPasswordReset({ email: resetForm.email });
+      if (result.devCode) setResetForm((form) => ({ ...form, code: result.devCode }));
+      setResetStep("confirm");
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitPasswordReset = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await authApi.resetPassword(resetForm);
+      handleAuthSuccess(result);
     } catch (caught) {
       setError(caught.message);
     } finally {
@@ -738,6 +764,8 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                 setError("");
                 setPendingVerification(null);
                 setEmailCode("");
+                setResetMode(false);
+                setResetStep("request");
               }}
               className={`px-4 py-4 text-sm font-black uppercase tracking-[0.16em] transition ${
                 tab === item ? "bg-blood text-white" : "bg-white/[0.03] text-zinc-400 hover:bg-white/10 hover:text-white"
@@ -755,7 +783,71 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
             </div>
           )}
 
-          {pendingVerification ? (
+          {resetMode ? (
+            <form onSubmit={resetStep === "request" ? requestPasswordReset : submitPasswordReset} className="grid gap-4">
+              <div className="rounded border border-white/10 bg-white/[0.03] p-4">
+                <h3 className="font-display text-xl font-black text-white">Parolu yenilə</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  Kod yalnız parolu dəyişmək üçün göndərilir. Normal girişdə kod lazım deyil.
+                </p>
+              </div>
+              <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                Email
+                <input
+                  required
+                  type="email"
+                  value={resetForm.email}
+                  onChange={(event) => setResetForm({ ...resetForm, email: event.target.value })}
+                  className={inputClass}
+                  placeholder="email@gmail.com"
+                  disabled={resetStep === "confirm"}
+                />
+              </label>
+              {resetStep === "confirm" && (
+                <>
+                  <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                    Email kodu
+                    <input
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      value={resetForm.code}
+                      onChange={(event) => setResetForm({ ...resetForm, code: event.target.value.replace(/\D/g, "").slice(0, 6) })}
+                      className={`${inputClass} text-center text-2xl tracking-[0.4em]`}
+                      placeholder="000000"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-bold text-zinc-200">
+                    Yeni parol
+                    <input
+                      required
+                      minLength={8}
+                      type="password"
+                      value={resetForm.password}
+                      onChange={(event) => setResetForm({ ...resetForm, password: event.target.value })}
+                      className={inputClass}
+                      placeholder="Ən az 8 simvol"
+                    />
+                  </label>
+                </>
+              )}
+              <button disabled={loading} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
+                {loading ? "Gözləyin..." : resetStep === "request" ? "Kod göndər" : "Parolu yenilə"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setResetMode(false);
+                  setResetStep("request");
+                  setError("");
+                }}
+                className="rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10"
+              >
+                Loginə qayıt
+              </button>
+            </form>
+          ) : pendingVerification ? (
             <form onSubmit={submitEmailCode} className="grid gap-4">
               <div className="rounded border border-white/10 bg-white/[0.03] p-4">
                 <h3 className="font-display text-xl font-black text-white">Email verification</h3>
@@ -823,6 +915,18 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
               <button disabled={loading} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
                 {loading ? "Logging in..." : "Login"}
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setResetForm((form) => ({ ...form, email: loginForm.email }));
+                  setResetMode(true);
+                  setResetStep("request");
+                  setError("");
+                }}
+                className="text-left text-sm font-bold text-zinc-400 hover:text-white"
+              >
+                Parolu unutdun? Kodla yenilə
+              </button>
             </form>
           ) : (
             <form onSubmit={submitRegister} className="grid gap-4">
@@ -863,6 +967,16 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
               <p className="text-sm leading-6 text-zinc-400">
                 Nickname, birth date, country, weight class, and gym can be completed later from your fighter profile.
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setTab("login");
+                  setError("");
+                }}
+                className="text-left text-sm font-bold text-zinc-400 hover:text-white"
+              >
+                Artıq qeydiyyatdan keçmisən? Login ol
+              </button>
               <button disabled={loading} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
                 {loading ? "Creating account..." : "Register"}
               </button>

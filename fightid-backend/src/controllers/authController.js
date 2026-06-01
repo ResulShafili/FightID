@@ -154,7 +154,68 @@ export const login = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid email or password");
   }
 
-  await authPendingResponse(res, user, "LOGIN");
+  const tokens = await issueTokens(user);
+  setAuthCookies(res, tokens);
+  res.json({ user: publicUser(user), ...tokens });
+});
+
+export const requestPasswordReset = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const user = await prisma.user.findUnique({ where: { email }, include: { fighterProfile: true } });
+
+  if (!user) {
+    res.json({ message: "If this email exists, a reset code has been sent." });
+    return;
+  }
+
+  const delivery = await sendEmailCode(user, "PASSWORD_RESET");
+  res.json({
+    email: user.email,
+    message: "Password reset code sent to your email.",
+    ...delivery,
+  });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email, code, password } = req.body;
+  const user = await prisma.user.findUnique({ where: { email }, include: { fighterProfile: true } });
+  if (!user) {
+    throw new ApiError(401, "Invalid or expired verification code");
+  }
+
+  const storedCode = await prisma.emailVerificationCode.findFirst({
+    where: {
+      userId: user.id,
+      purpose: "PASSWORD_RESET",
+      consumedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!storedCode || !(await bcrypt.compare(code, storedCode.codeHash))) {
+    throw new ApiError(401, "Invalid or expired verification code");
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  await prisma.$transaction([
+    prisma.emailVerificationCode.update({
+      where: { id: storedCode.id },
+      data: { consumedAt: new Date() },
+    }),
+    prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    }),
+    prisma.refreshToken.updateMany({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    }),
+  ]);
+
+  const tokens = await issueTokens(user);
+  setAuthCookies(res, tokens);
+  res.json({ user: publicUser(user), ...tokens });
 });
 
 export const verifyEmailCode = asyncHandler(async (req, res) => {

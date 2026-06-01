@@ -29,3 +29,13 @@ export const verifyEmailCodeSchema = z.object({
   code: z.string().regex(/^\d{6}$/, "Code must be 6 digits"),
   purpose: z.enum(["LOGIN", "REGISTER"]),
 });
+
+export const requestPasswordResetSchema = z.object({
+  email: z.string().email().toLowerCase(),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email().toLowerCase(),
+  code: z.string().regex(/^\d{6}$/, "Code must be 6 digits"),
+  password: z.string().min(8).max(128),
+});

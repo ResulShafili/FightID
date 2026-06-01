@@ -12,6 +12,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "migrate:deploy": "prisma migrate deploy",
     "seed": "node prisma/seed.js",
+    "cleanup:demo": "node prisma/cleanup-demo-fighters.js",
     "check": "node --check src/server.js"
   },
   "dependencies": {

@@ -42,6 +42,14 @@ npm run seed
 npm run dev
 ```
 
+`npm run seed` resets sample data and must not be used against the production database. In production it is blocked unless `ALLOW_PRODUCTION_SEED=true` is set intentionally for a full reset.
+
+To remove only bundled demo fighters from a database without touching real users, run:
+
+```bash
+npm run cleanup:demo
+```
+
 Backend runs on `http://localhost:5000` by default. Health check: `GET /health`.
 
 Required backend env:

@@ -4,6 +4,12 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+if (process.env.NODE_ENV === "production" && process.env.ALLOW_PRODUCTION_SEED !== "true") {
+  console.error("Refusing to run seed in production because it deletes all existing data.");
+  console.error("Set ALLOW_PRODUCTION_SEED=true only for an intentional full production reset.");
+  process.exit(1);
+}
+
 const profilePhotoUrl = "/assets/fightid-logo.svg";
 const coverPhotoUrl = "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=1600&q=80";
 

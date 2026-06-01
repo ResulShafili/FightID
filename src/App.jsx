@@ -473,6 +473,18 @@ const countryNames = {
 };
 
 function formatWeightClass(value = "") {
+  const labels = {
+    STRAWWEIGHT: "Minimum çəki",
+    FLYWEIGHT: "Yüngül milçək çəki",
+    BANTAMWEIGHT: "Yüngül çəki",
+    FEATHERWEIGHT: "Lələk çəki",
+    LIGHTWEIGHT: "Yüngül çəki",
+    WELTERWEIGHT: "Yarım orta çəki",
+    MIDDLEWEIGHT: "Orta çəki",
+    LIGHT_HEAVYWEIGHT: "Yarım ağır çəki",
+    HEAVYWEIGHT: "Ağır çəki",
+  };
+  if (labels[value]) return labels[value];
   return value
     .toLowerCase()
     .split("_")
@@ -500,6 +512,17 @@ function getStatus(fighter) {
 function recordFromStats(stats) {
   const record = stats?.record || {};
   return `${record.wins || 0}-${record.losses || 0}-${record.draws || 0}`;
+}
+
+function flagEmoji(code = "") {
+  const normalized = String(code || "").trim().toUpperCase();
+  if (normalized.length !== 2) return normalized;
+  return normalized.replace(/./g, (char) => String.fromCodePoint(char.charCodeAt(0) + 127397));
+}
+
+function compactGymName(gym = "") {
+  const value = gym || "Independent";
+  return value.length > 20 ? `${value.slice(0, 20)}...` : value;
 }
 
 function methodsFromStats(stats) {
@@ -1154,7 +1177,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
             <div className="flex items-center gap-3">
               <NotificationBell />
               <span className="max-w-[180px] truncate text-sm font-bold text-white">{getUserDisplayName(user)}</span>
-              <button onClick={() => setPage("My Profile")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">My Profile</button>
+                <button onClick={() => setPage("My Profile")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10">Profilim</button>
               <button onClick={onLogout} className="rounded border border-white/15 px-4 py-2 text-sm font-black text-white hover:bg-white/10">
                 {t.logout}
               </button>
@@ -1263,7 +1286,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
                   }}
                   className="block w-full rounded border border-white/15 px-3 py-3 text-left text-sm font-black text-white hover:bg-white/10"
                 >
-                  My Profile
+                  Profilim
                 </button>
                 <button
                   onClick={() => {
@@ -1331,8 +1354,8 @@ function FighterCard({ fighter, onOpen }) {
                 <div className="text-lg font-black text-white">{fighter.points}</div>
                 <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Points</div>
               </div>
-              <div className="px-3 py-2">
-                <div className="truncate text-lg font-black text-white">{fighter.gym}</div>
+              <div className="px-3 py-2" title={fighter.gym}>
+                <div className="text-lg font-black leading-5 text-white">{compactGymName(fighter.gym)}</div>
                 <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Gym</div>
               </div>
             </div>
@@ -1340,7 +1363,7 @@ function FighterCard({ fighter, onOpen }) {
         </div>
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <span className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">{fighter.country}</span>
-          <span className="text-xs font-black uppercase tracking-[0.14em] text-red-100">View profile</span>
+          <span className="text-xs font-black uppercase tracking-[0.14em] text-red-100">Profili gör</span>
         </div>
       </button>
     </article>
@@ -1349,7 +1372,7 @@ function FighterCard({ fighter, onOpen }) {
 
 function LandingPage({ setPage, openProfile }) {
   const [fighters, setFighters] = useState([]);
-  const [stats, setStats] = useState({ fighters: "Live", fights: "Active", countries: "Live" });
+  const [stats, setStats] = useState({ fighters: "Live", gyms: "Live", countries: "Live" });
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -1364,17 +1387,21 @@ function LandingPage({ setPage, openProfile }) {
         if (ignore) return;
         const leaders = leaderboardResult.data || [];
         const allFighters = fighterResult.data || [];
-        setFighters(leaders.map(normalizeCardFighter));
+        const sourceLeaders = leaders.map((leader) => {
+          const fullRecord = allFighters.find((fighter) => fighter.id === leader.id);
+          return fullRecord ? { ...leader, ...fullRecord, rank: leader.rank || fullRecord.rank } : leader;
+        });
+        setFighters(sourceLeaders.map(normalizeCardFighter));
         setStats({
           fighters: fighterResult.pagination?.total || allFighters.length || leaderboardResult.pagination?.total || leaders.length,
-          fights: "Active",
+          gyms: new Set(allFighters.map((fighter) => fighter.gym).filter(Boolean)).size || 0,
           countries: new Set(allFighters.map((fighter) => fighter.country)).size || "Live",
         });
       })
       .catch((caught) => {
         if (ignore) return;
         setFighters([]);
-        setStats({ fighters: 0, fights: "Active", countries: 0 });
+        setStats({ fighters: 0, gyms: 0, countries: 0 });
         setError(caught.message);
       });
 
@@ -1428,7 +1455,7 @@ function LandingPage({ setPage, openProfile }) {
                   <div className="text-center font-display text-2xl font-black text-zinc-500">#{fighter.rank || index + 1}</div>
                   <div className="min-w-0">
                     <div className="truncate text-sm font-black text-white">{fighter.name}</div>
-                    <div className="mt-1 truncate text-xs font-bold uppercase tracking-[0.12em] text-zinc-500">{fighter.countryCode || fighter.country} / {fighter.weightClass}</div>
+                    <div className="mt-1 truncate text-xs font-bold uppercase tracking-[0.12em] text-zinc-500">{flagEmoji(fighter.countryCode || fighter.country)} {fighter.countryCode || fighter.country} / {fighter.weightClass}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-black text-white">{fighter.record}</div>
@@ -1446,7 +1473,7 @@ function LandingPage({ setPage, openProfile }) {
           <div className="grid max-w-2xl grid-cols-3 gap-2 sm:gap-4">
             <Stat value={stats.fighters} label="Fighters" />
             <Stat value={stats.countries} label="Countries" />
-            <Stat value={stats.fights} label="Active" />
+            <Stat value={stats.gyms} label="Gyms" />
           </div>
           <div className="flex max-w-3xl flex-wrap gap-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-300">
             {["Verified records", "Amateur fighter index", "Live rankings", "Gym and country profiles"].map((item) => (
@@ -1515,6 +1542,7 @@ function FightersPage({ openProfile }) {
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [totalFighters, setTotalFighters] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1526,6 +1554,7 @@ function FightersPage({ openProfile }) {
       .list({ limit: 24, search, role, weightClass, country })
       .then((result) => {
         setFighters((result.data || []).map(normalizeCardFighter));
+        setTotalFighters(result.pagination?.total || result.data?.length || 0);
       })
       .catch((caught) => {
         if (caught.name !== "AbortError") {
@@ -1546,10 +1575,15 @@ function FightersPage({ openProfile }) {
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
       <div className="border-b border-zinc-800 pb-6">
+        {totalFighters < 20 && (
+          <div className="mb-6 rounded-sm border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-zinc-400">
+            FightBase açıq beta mərhələsindədir. Bazamız böyüyür.
+          </div>
+        )}
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Badge tone="red">Live fighter database</Badge>
-          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Fighter Database</h1>
+          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Döyüşçü Bazası</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
             Search records, gyms, countries, points and profile status in one compact combat-sports index.
           </p>
@@ -1590,10 +1624,10 @@ function FightersPage({ openProfile }) {
           </div>
         )}
         <div className="mt-5 grid grid-cols-2 gap-3 text-xs font-black uppercase tracking-[0.14em] text-zinc-500 sm:grid-cols-4">
-          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Verified profiles</div>
-          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Amateur records</div>
-          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Country ranks</div>
-          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Gym links</div>
+          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Təsdiqli profillər</div>
+          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Həvəskar rekordlar</div>
+          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Ölkə reytinqləri</div>
+          <div className="rounded-sm border border-zinc-800 bg-black/20 px-3 py-2">Zal bağlantıları</div>
         </div>
       </div>
 
@@ -1787,7 +1821,7 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate }) {
 
         <section className="rounded-sm border border-zinc-800 bg-[#101113] p-5 sm:p-6">
           <div>
-            <Badge>My Profile</Badge>
+            <Badge>Profilim</Badge>
             <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-5xl">Edit Fighter Profile</h1>
           </div>
 
@@ -1978,17 +2012,66 @@ function HeadToHead() {
     </main>
   );
 }
-function FightSeekBoard() {
-  return <SimpleFeaturePage title="Fight Board" badge="Fight Wanted" loader={() => seekApi.list({ limit: 30 })} empty="No fight listings for this weight class yet. Be the first to post." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><h3 className="font-display text-2xl font-black text-white">{item.fighter.fullName}</h3><p className="mt-2 text-zinc-400">{formatWeightClass(item.weightClass)} · {formatResult(item.ruleSet)} · {item.location}</p><p className="mt-3 text-sm text-zinc-500">{item.message}</p></div>} />;
+function FightSeekBoard({ user }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let ignore = false;
+    setLoading(true);
+    seekApi
+      .list({ limit: 30 })
+      .then((result) => {
+        if (!ignore) setItems(result.data || []);
+      })
+      .catch((caught) => {
+        if (!ignore) setError(caught.message);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  return (
+    <main className="mx-auto min-h-screen max-w-7xl px-4 pt-28 sm:px-6 sm:pt-32 lg:px-8">
+      <Badge tone="red">Döyüş axtarılır</Badge>
+      <h1 className="mt-4 font-display text-4xl font-black uppercase text-white sm:text-6xl">Döyüş lövhəsi</h1>
+      {loading && <div className="mt-8"><LoadingPanel /></div>}
+      {error && <div className="mt-8"><ErrorPanel message={error} /></div>}
+      {!loading && !error && items.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="mb-4 text-5xl">🥊</div>
+          <div className="mb-2 text-xl font-bold text-white">Hələ heç bir döyüş elanı yoxdur.</div>
+          <div className="mb-6 text-sm text-zinc-400">İlk döyüş elanını siz yerləşdirin.</div>
+          {user && <button className="rounded-sm bg-blood px-6 py-3 font-bold text-white shadow-red">Döyüş elanı yerləşdir</button>}
+        </div>
+      )}
+      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {items.map((item) => (
+          <div key={item.id} className="rounded-sm border border-zinc-800 bg-[#101113] p-5 transition hover:border-blood/50">
+            <h3 className="font-display text-2xl font-black uppercase text-white">{item.fighter.fullName}</h3>
+            <p className="mt-2 text-zinc-400">{formatWeightClass(item.weightClass)} / {formatResult(item.ruleSet)} / {item.location}</p>
+            <p className="mt-3 text-sm text-zinc-500">{item.message}</p>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
 }
 
 function TournamentHub() {
-  return <SimpleFeaturePage title="Tournaments" badge="Bracket Hub" loader={() => tournamentApi.list({ limit: 30 })} empty="No tournaments yet." renderItem={(item) => <div key={item.id} className="rounded border border-white/10 bg-[#111113] p-5"><Badge tone="red">{item.status}</Badge><h3 className="mt-4 font-display text-2xl font-black text-white">{item.name}</h3><p className="mt-2 text-zinc-400">{formatWeightClass(item.weightClass)} · {formatResult(item.ruleSet)} · {item.size} slots</p></div>} />;
+  const navigate = useNavigate();
+  return <SimpleFeaturePage title="Turnirlər" badge="Turnir mərkəzi" loader={() => tournamentApi.list({ limit: 30 })} empty="Hal-hazırda aktiv turnir yoxdur." renderItem={(item) => <button key={item.id} onClick={() => navigate(`/tournaments/${item.id}`)} className="cursor-pointer rounded-sm border border-white/10 bg-[#111113] p-5 text-left transition hover:border-zinc-500 hover:bg-zinc-800/60"><Badge tone="red">{item.status === "ACTIVE" ? "AKTİV" : item.status}</Badge><h3 className="mt-4 font-display text-2xl font-black uppercase text-white">{item.name}</h3><p className="mt-2 text-zinc-400">{formatWeightClass(item.weightClass)} / {formatResult(item.ruleSet)} / {item.size} yer</p><span className="mt-4 inline-flex rounded-sm border border-zinc-600 px-4 py-2 text-sm font-bold text-zinc-300 transition-colors hover:border-white hover:text-white">Braketi gör →</span></button>} />;
 }
 
 function GymHub() {
   const [tab, setTab] = useState("gyms");
-  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Gym Network</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Gyms</h1><div className="mt-6 flex gap-3"><button onClick={() => setTab("gyms")} className="rounded bg-[#dc1f26] px-5 py-3 font-black text-white">Gyms</button><button onClick={() => setTab("leaderboard")} className="rounded border border-white/10 px-5 py-3 font-black text-white">Gym Leaderboard</button></div><SimpleFeaturePage title="" badge="" loader={tab === "gyms" ? () => gymApi.list({ limit: 30 }) : gymApi.leaderboard} empty="No gyms yet." renderItem={(gym) => <div key={gym.id} className="rounded border border-white/10 bg-[#111113] p-5"><h3 className="font-display text-2xl font-black text-white">{gym.name}</h3><p className="mt-2 text-zinc-400">{gym.city}, {gym.country}</p><p className="mt-2 text-sm text-zinc-500">{gym.fighterCount || 0} fighters · {gym.totalPoints || 0} points</p></div>} /></main>;
+  const navigate = useNavigate();
+  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Zal şəbəkəsi</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Zallar</h1><div className="mt-6 flex gap-3"><button onClick={() => setTab("gyms")} className="rounded-sm bg-[#dc1f26] px-5 py-3 font-black text-white">Zallar</button><button onClick={() => setTab("leaderboard")} className="rounded-sm border border-white/10 px-5 py-3 font-black text-white">Zal liderliyi</button></div><SimpleFeaturePage title="" badge="" loader={tab === "gyms" ? () => gymApi.list({ limit: 30 }) : gymApi.leaderboard} empty="Hələ zal yoxdur." renderItem={(gym) => <div key={gym.id} onClick={() => navigate(`/gyms/${gym.id}`)} className="cursor-pointer rounded-sm border border-white/10 bg-[#111113] p-5 transition hover:border-zinc-500 hover:bg-zinc-800/50"><h3 className="font-display text-2xl font-black uppercase text-white">{gym.name}</h3><p className="mt-2 text-zinc-400">{gym.city}, {gym.country}</p><p className="mt-2 text-sm text-zinc-500">{gym.fighterCount || 0} döyüşçü / {gym.totalPoints || 0} xal</p><button onClick={(event) => { event.stopPropagation(); navigate(`/gyms/${gym.id}`); }} className="mt-4 w-full rounded-sm border border-zinc-600 py-2 text-sm font-bold text-zinc-300 transition-colors hover:border-white hover:text-white">Zala bax →</button></div>} /></main>;
 }
 
 function NationalChampions({ openProfile }) {
@@ -1996,7 +2079,7 @@ function NationalChampions({ openProfile }) {
   const [weight, setWeight] = useState("LIGHTWEIGHT");
   useEffect(() => { leaderboardApi.national().then(setData).catch(() => setData({})); }, []);
   const rows = data[weight] || [];
-  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">National Champions</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Country #1 Fighters</h1><div className="mt-6 flex gap-2 overflow-x-auto">{weightClassOptions.map((item) => <button key={item} onClick={() => setWeight(item)} className={`rounded px-4 py-2 text-sm font-black ${weight === item ? "bg-[#dc1f26] text-white" : "border border-white/10 text-zinc-300"}`}>{formatWeightClass(item)}</button>)}</div><div className="mt-8 overflow-hidden rounded border border-white/10 bg-[#111113]"><table className="w-full text-left text-sm"><tbody>{rows.map((row) => <tr key={row.country} className="border-b border-white/10"><td className="p-4 text-white">{row.country}</td><td className="p-4"><button onClick={() => openProfile(row.fighter.id)} className="font-bold text-white">{row.fighter.fullName}</button></td><td className="p-4 text-zinc-300">{row.fighter.points} pts</td></tr>)}</tbody></table></div></main>;
+  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Milli çempionlar</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Ölkə üzrə #1 döyüşçülər</h1><div className="mt-6 flex gap-2 overflow-x-auto">{weightClassOptions.map((item) => <button key={item} onClick={() => setWeight(item)} className={`rounded-sm px-4 py-2 text-sm font-black ${weight === item ? "bg-[#dc1f26] text-white" : "border border-white/10 text-zinc-300"}`}>{formatWeightClass(item)}</button>)}</div><div className="mt-8 overflow-hidden rounded-sm border border-white/10 bg-[#111113]"><table className="w-full text-left text-sm"><tbody>{rows.map((row) => <tr key={row.country} className="border-b border-white/10"><td className="p-4 text-white">{flagEmoji(row.country)} {row.country}</td><td className="p-4"><button onClick={() => openProfile(row.fighter.id)} className="font-bold text-white hover:text-blood">{row.fighter.fullName}</button></td><td className="p-4 text-zinc-300">{row.fighter.points} pts</td></tr>)}</tbody></table>{rows.length === 0 && <div className="py-12 text-center text-zinc-500">Bu çəki kateqoriyasında hələ çempion müəyyən edilməyib.</div>}</div></main>;
 }
 
 function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
@@ -2381,7 +2464,7 @@ function RankingsPage({ openProfile }) {
           <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Live Rankings</div>
           <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="font-display text-5xl font-black uppercase leading-none text-white sm:text-7xl">Athlete Rankings</h1>
+              <h1 className="font-display text-5xl font-black uppercase leading-none text-white sm:text-7xl">İdmançı Reytinqləri</h1>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-400">Clean live standings from the FightBase database. Filter by status or weight class.</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -2391,7 +2474,7 @@ function RankingsPage({ openProfile }) {
                 <option value="AMATEUR">Amateur</option>
               </select>
               <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-white outline-none focus:border-blood">
-                <option value="">All weights</option>
+                <option value="">Bütün çəkilər</option>
                 {["LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT"].map((value) => (
                   <option key={value} value={value}>{formatWeightClass(value)}</option>
                 ))}

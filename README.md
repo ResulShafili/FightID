@@ -77,6 +77,8 @@ Email is sent through Resend. Set `RESEND_API_KEY` and a verified `EMAIL_FROM` s
 4. Use `npm run prisma:deploy` during deploy or Railway's migrate step.
 5. Start command: `npm start`.
 
+Never use `node prisma/seed.js` in the Railway start command. The seed script resets demo data and deletes users. Production startup must not run `prisma db push` or `npm run seed`.
+
 ## Auth
 
 All protected routes require:

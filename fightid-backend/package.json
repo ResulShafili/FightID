@@ -13,6 +13,7 @@
     "migrate:deploy": "prisma migrate deploy",
     "seed": "node prisma/seed.js",
     "cleanup:demo": "node prisma/cleanup-demo-fighters.js",
+    "railway:start": "npm run prisma:deploy && npm start",
     "check": "node --check src/server.js"
   },
   "dependencies": {

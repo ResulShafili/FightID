@@ -121,7 +121,6 @@ enum BadgeType {
 enum EmailCodePurpose {
   LOGIN
   REGISTER
-  PASSWORD_RESET
 }
 
 model User {

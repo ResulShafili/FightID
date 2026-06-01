@@ -168,7 +168,7 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
     return;
   }
 
-  const delivery = await sendEmailCode(user, "PASSWORD_RESET");
+  const delivery = await sendEmailCode(user, "LOGIN");
   res.json({
     email: user.email,
     message: "Password reset code sent to your email.",
@@ -186,7 +186,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   const storedCode = await prisma.emailVerificationCode.findFirst({
     where: {
       userId: user.id,
-      purpose: "PASSWORD_RESET",
+      purpose: "LOGIN",
       consumedAt: null,
       expiresAt: { gt: new Date() },
     },

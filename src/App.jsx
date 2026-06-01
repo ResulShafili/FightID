@@ -785,12 +785,6 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
 
           {resetMode ? (
             <form onSubmit={resetStep === "request" ? requestPasswordReset : submitPasswordReset} className="grid gap-4">
-              <div className="rounded border border-white/10 bg-white/[0.03] p-4">
-                <h3 className="font-display text-xl font-black text-white">Parolu yenilə</h3>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  Kod yalnız parolu dəyişmək üçün göndərilir. Normal girişdə kod lazım deyil.
-                </p>
-              </div>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
                 Email
                 <input

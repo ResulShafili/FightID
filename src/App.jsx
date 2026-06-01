@@ -1468,23 +1468,6 @@ function LandingPage({ setPage, openProfile }) {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid gap-8 border-y border-zinc-800 py-8 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div className="grid max-w-2xl grid-cols-3 gap-2 sm:gap-4">
-            <Stat value={stats.fighters} label="Fighters" />
-            <Stat value={stats.countries} label="Countries" />
-            <Stat value={stats.gyms} label="Gyms" />
-          </div>
-          <div className="flex max-w-3xl flex-wrap gap-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-300">
-            {["Verified records", "Amateur fighter index", "Live rankings", "Gym and country profiles"].map((item) => (
-              <span key={item} className="rounded-sm border border-white/10 bg-black/30 px-3 py-2 backdrop-blur">
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-4 lg:grid-cols-4">
           {[
             [ShieldCheck, "Verified records", "Keep fighter identities, gyms, countries, and fight histories organized in one public database."],

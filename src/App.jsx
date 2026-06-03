@@ -584,7 +584,7 @@ function AthleteMetric({ value, label }) {
   );
 }
 
-function LoadingPanel({ label = "Loading live FightBase data" }) {
+function LoadingPanel({ label = "Canlı FightBase məlumatları yüklənir" }) {
   return (
     <div className="rounded border border-white/10 bg-panel p-6 text-sm font-semibold text-zinc-300">
       {label}...
@@ -595,7 +595,7 @@ function LoadingPanel({ label = "Loading live FightBase data" }) {
 function ErrorPanel({ message, action }) {
   return (
     <div className="rounded border border-blood/30 bg-blood/10 p-6">
-      <h3 className="font-display text-xl font-black text-white">Live data unavailable</h3>
+      <h3 className="font-display text-xl font-black text-white">Canlı məlumat əlçatan deyil</h3>
       <p className="mt-2 text-sm leading-6 text-red-100">{message}</p>
       {action && (
         <button onClick={action.onClick} className="mt-4 rounded border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
@@ -747,8 +747,8 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
       <div className="w-full max-w-2xl overflow-hidden rounded border border-white/10 bg-[#111113] shadow-red">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div>
-            <h2 className="font-display text-2xl font-black text-white">FightBase Access</h2>
-            <p className="mt-1 text-sm text-zinc-400">Log in or register your fighter account.</p>
+            <h2 className="font-display text-2xl font-black text-white">FightBase hesabı</h2>
+            <p className="mt-1 text-sm text-zinc-400">Döyüşçü hesabına daxil ol və ya yeni hesab yarat.</p>
           </div>
           <button onClick={onClose} className="rounded border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Close auth modal">
             <X size={20} />
@@ -771,7 +771,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                 tab === item ? "bg-blood text-white" : "bg-white/[0.03] text-zinc-400 hover:bg-white/10 hover:text-white"
               }`}
             >
-              {item}
+              {item === "login" ? "Giriş" : "Qeydiyyat"}
             </button>
           ))}
         </div>
@@ -838,24 +838,24 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                 }}
                 className="rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10"
               >
-                Loginə qayıt
+                Girişə qayıt
               </button>
             </form>
           ) : pendingVerification ? (
             <form onSubmit={submitEmailCode} className="grid gap-4">
               <div className="rounded border border-white/10 bg-white/[0.03] p-4">
-                <h3 className="font-display text-xl font-black text-white">Email verification</h3>
+                <h3 className="font-display text-xl font-black text-white">Email təsdiqi</h3>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  We sent a 6-digit FightBase code to <span className="font-bold text-white">{pendingVerification.email}</span>. Enter it here to finish login.
+                  FightBase təsdiq kodunu <span className="font-bold text-white">{pendingVerification.email}</span> ünvanına göndərdik. Davam etmək üçün kodu daxil et.
                 </p>
                 {!pendingVerification.emailSent && pendingVerification.devCode && (
                   <p className="mt-3 rounded border border-yellow-400/30 bg-yellow-400/10 px-3 py-2 text-sm font-bold text-yellow-100">
-                    Dev mode code: {pendingVerification.devCode}
+                    Test kodu: {pendingVerification.devCode}
                   </p>
                 )}
               </div>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                Verification code
+                Təsdiq kodu
                 <input
                   required
                   inputMode="numeric"
@@ -868,7 +868,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                 />
               </label>
               <button disabled={loading || emailCode.length !== 6} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
-                {loading ? "Verifying..." : "Verify and continue"}
+                {loading ? "Təsdiqlənir..." : "Təsdiqlə və davam et"}
               </button>
               <button
                 type="button"
@@ -879,7 +879,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                 }}
                 className="rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10"
               >
-                Back
+                Geri
               </button>
             </form>
           ) : tab === "login" ? (
@@ -896,18 +896,18 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                 />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                Password
+                Parol
                 <input
                   required
                   type="password"
                   value={loginForm.password}
                   onChange={(event) => setLoginForm({ ...loginForm, password: event.target.value })}
                   className={inputClass}
-                  placeholder="Your password"
+                  placeholder="Parolun"
                 />
               </label>
               <button disabled={loading} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
-                {loading ? "Logging in..." : "Login"}
+                {loading ? "Giriş edilir..." : "Giriş"}
               </button>
               <button
                 type="button"
@@ -926,7 +926,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
             <form onSubmit={submitRegister} className="grid gap-4">
               <div className="grid gap-4">
                 <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                  Full name
+                  Ad və soyad
                   <input
                     required
                     value={registerForm.fullName}
@@ -947,19 +947,19 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                  Password
+                  Parol
                   <input
                     required
                     type="password"
                     value={registerForm.password}
                     onChange={(event) => setRegisterForm({ ...registerForm, password: event.target.value })}
                     className={inputClass}
-                    placeholder="At least 8 characters"
+                    placeholder="Ən az 8 simvol"
                   />
                 </label>
               </div>
               <p className="text-sm leading-6 text-zinc-400">
-                Nickname, birth date, country, weight class, and gym can be completed later from your fighter profile.
+                Ləqəb, doğum tarixi, ölkə, çəki dərəcəsi və zal məlumatlarını sonra profilindən tamamlaya bilərsən.
               </p>
               <button
                 type="button"
@@ -969,10 +969,10 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
                 }}
                 className="text-left text-sm font-bold text-zinc-400 hover:text-white"
               >
-                Artıq qeydiyyatdan keçmisən? Login ol
+                Artıq qeydiyyatdan keçmisən? Giriş et
               </button>
               <button disabled={loading} className="mt-2 rounded bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60">
-                {loading ? "Creating account..." : "Register"}
+                {loading ? "Hesab yaradılır..." : "Qeydiyyatdan keç"}
               </button>
             </form>
           )}
@@ -1232,7 +1232,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
           <span className="grid h-10 w-10 place-items-center rounded-sm bg-blood text-lg font-black text-white shadow-red">FB</span>
           <span>
             <span className="block font-display text-xl font-black uppercase leading-none text-white">FightBase</span>
-            <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500 max-[420px]:hidden">MMA records database</span>
+            <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500 max-[420px]:hidden">MMA rekord bazası</span>
           </span>
         </button>
 
@@ -1454,15 +1454,15 @@ function FighterCard({ fighter, onOpen }) {
             <div className="mt-4 grid grid-cols-3 divide-x divide-zinc-800 rounded-sm border border-zinc-800 bg-black/25">
               <div className="px-3 py-2">
                 <div className="text-lg font-black text-white">{fighter.record}</div>
-                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Record</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Rekord</div>
               </div>
               <div className="px-3 py-2">
                 <div className="text-lg font-black text-white">{fighter.points}</div>
-                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Points</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Xal</div>
               </div>
               <div className="px-3 py-2" title={fighter.gym}>
                 <div className="text-lg font-black leading-5 text-white">{compactGymName(fighter.gym)}</div>
-                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Gym</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Zal</div>
               </div>
             </div>
           </div>
@@ -1525,35 +1525,35 @@ function LandingPage({ setPage, openProfile }) {
 
         <div className="relative mx-auto grid min-h-[calc(88vh-6rem)] max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:px-8">
           <div className="w-full max-w-[calc(100vw-2rem)] sm:max-w-3xl">
-            <Badge tone="red">MMA fighter database</Badge>
-            <h1 className="mt-6 max-w-4xl font-display text-5xl font-black leading-[1.02] text-white sm:text-7xl lg:text-7xl xl:text-8xl">Fight Records Database</h1>
+            <Badge tone="red">MMA döyüşçü bazası</Badge>
+            <h1 className="mt-6 max-w-4xl font-display text-5xl font-black leading-[1.02] text-white sm:text-7xl lg:text-7xl xl:text-8xl">Döyüş Rekord Bazası</h1>
             <p className="mt-6 max-w-[calc(100vw-2rem)] break-words text-lg leading-8 text-zinc-300 sm:max-w-2xl sm:text-xl">
-              FightBase is built like a serious combat sports database: verified fighter profiles, searchable amateur records, weight-class rankings, gym links, and clean discovery tools for real matchmaking.
+              FightBase ciddi döyüş idmanı bazası kimi qurulub: təsdiqli döyüşçü profilləri, axtarıla bilən həvəskar rekordları, çəki reytinqləri, zal bağlantıları və real uyğunlaşdırma üçün təmiz kəşf alətləri.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button onClick={() => setPage("Fighters")} className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-blood px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-ember sm:w-auto">
-                Search Database
+                Bazadan axtar
                 <ChevronRight size={18} />
               </button>
               <button onClick={() => setPage("Rankings")} className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-white/15 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white/10 sm:w-auto">
-                Rankings
+                Reytinqlər
               </button>
             </div>
           </div>
           <div className="hidden rounded-sm border border-zinc-800 bg-[#101113]/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur lg:block">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div>
-                <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Database snapshot</div>
-                <h2 className="mt-1 font-display text-2xl font-black text-white">Top ranked fighters</h2>
+                <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Baza icmalı</div>
+                <h2 className="mt-1 font-display text-2xl font-black text-white">Ən yüksək reytinqli döyüşçülər</h2>
               </div>
               <button onClick={() => setPage("Rankings")} className="rounded-sm border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-white hover:bg-white/10">
-                Full table
+                Tam cədvəl
               </button>
             </div>
             <div className="mt-3 divide-y divide-zinc-800">
               {fighters.length === 0 && (
                 <div className="py-8 text-sm font-semibold text-zinc-400">
-                  No live fighters yet. New registrations will appear here.
+                  Hələ canlı döyüşçü yoxdur. Yeni qeydiyyatlar burada görünəcək.
                 </div>
               )}
               {fighters.slice(0, 5).map((fighter, index) => (
@@ -1565,7 +1565,7 @@ function LandingPage({ setPage, openProfile }) {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-black text-white">{fighter.record}</div>
-                    <div className="text-[10px] font-black uppercase tracking-[0.12em] text-blood">{fighter.points} pts</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.12em] text-blood">{fighter.points} xal</div>
                   </div>
                 </button>
               ))}
@@ -1577,10 +1577,10 @@ function LandingPage({ setPage, openProfile }) {
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-4 lg:grid-cols-4">
           {[
-            [ShieldCheck, "Verified records", "Keep fighter identities, gyms, countries, and fight histories organized in one public database."],
-            [Activity, "Amateur-first profiles", "Give young and amateur fighters a clean profile page before they reach major promotions."],
-            [Gauge, "Weighted rankings", "Opponent rank, activity, and status influence weekly leaderboard movement."],
-            [Globe2, "Local discovery", "Search fighters by country, gym, weight class, rank, and activity without noisy extras."],
+            [ShieldCheck, "Təsdiqli rekordlar", "Döyüşçü kimlikləri, zallar, ölkələr və döyüş tarixçələri bir ictimai bazada səliqəli saxlanılır."],
+            [Activity, "Həvəskar mərkəzli profillər", "Gənc və həvəskar döyüşçülərə böyük promouşenlərə çatmadan əvvəl təmiz profil səhifəsi ver."],
+            [Gauge, "Çəkili reytinqlər", "Rəqib reytinqi, aktivlik və status həftəlik liderlik cədvəlinə təsir edir."],
+            [Globe2, "Yerli kəşf", "Döyüşçüləri ölkə, zal, çəki dərəcəsi, reytinq və aktivliyə görə artıq səs-küy olmadan tap."],
           ].map(([Icon, title, text]) => (
             <div key={title} className="rounded-sm border border-zinc-800 bg-[#101113] p-5">
               <Icon className="text-blood" size={24} />
@@ -1594,23 +1594,23 @@ function LandingPage({ setPage, openProfile }) {
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <Badge>Fighter index</Badge>
-            <h2 className="mt-4 font-display text-3xl font-black text-white sm:text-5xl">Ranked identities, real records.</h2>
+            <Badge>Döyüşçü indeksi</Badge>
+            <h2 className="mt-4 font-display text-3xl font-black text-white sm:text-5xl">Reytinqli profillər, real rekordlar.</h2>
           </div>
           <button onClick={() => setPage("Rankings")} className="inline-flex w-fit items-center gap-2 rounded-sm border border-white/15 px-4 py-3 text-sm font-bold text-white hover:bg-white/10">
-            Full leaderboard
+            Tam reytinq cədvəli
             <ArrowRight size={16} />
           </button>
         </div>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {error && (
             <div className="md:col-span-3 rounded border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold text-zinc-300">
-              Live sync is reconnecting. No mock fighters are shown.
+              Canlı bağlantı yenidən qurulur. Mock döyüşçülər göstərilmir.
             </div>
           )}
           {!error && fighters.length === 0 && (
             <div className="md:col-span-3 rounded-sm border border-zinc-800 bg-[#101113] p-6 text-sm font-semibold text-zinc-400">
-              No fighters are registered yet.
+              Hələ döyüşçü qeydiyyatı yoxdur.
             </div>
           )}
           {fighters.map((fighter) => (
@@ -1671,44 +1671,44 @@ function FightersPage({ openProfile }) {
         )}
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Badge tone="red">Live fighter database</Badge>
+          <Badge tone="red">Canlı döyüşçü bazası</Badge>
           <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Döyüşçü Bazası</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-            Search records, gyms, countries, points and profile status in one compact combat-sports index.
+            Rekordları, zalları, ölkələri, xalları və profil statusunu bir yığcam döyüş idmanı bazasında axtar.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by name, nickname, or gym"
+            placeholder="Ad, ləqəb və ya zal ilə axtar"
             className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none placeholder:text-zinc-500 focus:border-blood"
           />
           <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none focus:border-blood">
-            <option value="">All roles</option>
+            <option value="">Bütün statuslar</option>
             <option value="PRO">Pro</option>
-            <option value="AMATEUR">Amateur</option>
+            <option value="AMATEUR">Həvəskar</option>
           </select>
           <button onClick={() => setShowFilters((value) => !value)} className="inline-flex items-center justify-center gap-2 rounded-sm border border-white/15 px-4 py-3 text-sm font-black text-white hover:bg-white/10">
             <Filter size={16} />
-            Filter
+            Filtr
           </button>
         </div>
         </div>
         {showFilters && (
           <div className="mt-5 grid gap-3 rounded-sm border border-zinc-800 bg-black/20 p-4 sm:grid-cols-4">
             <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none focus:border-blood">
-              <option value="">All weight classes</option>
+              <option value="">Bütün çəki dərəcələri</option>
               {weightClassOptions.map((item) => <option key={item} value={item}>{formatWeightClass(item)}</option>)}
             </select>
-            <input value={country} onChange={(event) => setCountry(event.target.value.toUpperCase().slice(0, 2))} placeholder="Country e.g. AZ" className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none placeholder:text-zinc-500 focus:border-blood" />
+            <input value={country} onChange={(event) => setCountry(event.target.value.toUpperCase().slice(0, 2))} placeholder="Ölkə, məsələn AZ" className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none placeholder:text-zinc-500 focus:border-blood" />
             <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-semibold text-white outline-none focus:border-blood">
-              <option value="">All roles</option>
+              <option value="">Bütün statuslar</option>
               <option value="PRO">Pro</option>
-              <option value="AMATEUR">Amateur</option>
+              <option value="AMATEUR">Həvəskar</option>
             </select>
             <button onClick={() => { setSearch(""); setRole(""); setWeightClass(""); setCountry(""); }} className="rounded-sm border border-white/15 px-4 py-3 text-sm font-black text-white hover:bg-white/10">
-              Clear Filters
+              Filtrləri sıfırla
             </button>
           </div>
         )}
@@ -1721,15 +1721,15 @@ function FightersPage({ openProfile }) {
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        {loading && <div className="md:col-span-2 xl:col-span-3"><LoadingPanel label="Fetching fighters from /api/fighters" /></div>}
+        {loading && <div className="md:col-span-2 xl:col-span-3"><LoadingPanel label="Döyüşçülər yüklənir" /></div>}
         {error && (
           <div className="lg:col-span-2 rounded-sm border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold text-zinc-300">
-            Live sync is reconnecting. No mock fighters are shown.
+            Canlı bağlantı yenidən qurulur. Mock döyüşçülər göstərilmir.
           </div>
         )}
         {!loading && !error && fighters.length === 0 && (
           <div className="md:col-span-2 xl:col-span-3 rounded-sm border border-zinc-800 bg-[#101113] p-6 text-sm font-semibold text-zinc-400">
-            No fighters found. New registered fighters will appear here.
+            Döyüşçü tapılmadı. Yeni qeydiyyatdan keçənlər burada görünəcək.
           </div>
         )}
         {fighters.map((fighter) => (
@@ -1783,7 +1783,7 @@ function SimpleFeaturePage({ title, badge, loader, renderItem, empty = "Nothing 
   }, [user, loginRequired]);
 
   if (loginRequired && !user) {
-    return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-28 sm:px-6 sm:pt-32 lg:px-8"><div className="rounded-sm border border-white/10 bg-[#111113] p-6 sm:p-8"><Badge tone="red">{badge}</Badge><h1 className="mt-5 font-display text-4xl font-black uppercase text-white">Please login to continue</h1><button onClick={onLoginClick} className="mt-6 rounded-sm bg-blood px-5 py-3 font-black text-white shadow-red">Login</button></div></main>;
+    return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-28 sm:px-6 sm:pt-32 lg:px-8"><div className="rounded-sm border border-white/10 bg-[#111113] p-6 sm:p-8"><Badge tone="red">{badge}</Badge><h1 className="mt-5 font-display text-4xl font-black uppercase text-white">Davam etmək üçün giriş et</h1><button onClick={onLoginClick} className="mt-6 rounded-sm bg-blood px-5 py-3 font-black text-white shadow-red">Giriş</button></div></main>;
   }
 
   return (
@@ -1840,9 +1840,9 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
         <div className="rounded-sm border border-white/10 bg-[#111113] p-8">
-          <Badge tone="red">Profile</Badge>
-          <h1 className="mt-5 font-display text-4xl font-black text-white">Login to edit your fighter profile</h1>
-          <button onClick={onLoginClick} className="mt-6 rounded-sm bg-blood px-5 py-3 font-black text-white">Login</button>
+          <Badge tone="red">Profil</Badge>
+          <h1 className="mt-5 font-display text-4xl font-black text-white">Döyüşçü profilini redaktə etmək üçün giriş et</h1>
+          <button onClick={onLoginClick} className="mt-6 rounded-sm bg-blood px-5 py-3 font-black text-white">Giriş</button>
         </div>
       </main>
     );
@@ -1879,8 +1879,8 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
           setPhotoFile(null);
         } catch (caught) {
           uploadWarning = caught.message?.includes("Cloudinary")
-            ? "Photo upload skipped because Cloudinary storage is not configured on the server."
-            : `Photo upload failed: ${caught.message}`;
+            ? "Şəkil yüklənmədi: serverdə Cloudinary ayarlanmayıb."
+            : `Şəkil yüklənmədi: ${caught.message}`;
           setPhotoFile(null);
         }
       }
@@ -1888,7 +1888,7 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
       const nextUser = { ...user, fighterProfile: { ...user.fighterProfile, ...updatedProfile } };
       localStorage.setItem(userStorageKey, JSON.stringify(nextUser));
       onUserUpdate(nextUser);
-      setMessage(uploadWarning || "Profile updated.");
+      setMessage(uploadWarning || "Profil yeniləndi.");
       setEditMode(false);
     } catch (caught) {
       setError(caught.message);
@@ -1916,13 +1916,13 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
     <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
       <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
         <aside className="self-start rounded-sm border border-zinc-800 bg-[#101113] p-5">
-          <Badge tone="red">Fighter Profile</Badge>
+          <Badge tone="red">Döyüşçü profili</Badge>
           <img src={getFighterImage(profile?.profilePhotoUrl)} alt={form.fullName} className="mt-5 h-72 w-full rounded-sm border border-white/10 object-cover" />
           <label className="mt-4 block rounded-sm border border-white/10 bg-white/[0.03] p-4 text-sm font-bold text-zinc-200">
-            Profile photo
+            Profil şəkli
             <input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] || null)} className="mt-3 block w-full text-sm text-zinc-400 file:mr-4 file:rounded-sm file:border-0 file:bg-blood file:px-4 file:py-2 file:font-black file:text-white" />
           </label>
-          <p className="mt-4 text-sm leading-6 text-zinc-400">Complete these details so your public fighter page looks real and useful.</p>
+          <p className="mt-4 text-sm leading-6 text-zinc-400">İctimai döyüşçü səhifənin səliqəli görünməsi üçün bu məlumatları tamamla.</p>
         </aside>
 
         <section className="rounded-sm border border-zinc-800 bg-[#101113] p-5 sm:p-6">
@@ -1940,34 +1940,34 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
           <form onSubmit={saveProfile} className="mt-6 grid gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                Full name
+                Ad və soyad
                 <input required value={form.fullName} onChange={(event) => updateField("fullName", event.target.value)} className={inputClass} />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                Nickname
-                <input value={form.nickname} onChange={(event) => updateField("nickname", event.target.value)} className={inputClass} placeholder="Optional" />
+                Ləqəb
+                <input value={form.nickname} onChange={(event) => updateField("nickname", event.target.value)} className={inputClass} placeholder="İstəyə bağlı" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                Date of birth
+                Doğum tarixi
                 <input type="date" value={form.dateOfBirth} onChange={(event) => updateField("dateOfBirth", event.target.value)} className={inputClass} />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                Country
+                Ölkə
                 <input value={form.country} onChange={(event) => updateField("country", event.target.value.toUpperCase())} className={inputClass} maxLength={2} />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                Weight class
+                Çəki dərəcəsi
                 <select value={form.weightClass} onChange={(event) => updateField("weightClass", event.target.value)} className={inputClass}>
                   {weightClassOptions.map((value) => <option key={value} value={value}>{formatWeightClass(value)}</option>)}
                 </select>
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
-                Gym / club
-                <input value={form.gym} onChange={(event) => updateField("gym", event.target.value)} className={inputClass} placeholder="Zal / club adı" />
+                Zal / klub
+                <input value={form.gym} onChange={(event) => updateField("gym", event.target.value)} className={inputClass} placeholder="Zal / klub adı" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200 sm:col-span-2">
-                Bio
-                <textarea value={form.bio} onChange={(event) => updateField("bio", event.target.value)} className={`${inputClass} min-h-28 resize-y`} placeholder="Short fighter bio" />
+                Bioqrafiya
+                <textarea value={form.bio} onChange={(event) => updateField("bio", event.target.value)} className={`${inputClass} min-h-28 resize-y`} placeholder="Qısa döyüşçü bioqrafiyası" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200">
                 Instagram URL
@@ -1978,13 +1978,13 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
                 <input value={form.youtubeUrl} onChange={(event) => updateField("youtubeUrl", event.target.value)} className={inputClass} placeholder="https://youtube.com/..." />
               </label>
               <label className="grid gap-2 text-sm font-bold text-zinc-200 sm:col-span-2">
-                Cover photo URL
+                Cover şəkil linki
                 <input value={form.coverPhotoUrl} onChange={(event) => updateField("coverPhotoUrl", event.target.value)} className={inputClass} placeholder="https://..." />
               </label>
             </div>
 
             <button disabled={loading} className="rounded-sm bg-blood px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-red hover:bg-ember disabled:opacity-60">
-              {loading ? "Saving..." : "Save profile"}
+              {loading ? "Yadda saxlanılır..." : "Profili yadda saxla"}
             </button>
           </form>
         </section>
@@ -2035,18 +2035,18 @@ function HeadToHead() {
     setActiveSlot(slot);
   };
 
-  const rows = left && right ? [["Record", recordFromStats(left.stats), recordFromStats(right.stats)], ["Points", left.points, right.points], ["KO/TKO wins", left.stats?.methods?.KO_TKO || 0, right.stats?.methods?.KO_TKO || 0], ["Submission wins", left.stats?.methods?.SUBMISSION || 0, right.stats?.methods?.SUBMISSION || 0], ["Decision wins", left.stats?.methods?.DECISION || 0, right.stats?.methods?.DECISION || 0], ["Weight class", formatWeightClass(left.weightClass), formatWeightClass(right.weightClass)], ["Status", getStatus(left), getStatus(right)], ["Country", left.country, right.country]] : [];
+  const rows = left && right ? [["Rekord", recordFromStats(left.stats), recordFromStats(right.stats)], ["Xal", left.points, right.points], ["KO/TKO qələbələri", left.stats?.methods?.KO_TKO || 0, right.stats?.methods?.KO_TKO || 0], ["Sabmişn qələbələri", left.stats?.methods?.SUBMISSION || 0, right.stats?.methods?.SUBMISSION || 0], ["Hakim qərarı ilə qələbələr", left.stats?.methods?.DECISION || 0, right.stats?.methods?.DECISION || 0], ["Çəki dərəcəsi", formatWeightClass(left.weightClass), formatWeightClass(right.weightClass)], ["Status", getStatus(left), getStatus(right)], ["Ölkə", left.country, right.country]] : [];
 
   const slots = [
-    { key: "left", label: "Fighter 1", fighter: left },
-    { key: "right", label: "Fighter 2", fighter: right },
+    { key: "left", label: "Döyüşçü 1", fighter: left },
+    { key: "right", label: "Döyüşçü 2", fighter: right },
   ];
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 pt-28 sm:px-6 sm:pt-32 lg:px-8">
-      <Badge tone="red">Head to Head</Badge>
-      <h1 className="mt-4 font-display text-3xl font-black text-white sm:text-6xl">Compare Fighters</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400 sm:mt-3 sm:text-base">Tap a slot, search, then choose a fighter.</p>
+      <Badge tone="red">Üzbəüz müqayisə</Badge>
+      <h1 className="mt-4 font-display text-3xl font-black text-white sm:text-6xl">Döyüşçüləri müqayisə et</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400 sm:mt-3 sm:text-base">Bir xanaya toxun, axtar və döyüşçünü seç.</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3 md:mt-8 md:gap-5">
         {slots.map((slot) => (
@@ -2067,7 +2067,7 @@ function HeadToHead() {
                   }}
                   className="rounded border border-white/15 px-2 py-1 text-[10px] font-black text-white hover:bg-white/10 sm:px-3 sm:py-2 sm:text-xs"
                 >
-                  Clear
+                  Sil
                 </span>
               )}
             </div>
@@ -2079,7 +2079,7 @@ function HeadToHead() {
               </>
             ) : (
               <div className="mt-3 grid h-28 place-items-center rounded border border-dashed border-white/15 bg-white/[0.03] px-2 text-center text-sm text-zinc-400 sm:mt-5 sm:h-64 sm:text-base">
-                Select {slot.label}
+                Seç: {slot.label}
               </div>
             )}
           </button>
@@ -2089,14 +2089,14 @@ function HeadToHead() {
       <div className="mt-5 rounded border border-white/10 bg-[#111113] p-4 sm:mt-8 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="font-display text-xl font-black text-white sm:text-2xl">Choose {activeSlot === "left" ? "Fighter 1" : "Fighter 2"}</h2>
-            <p className="mt-1 hidden text-sm text-zinc-400 sm:block">Search by name, nickname, gym, or country.</p>
+            <h2 className="font-display text-xl font-black text-white sm:text-2xl">Seçim: {activeSlot === "left" ? "Döyüşçü 1" : "Döyüşçü 2"}</h2>
+            <p className="mt-1 hidden text-sm text-zinc-400 sm:block">Ad, ləqəb, zal və ya ölkə ilə axtar.</p>
           </div>
           <button onClick={() => setActiveSlot(activeSlot === "left" ? "right" : "left")} className="shrink-0 rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 sm:px-4 sm:py-3 sm:text-sm">
-            Switch
+            Dəyiş
           </button>
         </div>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fighters" className="mt-4 w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-blood sm:mt-5" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Döyüşçü axtar" className="mt-4 w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-blood sm:mt-5" />
         <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto pr-1 sm:mt-4 sm:grid-cols-2 sm:gap-3 sm:overflow-visible lg:grid-cols-5">
           {fighters.map((fighter) => (
             <button key={fighter.id} disabled={loadingPick === fighter.id} onClick={() => selectFighter(fighter.id)} className="rounded border border-white/10 bg-white/[0.03] p-3 text-left text-white hover:bg-white/10 disabled:opacity-60">
@@ -2188,7 +2188,7 @@ function NationalChampions({ openProfile }) {
   const [weight, setWeight] = useState("LIGHTWEIGHT");
   useEffect(() => { leaderboardApi.national().then(setData).catch(() => setData({})); }, []);
   const rows = data[weight] || [];
-  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Milli çempionlar</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Ölkə üzrə #1 döyüşçülər</h1><div className="mt-6 flex gap-2 overflow-x-auto">{weightClassOptions.map((item) => <button key={item} onClick={() => setWeight(item)} className={`rounded-sm px-4 py-2 text-sm font-black ${weight === item ? "bg-[#dc1f26] text-white" : "border border-white/10 text-zinc-300"}`}>{formatWeightClass(item)}</button>)}</div><div className="mt-8 overflow-hidden rounded-sm border border-white/10 bg-[#111113]"><table className="w-full text-left text-sm"><tbody>{rows.map((row) => <tr key={row.country} className="border-b border-white/10"><td className="p-4 text-white">{flagEmoji(row.country)} {row.country}</td><td className="p-4"><button onClick={() => openProfile(row.fighter.id)} className="font-bold text-white hover:text-blood">{row.fighter.fullName}</button></td><td className="p-4 text-zinc-300">{row.fighter.points} pts</td></tr>)}</tbody></table>{rows.length === 0 && <div className="py-12 text-center text-zinc-500">Bu çəki kateqoriyasında hələ çempion müəyyən edilməyib.</div>}</div></main>;
+  return <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8"><Badge tone="red">Milli çempionlar</Badge><h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Ölkə üzrə #1 döyüşçülər</h1><div className="mt-6 flex gap-2 overflow-x-auto">{weightClassOptions.map((item) => <button key={item} onClick={() => setWeight(item)} className={`rounded-sm px-4 py-2 text-sm font-black ${weight === item ? "bg-[#dc1f26] text-white" : "border border-white/10 text-zinc-300"}`}>{formatWeightClass(item)}</button>)}</div><div className="mt-8 overflow-hidden rounded-sm border border-white/10 bg-[#111113]"><table className="w-full text-left text-sm"><tbody>{rows.map((row) => <tr key={row.country} className="border-b border-white/10"><td className="p-4 text-white">{flagEmoji(row.country)} {row.country}</td><td className="p-4"><button onClick={() => openProfile(row.fighter.id)} className="font-bold text-white hover:text-blood">{row.fighter.fullName}</button></td><td className="p-4 text-zinc-300">{row.fighter.points} xal</td></tr>)}</tbody></table>{rows.length === 0 && <div className="py-12 text-center text-zinc-500">Bu çəki dərəcəsində hələ çempion müəyyən edilməyib.</div>}</div></main>;
 }
 
 function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
@@ -2244,7 +2244,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   if (loading) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
-        <LoadingPanel label="Fetching fighter profile from /api/fighters/:id" />
+        <LoadingPanel label="Döyüşçü profili yüklənir" />
       </main>
     );
   }
@@ -2252,7 +2252,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   if (error) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
-        <ErrorPanel message={error} action={{ label: "Browse fighters", onClick: () => openProfile(null) }} />
+        <ErrorPanel message={error} action={{ label: "Döyüşçülərə bax", onClick: () => openProfile(null) }} />
       </main>
     );
   }
@@ -2281,7 +2281,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
           <div className="z-10 pb-10 lg:pb-16">
             <div className="flex flex-wrap gap-2">
               <Badge tone={status === "Pro" ? "red" : "dark"}>{formatWeightClass(profile.weightClass)}</Badge>
-              <Badge tone="light">#{weightRank} weight rank</Badge>
+              <Badge tone="light">#{weightRank} çəki reytinqi</Badge>
               <Badge tone="light">{status}</Badge>
             </div>
             <h1 className="mt-7 max-w-xl font-display text-5xl font-black uppercase leading-[0.95] text-white sm:text-7xl">{profile.fullName}</h1>
@@ -2289,13 +2289,13 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
             <p className="mt-2 font-display text-2xl font-black text-white">{record.wins || 0}-{record.losses || 0}-{record.draws || 0} (W-L-D)</p>
             {nationalChampion?.isChampion && (
               <div className="mt-5 inline-flex rounded-sm border border-yellow-300/40 bg-yellow-400/20 px-4 py-3 text-sm font-black uppercase tracking-[0.1em] text-yellow-100">
-                🥇 {profile.country} National Champion
+                🥇 {profile.country} milli çempion
               </div>
             )}
             <div className="mt-9 grid max-w-xl grid-cols-3 divide-x divide-white/10 border-y border-white/10 py-2">
-              <AthleteMetric value={record.wins || 0} label="Fight wins" />
-              <AthleteMetric value={profile.stats?.methods?.KO_TKO || 0} label="Wins by knockout" />
-              <AthleteMetric value={profile.stats?.methods?.SUBMISSION || 0} label="Wins by submission" />
+              <AthleteMetric value={record.wins || 0} label="Qələbələr" />
+              <AthleteMetric value={profile.stats?.methods?.KO_TKO || 0} label="Nokautla qələbə" />
+              <AthleteMetric value={profile.stats?.methods?.SUBMISSION || 0} label="Sabmişnlə qələbə" />
             </div>
           </div>
 
@@ -2305,16 +2305,16 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
 
           <aside className="z-10 mb-10 grid gap-4 self-center lg:mb-0">
             <div className="border border-white/10 bg-[#24252b] p-5">
-              <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-400">Athlete profile</div>
-              <p className="mt-3 text-sm leading-6 text-zinc-300">{profile.bio || "Verified FightBase fighter profile."}</p>
+              <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-400">Döyüşçü profili</div>
+              <p className="mt-3 text-sm leading-6 text-zinc-300">{profile.bio || "Təsdiqli FightBase döyüşçü profili."}</p>
               <div className="mt-5 grid gap-3 text-sm font-bold text-zinc-300">
                 <span className="inline-flex items-center gap-2"><Flag size={16} /> {profile.country} {countryNames[profile.country] || profile.country}</span>
-                <span className="inline-flex items-center gap-2"><Globe2 size={16} /> {profile.gym || "Independent"}</span>
-                <span className="inline-flex items-center gap-2"><Trophy size={16} /> {badges.length} badges</span>
+                <span className="inline-flex items-center gap-2"><Globe2 size={16} /> {profile.gym || "Müstəqil"}</span>
+                <span className="inline-flex items-center gap-2"><Trophy size={16} /> {badges.length} nişan</span>
               </div>
             </div>
             <button onClick={shareProfile} className="border-2 border-white px-6 py-4 text-center text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white hover:text-black">
-              {shareCopied ? "Link copied!" : "Share Profile"}
+              {shareCopied ? "Link kopyalandı!" : "Profili paylaş"}
             </button>
           </aside>
         </div>
@@ -2325,19 +2325,19 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
           <div className="grid gap-5">
             <div className="grid gap-4 sm:grid-cols-4">
               <div className="rounded border border-white/10 bg-panel p-5">
-                <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Record</div>
+                <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Rekord</div>
                 <div className="mt-2 font-display text-4xl font-black text-white">{record.wins || 0}-{record.losses || 0}-{record.draws || 0}</div>
               </div>
               <div className="rounded border border-white/10 bg-panel p-5">
-                <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Points</div>
+                <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Xal</div>
                 <div className="mt-2 font-display text-4xl font-black text-white">{profile.points || 0}</div>
               </div>
               <div className="rounded border border-white/10 bg-panel p-5">
-                <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Country rank</div>
+                <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Ölkə reytinqi</div>
                 <div className="mt-2 font-display text-4xl font-black text-white">#{countryRank}</div>
               </div>
               <div className="rounded border border-white/10 bg-panel p-5">
-                <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Weight rank</div>
+                <div className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Çəki reytinqi</div>
                 <div className="mt-2 font-display text-4xl font-black text-white">#{weightRank}</div>
               </div>
             </div>
@@ -2345,8 +2345,8 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
             <div className="rounded border border-white/10 bg-panel p-5 sm:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="font-display text-2xl font-black text-white">Win method breakdown</h2>
-                  <p className="mt-1 text-sm text-zinc-400">Verified wins grouped by finish type.</p>
+                  <h2 className="font-display text-2xl font-black text-white">Qələbə üsulları</h2>
+                  <p className="mt-1 text-sm text-zinc-400">Təsdiqli qələbələr bitirmə üsuluna görə qruplaşdırılıb.</p>
                 </div>
                 <Activity className="text-blood" />
               </div>
@@ -2360,15 +2360,15 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
             <div className="overflow-hidden rounded border border-white/10 bg-panel">
               <div className="flex flex-col gap-4 border-b border-white/10 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="font-display text-2xl font-black text-white">Fight history</h2>
-                  <p className="mt-1 text-sm text-zinc-400">Confirmed bouts and federation-reviewed records.</p>
+                  <h2 className="font-display text-2xl font-black text-white">Döyüş tarixçəsi</h2>
+                  <p className="mt-1 text-sm text-zinc-400">Təsdiqlənmiş döyüşlər və yoxlanmış rekordlar.</p>
                 </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[760px] text-left text-sm">
                   <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.16em] text-zinc-500">
                     <tr>
-                      {["Date", "Opponent", "Event", "Result", "Method", "Round", "Time"].map((head) => (
+                      {["Tarix", "Rəqib", "Tədbir", "Nəticə", "Üsul", "Raund", "Vaxt"].map((head) => (
                         <th key={head} className="px-5 py-4 font-black">{head}</th>
                       ))}
                     </tr>
@@ -2376,7 +2376,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
                   <tbody className="divide-y divide-white/10">
                     {fightHistory.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-5 py-8 text-center font-semibold text-zinc-400">No recorded fights yet.</td>
+                        <td colSpan={7} className="px-5 py-8 text-center font-semibold text-zinc-400">Hələ döyüş qeydi yoxdur.</td>
                       </tr>
                     ) : (
                       fightHistory.map((fight) => (
@@ -2399,7 +2399,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
             </div>
 
             <div className="rounded border border-white/10 bg-panel p-5">
-              <h2 className="font-display text-2xl font-black text-white">Badges</h2>
+              <h2 className="font-display text-2xl font-black text-white">Nişanlar</h2>
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {Object.entries(BADGE_META).map(([type, meta]) => {
                   const earned = badges.find((badge) => badge.type === type);
@@ -2417,12 +2417,12 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
 
           <aside className="grid gap-5 self-start">
             <div className="rounded border border-white/10 bg-panel p-5">
-              <h2 className="font-display text-xl font-black text-white">Profile status</h2>
+              <h2 className="font-display text-xl font-black text-white">Profil statusu</h2>
               <div className="mt-5 grid gap-3">
                 {[
-                  `${status} status from backend`,
-                  profile.verifiedByFederation?.name || "Public amateur profile",
-                  profile.isVerifiedPro ? "Pro verification active" : "Amateur profile active",
+                  `${status} statusu backend-dən gəlir`,
+                  profile.verifiedByFederation?.name || "Açıq həvəskar profil",
+                  profile.isVerifiedPro ? "Pro təsdiqi aktivdir" : "Həvəskar profil aktivdir",
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-3 text-sm font-semibold text-zinc-300">
                     <CheckCircle2 className="text-emerald-400" size={18} />
@@ -2433,19 +2433,19 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
             </div>
 
             <div className="rounded border border-white/10 bg-panel p-5">
-              <h2 className="font-display text-xl font-black text-white">Social links</h2>
+              <h2 className="font-display text-xl font-black text-white">Sosial linklər</h2>
               <div className="mt-4 grid gap-3">
                 {profile.instagramUrl && (
                   <a href={profile.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded border border-white/10 px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10">
-                    Instagram <span className="text-zinc-400">Open</span>
+                    Instagram <span className="text-zinc-400">Aç</span>
                   </a>
                 )}
                 {profile.youtubeUrl && (
                   <a href={profile.youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded border border-white/10 px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10">
-                    YouTube <span className="text-zinc-400">Open</span>
+                    YouTube <span className="text-zinc-400">Aç</span>
                   </a>
                 )}
-                {!profile.instagramUrl && !profile.youtubeUrl && <p className="text-sm font-semibold text-zinc-500">No public social links yet.</p>}
+                {!profile.instagramUrl && !profile.youtubeUrl && <p className="text-sm font-semibold text-zinc-500">Hələ açıq sosial link yoxdur.</p>}
               </div>
             </div>
           </aside>
@@ -2461,7 +2461,7 @@ function RankingsPage({ openProfile }) {
   const [weightClass, setWeightClass] = useState("LIGHTWEIGHT");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const rankingTitle = role === "PRO" ? "Pro Reytinqi" : "Həvəskar Reytinqi";
+  const rankingTitle = role === "PRO" ? "Pro reytinqi" : "Həvəskar reytinqi";
 
   useEffect(() => {
     setLoading(true);
@@ -2480,16 +2480,16 @@ function RankingsPage({ openProfile }) {
     <main className="min-h-screen pt-[73px]">
       <section className="border-b border-zinc-800 bg-[#090a0c]/95 px-4 py-16 shadow-[0_22px_60px_rgba(0,0,0,0.28)] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Ayri reytinqler</div>
+          <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Ayrı reytinqlər</div>
           <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="font-display text-5xl font-black uppercase leading-none text-white sm:text-7xl">{rankingTitle}</h1>
-              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-400">Pro ve heveskar doyuscusler ayri siralanir. Her reytinq yalniz secilmis ceki derecesine aiddir.</p>
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-400">Pro və həvəskar döyüşçülər ayrı sıralanır. Hər reytinq yalnız seçilmiş çəki dərəcəsinə aiddir.</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <select value={role} onChange={(event) => setRole(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-white outline-none focus:border-blood">
                 <option value="PRO">Pro</option>
-                <option value="AMATEUR">Heveskar</option>
+                <option value="AMATEUR">Həvəskar</option>
               </select>
               <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} className="rounded-sm border border-zinc-800 bg-[#101113] px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-white outline-none focus:border-blood">
                 {weightClassOptions.map((value) => (
@@ -2507,12 +2507,12 @@ function RankingsPage({ openProfile }) {
             <div className="text-xs font-black uppercase tracking-[0.16em] text-blood">{formatWeightClass(weightClass)}</div>
             <h2 className="mt-1 font-display text-3xl font-black uppercase text-white">{rankingTitle}</h2>
           </div>
-          <div className="text-sm font-bold text-zinc-500">{fighters.length} doyuscu</div>
+          <div className="text-sm font-bold text-zinc-500">{fighters.length} döyüşçü</div>
         </div>
-        {loading && <LoadingPanel label="Reytinq yuklenir" />}
+        {loading && <LoadingPanel label="Reytinq yüklənir" />}
         {error && <ErrorPanel message={error} />}
         {!loading && !error && fighters.length === 0 && (
-          <div className="rounded-sm border border-zinc-800 bg-[#101113] p-8 text-center text-sm font-bold text-zinc-400">Bu bolmede hele reytinqe dusen doyuscu yoxdur.</div>
+          <div className="rounded-sm border border-zinc-800 bg-[#101113] p-8 text-center text-sm font-bold text-zinc-400">Bu bölmədə hələ reytinqə düşən döyüşçü yoxdur.</div>
         )}
         {!loading && !error && fighters.length > 0 && (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -2526,7 +2526,7 @@ function RankingsPage({ openProfile }) {
                 </div>
                 <div className="hidden text-right sm:block">
                   <div className="font-display text-2xl font-black text-white">{fighter.record}</div>
-                  <div className="text-xs font-black uppercase tracking-[0.12em] text-zinc-500">{fighter.points} pts</div>
+                  <div className="text-xs font-black uppercase tracking-[0.12em] text-zinc-500">{fighter.points} xal</div>
                 </div>
               </button>
             ))}
@@ -2603,10 +2603,10 @@ function FederationPanel({ user, onLoginClick, openProfile }) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
         <div className="rounded border border-white/10 bg-panel p-8">
-          <Badge tone="red">Federation</Badge>
-          <h1 className="mt-5 font-display text-4xl font-black text-white">Login required</h1>
-          <p className="mt-3 text-zinc-400">Federation tools are protected for admins and federation representatives.</p>
-          <button onClick={onLoginClick} className="mt-6 rounded bg-blood px-5 py-3 font-black text-white shadow-red">Login</button>
+          <Badge tone="red">Federasiya</Badge>
+          <h1 className="mt-5 font-display text-4xl font-black text-white">Giriş tələb olunur</h1>
+          <p className="mt-3 text-zinc-400">Federasiya alətləri yalnız admin və federasiya nümayəndələri üçündür.</p>
+          <button onClick={onLoginClick} className="mt-6 rounded bg-blood px-5 py-3 font-black text-white shadow-red">Giriş</button>
         </div>
       </main>
     );
@@ -2616,9 +2616,9 @@ function FederationPanel({ user, onLoginClick, openProfile }) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
         <div className="rounded border border-white/10 bg-panel p-8">
-          <Badge tone="red">Federation</Badge>
-          <h1 className="mt-5 font-display text-4xl font-black text-white">Access restricted</h1>
-          <p className="mt-3 text-zinc-400">This panel is available only for ADMIN and FEDERATION_REP accounts.</p>
+          <Badge tone="red">Federasiya</Badge>
+          <h1 className="mt-5 font-display text-4xl font-black text-white">Giriş məhduddur</h1>
+          <p className="mt-3 text-zinc-400">Bu panel yalnız ADMIN və FEDERATION_REP hesabları üçün aktivdir.</p>
         </div>
       </main>
     );
@@ -2628,45 +2628,45 @@ function FederationPanel({ user, onLoginClick, openProfile }) {
     <main className="mx-auto min-h-screen max-w-7xl px-4 pt-32 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Badge tone="red">Federation Command</Badge>
-          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Federation Panel</h1>
-          <p className="mt-3 max-w-2xl text-zinc-400">Review Pro requests, monitor platform health, and manage fighter status.</p>
+          <Badge tone="red">Federasiya idarəetməsi</Badge>
+          <h1 className="mt-4 font-display text-4xl font-black text-white sm:text-6xl">Federasiya paneli</h1>
+          <p className="mt-3 max-w-2xl text-zinc-400">Pro müraciətlərini yoxla, platforma vəziyyətini izlə və döyüşçü statuslarını idarə et.</p>
         </div>
-        <button onClick={loadPanel} className="rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10">Refresh</button>
+        <button onClick={loadPanel} className="rounded border border-white/15 px-5 py-3 text-sm font-black text-white hover:bg-white/10">Yenilə</button>
       </div>
 
-      {loading && <div className="mt-8"><LoadingPanel label="Loading federation data" /></div>}
-      {error && <div className="mt-8"><ErrorPanel message={error} action={{ label: "Try again", onClick: loadPanel }} /></div>}
+      {loading && <div className="mt-8"><LoadingPanel label="Federasiya məlumatları yüklənir" /></div>}
+      {error && <div className="mt-8"><ErrorPanel message={error} action={{ label: "Yenidən yoxla", onClick: loadPanel }} /></div>}
 
       {!loading && !error && (
         <>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.totalFighters || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Fighters</div></div>
-            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.proCount || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Pros</div></div>
-            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.fightsLogged || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Fights</div></div>
-            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.activeChallenges || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Active challenges</div></div>
+            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.totalFighters || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Döyüşçülər</div></div>
+            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.proCount || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Prolar</div></div>
+            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.fightsLogged || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Döyüşlər</div></div>
+            <div className="rounded border border-white/10 bg-panel p-5"><div className="text-3xl font-black text-white">{stats?.activeChallenges || 0}</div><div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Aktiv çağırışlar</div></div>
           </div>
 
           <section className="mt-8 rounded border border-white/10 bg-panel p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="font-display text-2xl font-black text-white">Pending Pro Verification</h2>
-                <p className="mt-1 text-sm text-zinc-400">{requests.length} request{requests.length === 1 ? "" : "s"} waiting for review.</p>
+                <h2 className="font-display text-2xl font-black text-white">Gözləyən Pro təsdiqləri</h2>
+                <p className="mt-1 text-sm text-zinc-400">{requests.length} müraciət yoxlama gözləyir.</p>
               </div>
-              <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Review note, optional for approve" className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-blood sm:max-w-md" />
+              <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Yoxlama qeydi, təsdiq üçün istəyə bağlıdır" className="w-full rounded border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-blood sm:max-w-md" />
             </div>
             <div className="mt-5 grid gap-3">
-              {requests.length === 0 && <div className="rounded border border-white/10 bg-white/5 p-4 text-sm text-zinc-400">No pending Pro verification requests.</div>}
+              {requests.length === 0 && <div className="rounded border border-white/10 bg-white/5 p-4 text-sm text-zinc-400">Gözləyən Pro təsdiq müraciəti yoxdur.</div>}
               {requests.map((request) => (
                 <div key={request.id} className="grid gap-4 rounded border border-white/10 bg-white/[0.03] p-4 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div>
-                    <button onClick={() => openProfile(request.fighterId)} className="font-display text-xl font-black text-white hover:text-red-100">{request.fighter?.fullName || "Fighter"}</button>
-                    <div className="mt-1 text-sm text-zinc-400">{request.federation?.name} · submitted {formatDate(request.createdAt)}</div>
-                    {request.documentUrl && <a href={request.documentUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-bold text-red-100 hover:text-white">Open document</a>}
+                    <button onClick={() => openProfile(request.fighterId)} className="font-display text-xl font-black text-white hover:text-red-100">{request.fighter?.fullName || "Döyüşçü"}</button>
+                    <div className="mt-1 text-sm text-zinc-400">{request.federation?.name} · göndərildi {formatDate(request.createdAt)}</div>
+                    {request.documentUrl && <a href={request.documentUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-bold text-red-100 hover:text-white">Sənədi aç</a>}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "approve")} className="rounded bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-60">Approve</button>
-                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "reject")} className="rounded bg-blood px-4 py-3 text-sm font-black text-white disabled:opacity-60">Reject</button>
+                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "approve")} className="rounded bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-60">Təsdiqlə</button>
+                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "reject")} className="rounded bg-blood px-4 py-3 text-sm font-black text-white disabled:opacity-60">Rədd et</button>
                   </div>
                 </div>
               ))}
@@ -2675,13 +2675,13 @@ function FederationPanel({ user, onLoginClick, openProfile }) {
 
           <section className="mt-8 overflow-hidden rounded border border-white/10 bg-panel">
             <div className="border-b border-white/10 p-5">
-              <h2 className="font-display text-2xl font-black text-white">Recent Fighters</h2>
-              <p className="mt-1 text-sm text-zinc-400">Fast status overview for federation review.</p>
+              <h2 className="font-display text-2xl font-black text-white">Son döyüşçülər</h2>
+              <p className="mt-1 text-sm text-zinc-400">Federasiya yoxlaması üçün sürətli status icmalı.</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[780px] text-left text-sm">
                 <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.16em] text-zinc-500">
-                  <tr>{["Fighter", "Role", "Country", "Weight", "Points", "Admin Action"].map((head) => <th key={head} className="px-5 py-4 font-black">{head}</th>)}</tr>
+                  <tr>{["Döyüşçü", "Rol", "Ölkə", "Çəki", "Xal", "Admin əməliyyatı"].map((head) => <th key={head} className="px-5 py-4 font-black">{head}</th>)}</tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
                   {fighters.map((fighter) => (
@@ -2694,11 +2694,11 @@ function FederationPanel({ user, onLoginClick, openProfile }) {
                       <td className="px-5 py-4">
                         {isAdmin ? (
                           <div className="flex gap-2">
-                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "PRO")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 disabled:opacity-60">Make Pro</button>
-                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "AMATEUR")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 disabled:opacity-60">Amateur</button>
+                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "PRO")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 disabled:opacity-60">Pro et</button>
+                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "AMATEUR")} className="rounded border border-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/10 disabled:opacity-60">Həvəskar et</button>
                           </div>
                         ) : (
-                          <span className="text-xs text-zinc-500">Admin only</span>
+                          <span className="text-xs text-zinc-500">Yalnız admin</span>
                         )}
                       </td>
                     </tr>
@@ -2720,7 +2720,7 @@ function PlaceholderPage({ title, icon: Icon }) {
         <Icon className="text-blood" size={34} />
         <h1 className="mt-5 font-display text-4xl font-black text-white">{title}</h1>
         <p className="mt-3 max-w-2xl text-zinc-400">
-          This section is queued for the next FightBase build phase. The live fighter, profile, and leaderboard API integrations are now connected.
+          Bu bölmə FightBase-in növbəti mərhələsi üçün saxlanılıb. Canlı döyüşçü, profil və reytinq API bağlantıları artıq qoşulub.
         </p>
       </div>
     </main>
@@ -2746,10 +2746,10 @@ function NotFoundPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 text-center text-white">
       <div className="font-display text-8xl font-black text-blood">404</div>
-      <h1 className="mt-4 font-display text-3xl font-black">Page not found</h1>
-      <p className="mt-3 max-w-md text-zinc-400">The FightBase page you opened does not exist yet.</p>
+      <h1 className="mt-4 font-display text-3xl font-black">Səhifə tapılmadı</h1>
+      <p className="mt-3 max-w-md text-zinc-400">Açdığın FightBase səhifəsi mövcud deyil.</p>
       <button onClick={() => navigate("/")} className="mt-6 rounded border border-white/15 px-6 py-3 font-bold hover:bg-white/10">
-        Go Home
+        Ana səhifəyə qayıt
       </button>
     </main>
   );
@@ -2877,7 +2877,7 @@ export default function App() {
       setToast(message);
       window.setTimeout(() => setToast(null), 3000);
     };
-    socket.on("fighter:won", () => showToast("Your fighter just won!"));
+    socket.on("fighter:won", () => showToast("Döyüşçün qalib gəldi!"));
     socket.on("notification:new", (notification) => showToast(notification.message));
     return () => socket.disconnect();
   }, [user]);
@@ -2999,7 +2999,7 @@ export default function App() {
       <footer className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-500">
         <span className="font-black uppercase tracking-[0.18em] text-zinc-300">FightBase</span>
         <span className="mx-3 text-zinc-700">/</span>
-        Verified combat network for fighters, federations, and fight fans.
+        Döyüşçülər, zallar və döyüş idmanı izləyiciləri üçün təsdiqli rekord bazası.
       </footer>
     </div>
   );

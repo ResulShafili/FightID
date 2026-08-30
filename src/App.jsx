@@ -80,7 +80,7 @@ const userStorageKey = "fightidUser";
 const settingsStorageKey = "fightidSettings";
 const defaultSettings = {
   language: "az",
-  theme: "dark",
+  theme: "light",
   accent: "#dc1f26",
   compactMode: false,
   reduceMotion: false,
@@ -94,9 +94,9 @@ const languageOptions = [
   { value: "ru", label: "RU", name: "Русский" },
 ];
 const themeOptions = [
-  { value: "dark", label: "Dark", description: "Classic FightBase charcoal" },
-  { value: "midnight", label: "Midnight", description: "Deeper black arena look" },
-  { value: "contrast", label: "High Contrast", description: "Sharper text and panels" },
+  { value: "light", label: "Light", description: "Clean white records database" },
+  { value: "paper", label: "Paper", description: "Soft editorial database look" },
+  { value: "contrast", label: "High Contrast", description: "Sharper white panels and borders" },
 ];
 const accentOptions = [
   { value: "#dc1f26", label: "Blood Red" },
@@ -105,9 +105,11 @@ const accentOptions = [
   { value: "#7c3aed", label: "Violet" },
 ];
 const themePalettes = {
-  dark: { canvas: "#07080a", panel: "#101114", elevated: "#111113", text: "#f4f0e8", border: "rgba(255,255,255,0.10)" },
-  midnight: { canvas: "#02030a", panel: "#090b16", elevated: "#0d1020", text: "#f7f8ff", border: "rgba(117,139,255,0.22)" },
-  contrast: { canvas: "#000000", panel: "#181818", elevated: "#202020", text: "#ffffff", border: "rgba(255,255,255,0.28)" },
+  light: { canvas: "#f6f4f1", panel: "#ffffff", elevated: "#f9fafb", text: "#111217", muted: "#5f6673", faint: "#8b93a1", border: "rgba(17,18,23,0.13)" },
+  paper: { canvas: "#faf7f2", panel: "#ffffff", elevated: "#f2eee7", text: "#15110d", muted: "#665f57", faint: "#948b82", border: "rgba(77,64,52,0.16)" },
+  contrast: { canvas: "#ffffff", panel: "#ffffff", elevated: "#f5f5f5", text: "#050505", muted: "#333333", faint: "#5c5c5c", border: "rgba(0,0,0,0.28)" },
+  dark: { canvas: "#f6f4f1", panel: "#ffffff", elevated: "#f9fafb", text: "#111217", muted: "#5f6673", faint: "#8b93a1", border: "rgba(17,18,23,0.13)" },
+  midnight: { canvas: "#f6f4f1", panel: "#ffffff", elevated: "#f9fafb", text: "#111217", muted: "#5f6673", faint: "#8b93a1", border: "rgba(17,18,23,0.13)" },
 };
 const translations = {
   az: {
@@ -1518,9 +1520,9 @@ function LandingPage({ setPage, openProfile }) {
 
   return (
     <main>
-      <section className="relative min-h-[88vh] overflow-hidden pt-24">
-        <img src="/assets/hero-arena.png" alt="MMA arena walkout" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#07080a_0%,rgba(7,8,10,.94)_37%,rgba(7,8,10,.58)_70%,rgba(7,8,10,.92)_100%)]" />
+      <section className="relative min-h-[88vh] overflow-hidden border-b border-line bg-canvas pt-24">
+        <img src="/assets/hero-arena.png" alt="MMA arena walkout" className="absolute inset-y-0 right-0 h-full w-full object-cover opacity-[0.14] saturate-0 lg:w-[58%]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,#f6f4f1_0%,rgba(246,244,241,.96)_42%,rgba(246,244,241,.78)_70%,#f6f4f1_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-canvas to-transparent" />
 
         <div className="relative mx-auto grid min-h-[calc(88vh-6rem)] max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:px-8">
@@ -1535,12 +1537,12 @@ function LandingPage({ setPage, openProfile }) {
                 Bazadan axtar
                 <ChevronRight size={18} />
               </button>
-              <button onClick={() => setPage("Rankings")} className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-white/15 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white/10 sm:w-auto">
+              <button onClick={() => setPage("Rankings")} className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-line bg-white px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-zinc-50 sm:w-auto">
                 Reytinqlər
               </button>
             </div>
           </div>
-          <div className="hidden rounded-sm border border-zinc-800 bg-[#101113]/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur lg:block">
+          <div className="hidden rounded-sm border border-line bg-white/95 p-4 shadow-[0_24px_70px_rgba(17,18,23,0.10)] backdrop-blur lg:block">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div>
                 <div className="text-xs font-black uppercase tracking-[0.18em] text-blood">Baza icmalı</div>
@@ -2275,8 +2277,8 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
 
   return (
     <main className="pt-[73px]">
-      <section className="relative overflow-hidden bg-[#18191f]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.08),transparent_28%),linear-gradient(90deg,#18191f_0%,#18191f_55%,#101115_100%)]" />
+      <section className="relative overflow-hidden border-b border-line bg-canvas">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(225,29,46,0.08),transparent_28%),linear-gradient(90deg,#f6f4f1_0%,#ffffff_55%,#eee9e1_100%)]" />
         <div className="relative mx-auto grid min-h-[640px] max-w-7xl items-end gap-8 px-4 pt-12 sm:px-6 lg:grid-cols-[1fr_420px_360px] lg:px-8">
           <div className="z-10 pb-10 lg:pb-16">
             <div className="flex flex-wrap gap-2">
@@ -2313,7 +2315,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
                 <span className="inline-flex items-center gap-2"><Trophy size={16} /> {badges.length} nişan</span>
               </div>
             </div>
-            <button onClick={shareProfile} className="border-2 border-white px-6 py-4 text-center text-sm font-black uppercase tracking-[0.12em] text-white hover:bg-white hover:text-black">
+            <button onClick={shareProfile} className="border-2 border-line bg-white px-6 py-4 text-center text-sm font-black uppercase tracking-[0.12em] text-white shadow-red hover:bg-zinc-50">
               {shareCopied ? "Link kopyalandı!" : "Profili paylaş"}
             </button>
           </aside>
@@ -2801,6 +2803,8 @@ export default function App() {
         --fightid-panel: ${palette.panel};
         --fightid-elevated: ${palette.elevated};
         --fightid-text: ${palette.text};
+        --fightid-muted: ${palette.muted || "#5f6673"};
+        --fightid-faint: ${palette.faint || "#8b93a1"};
         --fightid-border: ${palette.border};
       }
       body { background: var(--fightid-canvas) !important; color: var(--fightid-text) !important; }
@@ -2808,21 +2812,73 @@ export default function App() {
       .bg-canvas\\/80 { background-color: color-mix(in srgb, var(--fightid-canvas), transparent 20%) !important; }
       .bg-panel,
       .bg-\\[\\#111113\\],
-      .bg-\\[\\#0a0a0b\\] { background-color: var(--fightid-panel) !important; }
-      .text-bone { color: var(--fightid-text) !important; }
+      .bg-\\[\\#101113\\],
+      .bg-\\[\\#0a0a0b\\],
+      .bg-\\[\\#090a0c\\],
+      .bg-\\[\\#090a0c\\]\\/95,
+      .bg-\\[\\#18191f\\],
+      .bg-\\[\\#24252b\\],
+      .bg-zinc-900,
+      .bg-zinc-800 { background-color: var(--fightid-panel) !important; }
+      .bg-black,
+      .bg-black\\/20,
+      .bg-black\\/25,
+      .bg-black\\/75,
+      .bg-black\\/95 { background-color: color-mix(in srgb, var(--fightid-panel), transparent 4%) !important; }
+      .text-bone,
+      .text-white,
+      .text-zinc-200,
+      .text-zinc-300 { color: var(--fightid-text) !important; }
+      .text-zinc-400 { color: var(--fightid-muted) !important; }
+      .text-zinc-500,
+      .text-zinc-600,
+      .text-zinc-700 { color: var(--fightid-faint) !important; }
+      .border-zinc-700,
+      .border-zinc-800,
+      .border-zinc-900,
       .border-white\\/10,
       .border-white\\/15 { border-color: var(--fightid-border) !important; }
-      .bg-blood { background-color: var(--fightid-accent) !important; }
+      .divide-zinc-800 > :not([hidden]) ~ :not([hidden]),
+      .divide-white\\/10 > :not([hidden]) ~ :not([hidden]) { border-color: var(--fightid-border) !important; }
+      .bg-blood,
+      .bg-\\[\\#dc1f26\\] { background-color: var(--fightid-accent) !important; }
       .bg-blood\\/10 { background-color: color-mix(in srgb, var(--fightid-accent), transparent 90%) !important; }
       .bg-blood\\/15 { background-color: color-mix(in srgb, var(--fightid-accent), transparent 85%) !important; }
       .bg-blood\\/20 { background-color: color-mix(in srgb, var(--fightid-accent), transparent 80%) !important; }
       .text-blood { color: var(--fightid-accent) !important; }
+      .text-red-100,
+      .text-red-200,
+      .text-red-300 { color: color-mix(in srgb, var(--fightid-accent), black 12%) !important; }
       .border-blood { border-color: var(--fightid-accent) !important; }
       .border-blood\\/30,
       .border-blood\\/40 { border-color: color-mix(in srgb, var(--fightid-accent), transparent 58%) !important; }
-      .shadow-red { box-shadow: 0 0 30px color-mix(in srgb, var(--fightid-accent), transparent 58%) !important; }
-      html[data-fightid-theme="contrast"] .text-zinc-400 { color: #d4d4d8 !important; }
-      html[data-fightid-theme="contrast"] .text-zinc-500 { color: #b7b7c0 !important; }
+      .shadow-red { box-shadow: 0 16px 45px rgba(17, 18, 23, 0.08) !important; }
+      .bg-blood.text-white,
+      .bg-\\[\\#dc1f26\\].text-white,
+      .bg-blood .text-white,
+      .bg-\\[\\#dc1f26\\] .text-white,
+      .bg-emerald-600.text-white,
+      .bg-emerald-500\\/15 { color: #ffffff !important; }
+      button.bg-blood,
+      button.bg-\\[\\#dc1f26\\] { color: #ffffff !important; }
+      input, textarea, select {
+        background-color: #ffffff !important;
+        color: var(--fightid-text) !important;
+        border-color: var(--fightid-border) !important;
+      }
+      input::placeholder, textarea::placeholder { color: var(--fightid-faint) !important; }
+      header {
+        background-color: rgba(255, 255, 255, 0.94) !important;
+        border-color: var(--fightid-border) !important;
+        box-shadow: 0 10px 35px rgba(17, 18, 23, 0.08) !important;
+      }
+      header .text-white,
+      header .text-zinc-200,
+      header .text-zinc-300 { color: var(--fightid-text) !important; }
+      header .bg-white.text-black,
+      .bg-white.text-black { background: #111217 !important; color: #ffffff !important; }
+      html[data-fightid-theme="contrast"] .text-zinc-400 { color: #333333 !important; }
+      html[data-fightid-theme="contrast"] .text-zinc-500 { color: #5c5c5c !important; }
       html[data-fightid-compact="true"] { font-size: 14px; }
       html[data-fightid-reduce-motion="true"] *,
       html[data-fightid-reduce-motion="true"] *::before,

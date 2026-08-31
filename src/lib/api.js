@@ -98,6 +98,7 @@ export const challengeApi = {
   send: (payload) => apiRequest("/challenges", { method: "POST", body: JSON.stringify(payload) }),
   accept: (id) => apiRequest(`/challenges/${id}/accept`, { method: "PUT" }),
   decline: (id) => apiRequest(`/challenges/${id}/decline`, { method: "PUT" }),
+  cancel: (id) => apiRequest(`/challenges/${id}/cancel`, { method: "PUT" }),
 };
 
 export const notificationApi = {

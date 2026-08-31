@@ -2,8 +2,11 @@ import {
   Activity,
   ArrowRight,
   ArrowUpRight,
+  ArrowLeft,
   Award,
   Bell,
+  Building2,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -14,16 +17,20 @@ import {
   Flame,
   Gauge,
   Globe2,
+  Inbox,
   Instagram,
   Languages,
   MapPin,
   Medal,
   Menu,
+  Network,
   Pencil,
   Search,
+  Send,
   Settings,
   Share2,
   ShieldCheck,
+  ShieldQuestion,
   SlidersHorizontal,
   Sparkles,
   Swords,
@@ -38,8 +45,10 @@ import {
 import React, { useEffect, useId, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
+  adminApi,
   authApi,
   badgeApi,
+  challengeApi,
   fighterApi,
   gymApi,
   leaderboardApi,
@@ -47,6 +56,7 @@ import {
   seekApi,
   setAccessToken,
   tournamentApi,
+  verificationApi,
 } from "./lib/api";
 import { createFightIdSocket } from "./lib/socket";
 
@@ -58,7 +68,7 @@ const navGroups = [
   },
   {
     label: "Match",
-    items: ["Compare", "Fight Board", "Tournaments"],
+    items: ["Compare", "Fight Board", "Tournaments", "Challenges"],
   },
 ];
 const pagePaths = {
@@ -68,8 +78,10 @@ const pagePaths = {
   Compare: "/compare",
   "Fight Board": "/fight-board",
   Tournaments: "/tournaments",
+  Challenges: "/challenges",
   Gyms: "/gyms",
   "National Champions": "/national-champions",
+  Federation: "/federation",
   "My Profile": "/profile",
   "Fighter Profile": "/fighters",
 };
@@ -81,10 +93,24 @@ const pathToPage = (pathname) => {
   if (pathname.startsWith("/compare")) return "Compare";
   if (pathname.startsWith("/fight-board")) return "Fight Board";
   if (pathname.startsWith("/tournaments")) return "Tournaments";
+  if (pathname.startsWith("/challenges")) return "Challenges";
   if (pathname.startsWith("/gyms")) return "Gyms";
   if (pathname.startsWith("/national-champions")) return "National Champions";
+  if (pathname.startsWith("/federation")) return "Federation";
   if (pathname.startsWith("/profile")) return "My Profile";
   return "";
+};
+const RULE_SET_LABELS = { MMA: "MMA", GRAPPLING: "Grappling", BOXING: "Boks", MUAY_THAI: "Muay Thai" };
+function formatRuleSet(value = "") {
+  return RULE_SET_LABELS[value] || formatResult(value);
+}
+const CHALLENGE_STATUS_META = {
+  PENDING: { label: "Gözləyir", tone: "gold" },
+  ACCEPTED: { label: "Qəbul edilib", tone: "emerald" },
+  DECLINED: { label: "Rədd edilib", tone: "red" },
+  COUNTERED: { label: "Qarşı təklif", tone: "blue" },
+  CANCELLED: { label: "Ləğv edilib", tone: "muted" },
+  COMPLETED: { label: "Tamamlanıb", tone: "muted" },
 };
 const fightIdLogo = "/assets/fightid-logo.svg";
 const refreshTokenStorageKey = "fightidRefreshToken";
@@ -337,14 +363,14 @@ const countryNames = {
 
 function formatWeightClass(value = "") {
   const labels = {
-    STRAWWEIGHT: "Minimum çəki",
-    FLYWEIGHT: "Yüngül milçək çəki",
+    STRAWWEIGHT: "Salma çəki",
+    FLYWEIGHT: "Milçək çəki",
     BANTAMWEIGHT: "Xoruz çəki",
     FEATHERWEIGHT: "Lələk çəki",
     LIGHTWEIGHT: "Yüngül çəki",
-    WELTERWEIGHT: "Yarım orta çəki",
+    WELTERWEIGHT: "Yarımorta çəki",
     MIDDLEWEIGHT: "Orta çəki",
-    LIGHT_HEAVYWEIGHT: "Yarım ağır çəki",
+    LIGHT_HEAVYWEIGHT: "Yarımağır çəki",
     HEAVYWEIGHT: "Ağır çəki",
   };
   if (labels[value]) return labels[value];
@@ -424,6 +450,8 @@ function Chip({ children, tone = "default", icon: Icon }) {
     red: "border-blood/45 bg-blood/15 text-red-100",
     gold: "border-gold/45 bg-gold/15 text-amber-100",
     blue: "border-sky-400/40 bg-sky-400/10 text-sky-100",
+    emerald: "border-emerald-400/40 bg-emerald-400/10 text-emerald-100",
+    muted: "border-white/10 bg-white/[0.03] text-zinc-500",
     ghost: "border-transparent bg-white/[0.05] text-zinc-400",
     solid: "border-transparent bg-blood text-white",
   };
@@ -482,6 +510,37 @@ function EmptyState({ emoji = "🥊", title, subtitle, children }) {
       {subtitle && <div className="mt-2 max-w-sm text-sm text-zinc-400">{subtitle}</div>}
       {children && <div className="mt-6">{children}</div>}
     </div>
+  );
+}
+
+function CardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-surface">
+      <div className="flex gap-4 p-4">
+        <div className="h-32 w-28 shrink-0 animate-pulse rounded-xl bg-white/[0.06]" />
+        <div className="flex-1 space-y-3 py-1">
+          <div className="h-4 w-24 animate-pulse rounded bg-white/[0.06]" />
+          <div className="h-7 w-40 animate-pulse rounded bg-white/[0.06]" />
+          <div className="h-3 w-28 animate-pulse rounded bg-white/[0.05]" />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-white/8 border-t border-white/8 bg-black/20">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="space-y-2 px-3 py-3">
+            <div className="h-5 w-12 animate-pulse rounded bg-white/[0.06]" />
+            <div className="h-2 w-10 animate-pulse rounded bg-white/[0.05]" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CardSkeletonGrid({ count = 6 }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => <CardSkeleton key={i} />)}
+    </>
   );
 }
 
@@ -1040,6 +1099,12 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
               </div>
             );
           })}
+          {["ADMIN", "FEDERATION_REP"].includes(user?.role) && (
+            <button onClick={() => setPage("Federation")} className={`relative rounded-lg px-3 py-2 text-sm font-bold uppercase tracking-[0.1em] transition ${page === "Federation" ? "text-white" : "text-zinc-400 hover:text-white"}`}>
+              Federation
+              {page === "Federation" && <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-blood" />}
+            </button>
+          )}
         </nav>
 
         <div className="hidden shrink-0 items-center gap-2 md:flex">
@@ -1105,6 +1170,9 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
               )}
             </div>
           ))}
+          {["ADMIN", "FEDERATION_REP"].includes(user?.role) && (
+            <button onClick={() => { setPage("Federation"); setOpen(false); }} className={`block w-full rounded-xl px-4 py-3 text-left text-sm font-bold uppercase tracking-wide ${page === "Federation" ? "bg-blood/15 text-white" : "text-zinc-300 hover:bg-white/[0.05]"}`}>Federation</button>
+          )}
           <div className="mt-3 grid gap-2 border-t border-white/10 pt-4">
             {user ? (
               <button onClick={() => { setPage("My Profile"); setOpen(false); }} className="block w-full rounded-xl bg-blood px-4 py-3 text-left text-sm font-black text-white shadow-red">Profilim</button>
@@ -1352,6 +1420,28 @@ function LandingPage({ setPage, openProfile }) {
           ))}
         </div>
       </section>
+
+      {/* CTA BAND */}
+      <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#1c0507] via-surface to-coal p-8 sm:p-14">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-blood/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-10 h-72 w-72 rounded-full bg-gold/10 blur-3xl" />
+          <span className="pointer-events-none absolute -bottom-10 right-6 select-none font-display text-[10rem] font-bold uppercase leading-none text-stroke opacity-30 sm:text-[14rem]">FB</span>
+          <div className="relative max-w-2xl">
+            <Kicker icon={ShieldCheck}>Öz kimliyini qur</Kicker>
+            <h2 className="mt-4 font-display text-4xl font-bold uppercase leading-[0.95] text-white sm:text-6xl">Döyüşçü profilini bu gün yarat</h2>
+            <p className="mt-4 max-w-xl text-base leading-7 text-zinc-300">Rekordunu qeyd et, reytinqlərdə yüksəl və uyğun rəqiblərə çağırış göndər — hamısı təsdiqli, təmiz bir bazada.</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button onClick={() => setPage("Fighters")} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-7 py-4 text-sm font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/10">
+                <Users size={18} /> Döyüşçülərə bax
+              </button>
+              <button onClick={() => setPage("Rankings")} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blood px-7 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red transition hover:brightness-110">
+                <Trophy size={18} className="text-gold" /> Reytinqlərə bax
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
@@ -1457,8 +1547,12 @@ function FightersPage({ openProfile }) {
         </div>
       )}
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {loading && <div className="col-span-full"><LoadingPanel label="Döyüşçülər yüklənir" /></div>}
+      {!loading && !error && fighters.length > 0 && (
+        <div className="mt-6 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">{fighters.length} döyüşçü göstərilir</div>
+      )}
+
+      <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {loading && <CardSkeletonGrid count={6} />}
         {error && <div className="col-span-full"><ErrorPanel message="Canlı bağlantı yenidən qurulur. Mock döyüşçülər göstərilmir." /></div>}
         {!loading && !error && fighters.length === 0 && (
           <div className="col-span-full"><EmptyState emoji="🔎" title="Döyüşçü tapılmadı" subtitle="Axtarışı və ya filtrləri dəyiş, yaxud yeni qeydiyyatları gözlə." /></div>
@@ -1482,61 +1576,6 @@ function MethodBar({ method, total }) {
         <div className={`h-full rounded-full ${tones[method.tone]} transition-all duration-700`} style={{ width: `${pct}%` }} />
       </div>
     </div>
-  );
-}
-
-function SimpleFeaturePage({ title, badge, loader, renderItem, empty = "Hələ heç nə yoxdur.", user, loginRequired = false, onLoginClick }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (loginRequired && !user) {
-      setLoading(false);
-      return;
-    }
-    let ignore = false;
-    setLoading(true);
-    loader()
-      .then((result) => {
-        if (!ignore) setItems(result?.data || result || []);
-      })
-      .catch((caught) => {
-        if (!ignore) setError(caught.message);
-      })
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [user, loginRequired]);
-
-  if (loginRequired && !user) {
-    return (
-      <PageShell>
-        <Panel className="p-8">
-          <Chip tone="red">{badge}</Chip>
-          <h1 className="mt-5 font-display text-4xl font-bold uppercase text-white">Davam etmək üçün giriş et</h1>
-          <button onClick={onLoginClick} className="mt-6 rounded-xl bg-blood px-5 py-3 font-black text-white shadow-red">Giriş</button>
-        </Panel>
-      </PageShell>
-    );
-  }
-
-  return (
-    <PageShell>
-      {(badge || title) && (
-        <div className="border-b border-white/10 pb-6">
-          {badge && <Chip tone="red">{badge}</Chip>}
-          {title && <h1 className="mt-4 font-display text-5xl font-bold uppercase leading-none text-white sm:text-6xl">{title}</h1>}
-        </div>
-      )}
-      {loading && <div className="mt-8"><LoadingPanel /></div>}
-      {error && <div className="mt-8"><ErrorPanel message={error} /></div>}
-      {!loading && !error && items.length === 0 && <div className="mt-8"><EmptyState title={empty} /></div>}
-      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{items.map(renderItem)}</div>
-    </PageShell>
   );
 }
 
@@ -1888,55 +1927,634 @@ function FightSeekBoard({ user }) {
 
 function TournamentHub() {
   const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let ignore = false;
+    setLoading(true);
+    tournamentApi.list({ limit: 30 })
+      .then((r) => { if (!ignore) setItems(r?.data || []); })
+      .catch((e) => { if (!ignore) setError(e.message); })
+      .finally(() => { if (!ignore) setLoading(false); });
+    return () => { ignore = true; };
+  }, []);
+
+  const statusTone = { ACTIVE: "red", UPCOMING: "gold", COMPLETED: "muted" };
+  const statusLabel = { ACTIVE: "Aktiv", UPCOMING: "Yaxınlaşır", COMPLETED: "Bitib" };
+
   return (
-    <SimpleFeaturePage
-      title="Turnirlər"
-      badge="Turnir mərkəzi"
-      loader={() => tournamentApi.list({ limit: 30 })}
-      empty="Hal-hazırda aktiv turnir yoxdur."
-      renderItem={(item) => (
-        <button key={item.id} onClick={() => navigate(`/tournaments/${item.id}`)} className="group cursor-pointer rounded-2xl border border-white/10 bg-surface p-5 text-left transition hover:-translate-y-1 hover:border-blood/50">
-          <Chip tone={item.status === "ACTIVE" ? "red" : "default"}>{item.status === "ACTIVE" ? "AKTİV" : item.status}</Chip>
-          <h3 className="mt-4 font-display text-2xl font-bold uppercase text-white">{item.name}</h3>
-          <p className="mt-2 font-mono text-sm text-zinc-400">{formatWeightClass(item.weightClass)} · {formatResult(item.ruleSet)} · {item.size} yer</p>
-          <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blood transition group-hover:gap-2">Braketi gör <ArrowRight size={15} /></span>
-        </button>
+    <PageShell>
+      <PageHeader kicker="Turnir mərkəzi" kickerIcon={Network} title="Turnirlər" subtitle="Aktiv və yaxınlaşan braketləri izlə, hər raundun qalibini gör." />
+      {loading && <div className="mt-8"><LoadingPanel label="Turnirlər yüklənir" /></div>}
+      {error && <div className="mt-8"><ErrorPanel message={error} /></div>}
+      {!loading && !error && items.length === 0 && <div className="mt-8"><EmptyState emoji="🏆" title="Aktiv turnir yoxdur" subtitle="Yeni braketlər elan olunanda burada görünəcək." /></div>}
+      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {items.map((item) => (
+          <button key={item.id} onClick={() => navigate(`/tournaments/${item.id}`)} className="group cursor-pointer rounded-2xl border border-white/10 bg-surface p-5 text-left transition hover:-translate-y-1 hover:border-blood/50">
+            <div className="flex items-center justify-between">
+              <Chip tone={statusTone[item.status] || "default"}>{statusLabel[item.status] || item.status}</Chip>
+              <span className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-blood/10 text-blood"><Network size={18} /></span>
+            </div>
+            <h3 className="mt-4 font-display text-2xl font-bold uppercase text-white">{item.name}</h3>
+            <p className="mt-2 font-mono text-sm text-zinc-400">{formatWeightClass(item.weightClass)} · {formatRuleSet(item.ruleSet)} · {item.size} yer</p>
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blood transition group-hover:gap-2">Braketi gör <ArrowRight size={15} /></span>
+          </button>
+        ))}
+      </div>
+    </PageShell>
+  );
+}
+
+function TournamentDetailPage({ openProfile }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [tournament, setTournament] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let ignore = false;
+    setLoading(true);
+    setError("");
+    tournamentApi.get(id)
+      .then((t) => { if (!ignore) setTournament(t); })
+      .catch((e) => { if (!ignore) setError(e.message); })
+      .finally(() => { if (!ignore) setLoading(false); });
+    return () => { ignore = true; };
+  }, [id]);
+
+  if (loading) return <PageShell><LoadingPanel label="Turnir yüklənir" /></PageShell>;
+  if (error) return <PageShell><ErrorPanel message={error} action={{ label: "Turnirlərə qayıt", onClick: () => navigate("/tournaments") }} /></PageShell>;
+
+  const matches = tournament.matches || [];
+  const rounds = [...new Set(matches.map((m) => m.round))].sort((a, b) => a - b);
+  const roundLabel = (round, total) => {
+    const fromEnd = total - round;
+    if (fromEnd === 0) return "Final";
+    if (fromEnd === 1) return "Yarımfinal";
+    if (fromEnd === 2) return "Çərəkfinal";
+    return `${round}. raund`;
+  };
+  const champion = matches.find((m) => m.round === rounds[rounds.length - 1])?.winner;
+
+  const SlotRow = ({ fighter, isWinner }) => (
+    <button
+      onClick={() => fighter && openProfile(fighter.id)}
+      disabled={!fighter}
+      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition ${isWinner ? "bg-blood/15 text-white" : "text-zinc-400"} ${fighter ? "hover:bg-white/[0.05]" : ""}`}
+    >
+      {fighter ? (
+        <>
+          <div className="h-7 w-7 shrink-0 overflow-hidden rounded-md border border-white/10"><Avatar name={fighter.fullName} photoUrl={fighter.profilePhotoUrl} /></div>
+          <span className="min-w-0 flex-1 truncate text-sm font-bold">{fighter.fullName}</span>
+          {isWinner && <Trophy size={13} className="shrink-0 text-gold" />}
+        </>
+      ) : (
+        <span className="text-sm font-semibold text-zinc-600">TBD</span>
       )}
-    />
+    </button>
+  );
+
+  return (
+    <PageShell>
+      <button onClick={() => navigate("/tournaments")} className="inline-flex items-center gap-2 text-sm font-bold text-zinc-400 transition hover:text-white"><ArrowLeft size={15} /> Turnirlər</button>
+      <div className="mt-5 flex flex-col gap-5 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <Kicker icon={Network}>Braket</Kicker>
+          <h1 className="mt-4 font-display text-5xl font-bold uppercase leading-[0.95] text-white sm:text-6xl">{tournament.name}</h1>
+          <p className="mt-3 font-mono text-sm text-zinc-400">{formatWeightClass(tournament.weightClass)} · {formatRuleSet(tournament.ruleSet)} · {tournament.size} döyüşçü</p>
+        </div>
+        {champion && (
+          <div className="inline-flex items-center gap-3 rounded-2xl border border-gold/40 bg-gold/10 px-5 py-3">
+            <Crown size={22} className="text-gold" />
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-[0.16em] text-amber-200/80">Çempion</div>
+              <div className="font-display text-lg font-bold uppercase text-white">{champion.fullName}</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {matches.length === 0 ? (
+        <div className="mt-8"><EmptyState emoji="🗂️" title="Braket hazır deyil" subtitle="Döyüşlər təyin olunanda braket burada görünəcək." /></div>
+      ) : (
+        <div className="mt-8 overflow-x-auto pb-2">
+          <div className="flex min-w-max gap-5">
+            {rounds.map((round) => (
+              <div key={round} className="w-64 shrink-0">
+                <div className="mb-3 text-center text-xs font-black uppercase tracking-[0.16em] text-blood">{roundLabel(round, rounds.length)}</div>
+                <div className="flex h-full flex-col justify-around gap-4">
+                  {matches.filter((m) => m.round === round).map((match) => (
+                    <div key={match.id} className="rounded-2xl border border-white/10 bg-surface p-2">
+                      <SlotRow fighter={match.fighter1} isWinner={match.winnerId && match.winnerId === match.fighter1Id} />
+                      <div className="my-1 flex items-center gap-2 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600"><span className="h-px flex-1 bg-white/10" />vs<span className="h-px flex-1 bg-white/10" /></div>
+                      <SlotRow fighter={match.fighter2} isWinner={match.winnerId && match.winnerId === match.fighter2Id} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </PageShell>
   );
 }
 
 function GymHub() {
   const [tab, setTab] = useState("gyms");
+  const [gyms, setGyms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let ignore = false;
+    setLoading(true);
+    setError("");
+    const request = tab === "gyms" ? gymApi.list({ limit: 30 }) : gymApi.leaderboard();
+    Promise.resolve(request)
+      .then((r) => { if (!ignore) setGyms(r?.data || r || []); })
+      .catch((e) => { if (!ignore) setError(e.message); })
+      .finally(() => { if (!ignore) setLoading(false); });
+    return () => { ignore = true; };
+  }, [tab]);
+
   return (
     <PageShell>
-      <PageHeader kicker="Zal şəbəkəsi" kickerIcon={Target} title="Zallar" subtitle="Döyüş klublarını və onların döyüşçü gücünü kəşf et." />
+      <PageHeader kicker="Zal şəbəkəsi" kickerIcon={Building2} title="Zallar" subtitle="Döyüş klublarını və onların döyüşçü gücünü kəşf et." />
       <div className="mt-6 inline-flex rounded-xl border border-white/10 bg-surface p-1">
         <button onClick={() => setTab("gyms")} className={`rounded-lg px-5 py-2.5 text-sm font-black uppercase tracking-wide transition ${tab === "gyms" ? "bg-blood text-white shadow-red" : "text-zinc-400 hover:text-white"}`}>Zallar</button>
-        <button onClick={() => setTab("leaderboard")} className={`rounded-lg px-5 py-2.5 text-sm font-black uppercase tracking-wide transition ${tab === "leaderboard" ? "bg-blood text-white shadow-red" : "text-zinc-400 hover:text-white"}`}>Zal liderliyi</button>
+        <button onClick={() => setTab("leaderboard")} className={`rounded-lg px-5 py-2.5 text-sm font-black uppercase tracking-wide transition ${tab === "leaderboard" ? "bg-blood text-white shadow-red" : "text-zinc-400 hover:text-white"}`}>Liderlik</button>
       </div>
-      <SimpleFeaturePage
-        title=""
-        badge=""
-        loader={tab === "gyms" ? () => gymApi.list({ limit: 30 }) : gymApi.leaderboard}
-        empty="Hələ zal yoxdur."
-        renderItem={(gym) => (
-          <div key={gym.id} onClick={() => navigate(`/gyms/${gym.id}`)} className="group cursor-pointer rounded-2xl border border-white/10 bg-surface p-5 transition hover:-translate-y-1 hover:border-blood/50">
+
+      {loading && <div className="mt-8"><LoadingPanel label="Zallar yüklənir" /></div>}
+      {error && <div className="mt-8"><ErrorPanel message={error} /></div>}
+      {!loading && !error && gyms.length === 0 && <div className="mt-8"><EmptyState emoji="🏟️" title="Hələ zal yoxdur" subtitle="Zallar əlavə olunanda burada görünəcək." /></div>}
+      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {gyms.map((gym, index) => (
+          <button key={gym.id} onClick={() => navigate(`/gyms/${gym.id}`)} className="group cursor-pointer rounded-2xl border border-white/10 bg-surface p-5 text-left transition hover:-translate-y-1 hover:border-blood/50">
             <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-xl border border-white/10 bg-blood/10 text-blood"><Target size={20} /></div>
-              <div>
-                <h3 className="font-display text-2xl font-bold uppercase leading-none text-white">{gym.name}</h3>
-                <p className="mt-1 text-sm text-zinc-500">{flagEmoji(gym.country)} {gym.city}, {gym.country}</p>
+              {tab === "leaderboard" && <span className={`font-display text-2xl font-bold ${index === 0 ? "text-gold" : index === 1 ? "text-zinc-300" : index === 2 ? "text-amber-700" : "text-zinc-600"}`}>{index + 1}</span>}
+              <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/10 bg-blood/10 text-blood">
+                {gym.logoUrl ? <img src={gym.logoUrl} alt="" className="h-full w-full object-cover" /> : <Building2 size={20} />}
+              </div>
+              <div className="min-w-0">
+                <h3 className="truncate font-display text-2xl font-bold uppercase leading-none text-white">{gym.name}</h3>
+                <p className="mt-1 truncate text-sm text-zinc-500">{flagEmoji(gym.country)} {gym.city}, {gym.country}</p>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2"><div className="font-mono text-lg font-bold text-white">{gym.fighterCount || 0}</div><div className="text-[10px] font-black uppercase tracking-wide text-zinc-600">Döyüşçü</div></div>
               <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2"><div className="font-mono text-lg font-bold text-blood">{gym.totalPoints || 0}</div><div className="text-[10px] font-black uppercase tracking-wide text-zinc-600">Xal</div></div>
             </div>
+          </button>
+        ))}
+      </div>
+    </PageShell>
+  );
+}
+
+function GymDetailPage({ openProfile }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [gym, setGym] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let ignore = false;
+    setLoading(true);
+    setError("");
+    gymApi.get(id)
+      .then((g) => { if (!ignore) setGym(g); })
+      .catch((e) => { if (!ignore) setError(e.message); })
+      .finally(() => { if (!ignore) setLoading(false); });
+    return () => { ignore = true; };
+  }, [id]);
+
+  if (loading) return <PageShell><LoadingPanel label="Zal yüklənir" /></PageShell>;
+  if (error) return <PageShell><ErrorPanel message={error} action={{ label: "Zallara qayıt", onClick: () => navigate("/gyms") }} /></PageShell>;
+
+  const roster = (gym.fighters || []).map((fighter, index) => normalizeCardFighter(fighter, index)).sort((a, b) => b.points - a.points);
+
+  return (
+    <PageShell>
+      <button onClick={() => navigate("/gyms")} className="inline-flex items-center gap-2 text-sm font-bold text-zinc-400 transition hover:text-white"><ArrowLeft size={15} /> Zallar</button>
+      <div className="mt-5 flex flex-col gap-5 border-b border-white/10 pb-6 sm:flex-row sm:items-center">
+        <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-2xl border border-white/10 bg-blood/10 text-blood">
+          {gym.logoUrl ? <img src={gym.logoUrl} alt="" className="h-full w-full object-cover" /> : <Building2 size={30} />}
+        </div>
+        <div>
+          <Kicker icon={Building2}>Zal profili</Kicker>
+          <h1 className="mt-3 font-display text-5xl font-bold uppercase leading-[0.95] text-white sm:text-6xl">{gym.name}</h1>
+          <p className="mt-2 flex items-center gap-2 text-sm text-zinc-400"><MapPin size={15} className="text-blood" /> {flagEmoji(gym.country)} {gym.city}, {gym.country}</p>
+        </div>
+      </div>
+
+      {gym.description && <p className="mt-6 max-w-3xl text-sm leading-7 text-zinc-400">{gym.description}</p>}
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-4">
+        {[
+          ["Döyüşçü", gym.fighterCount ?? roster.length, Users],
+          ["Pro", gym.proFighters ?? 0, ShieldCheck],
+          ["Ümumi xal", gym.totalPoints ?? 0, Zap],
+          ["Orta xal", gym.averagePoints ?? 0, Gauge],
+        ].map(([label, value, Icon]) => (
+          <div key={label} className="rounded-2xl border border-white/10 bg-surface p-5">
+            <Icon size={16} className="text-blood" />
+            <div className="mt-3 font-display text-3xl font-bold text-white">{value}</div>
+            <div className="mt-1 text-[11px] font-black uppercase tracking-[0.14em] text-zinc-500">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="mt-10 font-display text-2xl font-bold uppercase text-white">Döyüşçü heyəti</h2>
+      {roster.length === 0 ? (
+        <div className="mt-4"><EmptyState emoji="🥋" title="Heyət boşdur" subtitle="Bu zala hələ döyüşçü bağlanmayıb." /></div>
+      ) : (
+        <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {roster.map((fighter) => <FighterCard key={fighter.id} fighter={fighter} onOpen={openProfile} />)}
+        </div>
+      )}
+    </PageShell>
+  );
+}
+
+function ChallengeModal({ opponent, onClose, onSent }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [form, setForm] = useState({
+    proposedDateFrom: today,
+    proposedDateTo: today,
+    location: "",
+    weightClass: opponent.weightClass || "LIGHTWEIGHT",
+    ruleSet: "MMA",
+    senderMessage: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const inputClass = "w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-500 focus:border-blood focus:ring-2 focus:ring-blood/30";
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      await challengeApi.send({
+        receiverId: opponent.id,
+        proposedDateFrom: new Date(form.proposedDateFrom).toISOString(),
+        proposedDateTo: new Date(form.proposedDateTo).toISOString(),
+        location: form.location,
+        weightClass: form.weightClass,
+        ruleSet: form.ruleSet,
+        ...(form.senderMessage ? { senderMessage: form.senderMessage } : {}),
+      });
+      onSent?.();
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/80 px-4 py-8 backdrop-blur-md">
+      <div className="w-full max-w-lg animate-fade-up overflow-hidden rounded-3xl border border-white/10 bg-coal shadow-panel">
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 overflow-hidden rounded-xl border border-white/10"><Avatar name={opponent.fullName} photoUrl={opponent.profilePhotoUrl} /></div>
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-[0.16em] text-blood">Çağırış göndər</div>
+              <h2 className="font-display text-xl font-bold uppercase text-white">{opponent.fullName}</h2>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-lg border border-white/12 p-2 text-white transition hover:bg-white/10"><X size={18} /></button>
+        </div>
+        <form onSubmit={submit} className="grid gap-4 p-6">
+          {error && <div className="rounded-xl border border-blood/40 bg-blood/15 px-4 py-3 text-sm font-semibold text-red-100">{error}</div>}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Tarix (başlanğıc)"><input required type="date" value={form.proposedDateFrom} onChange={(e) => setForm({ ...form, proposedDateFrom: e.target.value })} className={inputClass} /></Field>
+            <Field label="Tarix (son)"><input required type="date" value={form.proposedDateTo} onChange={(e) => setForm({ ...form, proposedDateTo: e.target.value })} className={inputClass} /></Field>
+          </div>
+          <Field label="Məkan"><input required minLength={2} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={inputClass} placeholder="Şəhər / zal" /></Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Çəki dərəcəsi">
+              <select value={form.weightClass} onChange={(e) => setForm({ ...form, weightClass: e.target.value })} className={inputClass}>
+                {weightClassOptions.map((v) => <option key={v} value={v}>{formatWeightClass(v)}</option>)}
+              </select>
+            </Field>
+            <Field label="Qayda dəsti">
+              <select value={form.ruleSet} onChange={(e) => setForm({ ...form, ruleSet: e.target.value })} className={inputClass}>
+                {Object.entries(RULE_SET_LABELS).map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+              </select>
+            </Field>
+          </div>
+          <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-400">
+            Mesaj (istəyə bağlı)
+            <textarea value={form.senderMessage} onChange={(e) => setForm({ ...form, senderMessage: e.target.value })} className={`${inputClass} min-h-24 resize-y`} placeholder="Rəqibinə bir neçə söz" />
+          </label>
+          <PrimaryButton disabled={loading}><Send size={16} /> {loading ? "Göndərilir…" : "Çağırışı göndər"}</PrimaryButton>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ChallengesPage({ user, onLoginClick, openProfile }) {
+  const myId = user?.fighterProfile?.id;
+  const [items, setItems] = useState([]);
+  const [tab, setTab] = useState("incoming");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionId, setActionId] = useState("");
+
+  const load = () => {
+    setLoading(true);
+    setError("");
+    challengeApi.mine()
+      .then((r) => setItems(Array.isArray(r) ? r : r?.data || []))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return; }
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  if (!user) {
+    return (
+      <PageShell>
+        <Panel className="p-8">
+          <Chip tone="red" icon={Swords}>Çağırış mərkəzi</Chip>
+          <h1 className="mt-5 font-display text-4xl font-bold uppercase text-white">Çağırışları görmək üçün giriş et</h1>
+          <p className="mt-3 max-w-xl text-zinc-400">Göndərdiyin və aldığın döyüş çağırışları burada toplanır.</p>
+          <button onClick={onLoginClick} className="mt-6 rounded-xl bg-blood px-5 py-3 font-black text-white shadow-red">Giriş</button>
+        </Panel>
+      </PageShell>
+    );
+  }
+
+  const runAction = async (fn, challengeId) => {
+    setActionId(challengeId);
+    try {
+      await fn(challengeId);
+      load();
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setActionId("");
+    }
+  };
+
+  const incoming = items.filter((c) => c.receiverId === myId);
+  const outgoing = items.filter((c) => c.senderId === myId);
+  const list = tab === "incoming" ? incoming : outgoing;
+
+  const Card = ({ challenge, direction }) => {
+    const other = direction === "incoming" ? challenge.sender : challenge.receiver;
+    const meta = CHALLENGE_STATUS_META[challenge.status] || { label: challenge.status, tone: "default" };
+    const canRespond = direction === "incoming" && ["PENDING", "COUNTERED"].includes(challenge.status);
+    const canCancel = direction === "outgoing" && ["PENDING", "COUNTERED"].includes(challenge.status);
+    return (
+      <div className="rounded-2xl border border-white/10 bg-surface p-5">
+        <div className="flex items-start justify-between gap-3">
+          <button onClick={() => other && openProfile(other.id)} className="flex items-center gap-3 text-left">
+            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10"><Avatar name={other?.fullName} photoUrl={other?.profilePhotoUrl} /></div>
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-500">{direction === "incoming" ? "Səni çağırır" : "Çağırdığın"}</div>
+              <div className="font-display text-xl font-bold uppercase text-white">{other?.fullName || "Döyüşçü"}</div>
+            </div>
+          </button>
+          <Chip tone={meta.tone}>{meta.label}</Chip>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2"><div className="text-[10px] font-black uppercase tracking-wide text-zinc-600">Qayda</div><div className="mt-0.5 text-sm font-bold text-white">{formatRuleSet(challenge.ruleSet)}</div></div>
+          <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2"><div className="text-[10px] font-black uppercase tracking-wide text-zinc-600">Çəki</div><div className="mt-0.5 truncate text-sm font-bold text-white">{formatWeightClass(challenge.weightClass)}</div></div>
+          <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2"><div className="text-[10px] font-black uppercase tracking-wide text-zinc-600">Məkan</div><div className="mt-0.5 truncate text-sm font-bold text-white">{challenge.location}</div></div>
+          <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2"><div className="text-[10px] font-black uppercase tracking-wide text-zinc-600">Tarix</div><div className="mt-0.5 truncate font-mono text-xs font-bold text-white">{formatDate(challenge.proposedDateFrom)}</div></div>
+        </div>
+        {(challenge.senderMessage || challenge.counterOffer) && (
+          <p className="mt-3 rounded-xl border border-white/8 bg-black/20 px-4 py-3 text-sm leading-6 text-zinc-400">{challenge.counterOffer || challenge.senderMessage}</p>
+        )}
+        {(canRespond || canCancel) && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {canRespond && (
+              <>
+                <button disabled={actionId === challenge.id} onClick={() => runAction(challengeApi.accept, challenge.id)} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white transition hover:brightness-110 disabled:opacity-60"><CheckCircle2 size={16} /> Qəbul et</button>
+                <button disabled={actionId === challenge.id} onClick={() => runAction(challengeApi.decline, challenge.id)} className="inline-flex items-center gap-2 rounded-xl border border-white/12 px-4 py-2.5 text-sm font-black text-white transition hover:bg-white/10 disabled:opacity-60"><X size={16} /> Rədd et</button>
+              </>
+            )}
+            {canCancel && (
+              <button disabled={actionId === challenge.id} onClick={() => runAction(challengeApi.cancel, challenge.id)} className="inline-flex items-center gap-2 rounded-xl border border-white/12 px-4 py-2.5 text-sm font-black text-white transition hover:bg-white/10 disabled:opacity-60"><X size={16} /> Ləğv et</button>
+            )}
           </div>
         )}
+      </div>
+    );
+  };
+
+  return (
+    <PageShell>
+      <PageHeader kicker="Çağırış mərkəzi" kickerIcon={Swords} title="Çağırışlar" subtitle="Göndərdiyin və aldığın döyüş çağırışlarını idarə et." />
+      <div className="mt-6 inline-flex rounded-xl border border-white/10 bg-surface p-1">
+        <button onClick={() => setTab("incoming")} className={`inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-black uppercase tracking-wide transition ${tab === "incoming" ? "bg-blood text-white shadow-red" : "text-zinc-400 hover:text-white"}`}><Inbox size={15} /> Gələn ({incoming.length})</button>
+        <button onClick={() => setTab("outgoing")} className={`inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-black uppercase tracking-wide transition ${tab === "outgoing" ? "bg-blood text-white shadow-red" : "text-zinc-400 hover:text-white"}`}><Send size={15} /> Gedən ({outgoing.length})</button>
+      </div>
+
+      {loading && <div className="mt-8"><LoadingPanel label="Çağırışlar yüklənir" /></div>}
+      {error && <div className="mt-8"><ErrorPanel message={error} action={{ label: "Yenidən yoxla", onClick: load }} /></div>}
+      {!loading && !error && list.length === 0 && (
+        <div className="mt-8"><EmptyState emoji="🥊" title={tab === "incoming" ? "Gələn çağırış yoxdur" : "Gedən çağırış yoxdur"} subtitle={tab === "incoming" ? "Səni kimsə çağıranda burada görünəcək." : "Döyüşçü profilindən çağırış göndər."} /></div>
+      )}
+      {!loading && !error && list.length > 0 && (
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          {list.map((challenge) => <Card key={challenge.id} challenge={challenge} direction={tab} />)}
+        </div>
+      )}
+    </PageShell>
+  );
+}
+
+function FederationPanel({ user, onLoginClick, openProfile }) {
+  const [stats, setStats] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [fighters, setFighters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionLoading, setActionLoading] = useState("");
+  const [note, setNote] = useState("");
+  const canReview = ["ADMIN", "FEDERATION_REP"].includes(user?.role);
+  const isAdmin = user?.role === "ADMIN";
+
+  const loadPanel = () => {
+    setLoading(true);
+    setError("");
+    Promise.all([adminApi.stats(), verificationApi.pending(), adminApi.fighters({ limit: 8 })])
+      .then(([statsResult, pendingResult, fightersResult]) => {
+        setStats(statsResult);
+        setRequests(pendingResult || []);
+        setFighters(fightersResult.data || []);
+      })
+      .catch((caught) => setError(caught.message))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (canReview) loadPanel();
+    else setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canReview]);
+
+  const reviewRequest = async (requestId, decision) => {
+    setActionLoading(requestId);
+    setError("");
+    try {
+      if (decision === "approve") await verificationApi.approve(requestId, note);
+      else await verificationApi.reject(requestId, note || "Kifayət qədər təsdiqlənmiş sənəd yoxdur.");
+      setNote("");
+      loadPanel();
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  const updateRole = async (fighterId, role) => {
+    setActionLoading(fighterId);
+    setError("");
+    try {
+      await adminApi.updateRole(fighterId, role);
+      loadPanel();
+    } catch (caught) {
+      setError(caught.message);
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  if (!user) {
+    return (
+      <PageShell>
+        <Panel className="p-8">
+          <Chip tone="red" icon={ShieldQuestion}>Federasiya</Chip>
+          <h1 className="mt-5 font-display text-4xl font-bold uppercase text-white">Giriş tələb olunur</h1>
+          <p className="mt-3 max-w-xl text-zinc-400">Federasiya alətləri yalnız admin və federasiya nümayəndələri üçündür.</p>
+          <button onClick={onLoginClick} className="mt-6 rounded-xl bg-blood px-5 py-3 font-black text-white shadow-red">Giriş</button>
+        </Panel>
+      </PageShell>
+    );
+  }
+
+  if (!canReview) {
+    return (
+      <PageShell>
+        <Panel className="p-8">
+          <Chip tone="red" icon={ShieldQuestion}>Federasiya</Chip>
+          <h1 className="mt-5 font-display text-4xl font-bold uppercase text-white">Giriş məhduddur</h1>
+          <p className="mt-3 max-w-xl text-zinc-400">Bu panel yalnız ADMIN və FEDERATION_REP hesabları üçün aktivdir.</p>
+        </Panel>
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell>
+      <PageHeader
+        kicker="Federasiya idarəetməsi"
+        kickerIcon={ShieldCheck}
+        title="Federasiya paneli"
+        subtitle="Pro müraciətlərini yoxla, platforma vəziyyətini izlə və döyüşçü statuslarını idarə et."
+        right={<button onClick={loadPanel} className="rounded-xl border border-white/12 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10">Yenilə</button>}
       />
+
+      {loading && <div className="mt-8"><LoadingPanel label="Federasiya məlumatları yüklənir" /></div>}
+      {error && <div className="mt-8"><ErrorPanel message={error} action={{ label: "Yenidən yoxla", onClick: loadPanel }} /></div>}
+
+      {!loading && !error && (
+        <>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Döyüşçülər", stats?.totalFighters || 0, Users],
+              ["Prolar", stats?.proCount || 0, ShieldCheck],
+              ["Döyüşlər", stats?.fightsLogged || 0, Activity],
+              ["Aktiv çağırışlar", stats?.activeChallenges || 0, Swords],
+            ].map(([label, value, Icon]) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-surface p-5">
+                <Icon size={16} className="text-blood" />
+                <div className="mt-3 font-display text-3xl font-bold text-white">{value}</div>
+                <div className="mt-1 text-[11px] font-black uppercase tracking-[0.14em] text-zinc-500">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          <section className="mt-8 rounded-2xl border border-white/10 bg-surface p-5 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-display text-2xl font-bold uppercase text-white">Gözləyən Pro təsdiqləri</h2>
+                <p className="mt-1 text-sm text-zinc-500">{requests.length} müraciət yoxlama gözləyir.</p>
+              </div>
+              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Yoxlama qeydi (istəyə bağlı)" className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-blood sm:max-w-md" />
+            </div>
+            <div className="mt-5 grid gap-3">
+              {requests.length === 0 && <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">Gözləyən Pro təsdiq müraciəti yoxdur.</div>}
+              {requests.map((request) => (
+                <div key={request.id} className="grid gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div>
+                    <button onClick={() => openProfile(request.fighterId)} className="font-display text-xl font-bold uppercase text-white transition hover:text-red-100">{request.fighter?.fullName || "Döyüşçü"}</button>
+                    <div className="mt-1 text-sm text-zinc-500">{request.federation?.name} · göndərildi {formatDate(request.createdAt)}</div>
+                    {request.documentUrl && <a href={request.documentUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-blood transition hover:text-white">Sənədi aç <ArrowUpRight size={14} /></a>}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "approve")} className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:brightness-110 disabled:opacity-60">Təsdiqlə</button>
+                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "reject")} className="rounded-xl bg-blood px-4 py-3 text-sm font-black text-white transition hover:brightness-110 disabled:opacity-60">Rədd et</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-surface">
+            <div className="border-b border-white/10 p-5">
+              <h2 className="font-display text-2xl font-bold uppercase text-white">Son döyüşçülər</h2>
+              <p className="mt-1 text-sm text-zinc-500">Federasiya yoxlaması üçün sürətli status icmalı.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[780px] text-left text-sm">
+                <thead className="bg-black/30 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
+                  <tr>{["Döyüşçü", "Rol", "Ölkə", "Çəki", "Xal", "Admin əməliyyatı"].map((head) => <th key={head} className="px-5 py-4 font-black">{head}</th>)}</tr>
+                </thead>
+                <tbody className="divide-y divide-white/8">
+                  {fighters.map((fighter) => (
+                    <tr key={fighter.id} className="text-zinc-300 transition hover:bg-white/[0.02]">
+                      <td className="px-5 py-4"><button onClick={() => openProfile(fighter.id)} className="font-bold text-white transition hover:text-red-100">{fighter.fullName}</button></td>
+                      <td className="px-5 py-4"><Chip tone={fighter.isVerifiedPro ? "red" : "default"}>{fighter.user?.role || "AMATEUR"}</Chip></td>
+                      <td className="px-5 py-4">{flagEmoji(fighter.country)} {fighter.country}</td>
+                      <td className="px-5 py-4">{formatWeightClass(fighter.weightClass)}</td>
+                      <td className="px-5 py-4 font-mono font-bold text-white">{fighter.points}</td>
+                      <td className="px-5 py-4">
+                        {isAdmin ? (
+                          <div className="flex gap-2">
+                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "PRO")} className="rounded-lg border border-white/12 px-3 py-2 text-xs font-black text-white transition hover:bg-white/10 disabled:opacity-60">Pro et</button>
+                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "AMATEUR")} className="rounded-lg border border-white/12 px-3 py-2 text-xs font-black text-white transition hover:bg-white/10 disabled:opacity-60">Həvəskar et</button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-zinc-600">Yalnız admin</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
     </PageShell>
   );
 }
@@ -1981,11 +2599,13 @@ function NationalChampions({ openProfile }) {
 
 /* ---------------------------------- FIGHTER PROFILE ---------------------------------- */
 
-function FighterProfilePage({ fighterId, openProfile }) {
+function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const [profile, setProfile] = useState(null);
   const [countryRank, setCountryRank] = useState("—");
   const [weightRank, setWeightRank] = useState("—");
   const [shareCopied, setShareCopied] = useState(false);
+  const [showChallenge, setShowChallenge] = useState(false);
+  const [challengeSent, setChallengeSent] = useState(false);
   const [badges, setBadges] = useState([]);
   const [nationalChampion, setNationalChampion] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2089,6 +2709,17 @@ function FighterProfilePage({ fighterId, openProfile }) {
                 <div className="px-2 py-3 text-center"><div className="font-mono text-lg font-bold text-white">{earnedBadges}</div><div className="text-[9px] font-black uppercase tracking-wide text-zinc-600">Nişan</div></div>
               </div>
             </div>
+            {user?.fighterProfile?.id !== profile.id && (
+              challengeSent ? (
+                <div className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-6 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-emerald-100">
+                  <CheckCircle2 size={16} /> Çağırış göndərildi
+                </div>
+              ) : (
+                <button onClick={() => (user ? setShowChallenge(true) : onLoginRequired?.())} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blood px-6 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-white shadow-red transition hover:brightness-110">
+                  <Swords size={16} /> Çağırış göndər
+                </button>
+              )
+            )}
             <button onClick={shareProfile} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-6 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-white transition hover:bg-white/10">
               <Share2 size={16} /> {shareCopied ? "Link kopyalandı!" : "Profili paylaş"}
             </button>
@@ -2224,6 +2855,13 @@ function FighterProfilePage({ fighterId, openProfile }) {
           </aside>
         </div>
       </section>
+      {showChallenge && (
+        <ChallengeModal
+          opponent={profile}
+          onClose={() => setShowChallenge(false)}
+          onSent={() => { setShowChallenge(false); setChallengeSent(true); }}
+        />
+      )}
     </main>
   );
 }
@@ -2562,12 +3200,14 @@ export default function App() {
             }
           />
           <Route path="/gyms" element={<GymHub />} />
-          <Route path="/gyms/:id" element={<GymHub />} />
-          <Route path="/tournaments" element={<TournamentHub user={user} />} />
-          <Route path="/tournaments/:id" element={<TournamentHub user={user} />} />
+          <Route path="/gyms/:id" element={<GymDetailPage openProfile={openProfile} />} />
+          <Route path="/tournaments" element={<TournamentHub />} />
+          <Route path="/tournaments/:id" element={<TournamentDetailPage openProfile={openProfile} />} />
           <Route path="/compare" element={<HeadToHead />} />
           <Route path="/fight-board" element={<FightSeekBoard user={user} onLoginClick={() => openAuth("login")} />} />
+          <Route path="/challenges" element={<ChallengesPage user={user} onLoginClick={() => openAuth("login")} openProfile={openProfile} />} />
           <Route path="/national-champions" element={<NationalChampions openProfile={openProfile} />} />
+          <Route path="/federation" element={<FederationPanel user={user} onLoginClick={() => openAuth("login")} openProfile={openProfile} />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>

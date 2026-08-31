@@ -35,7 +35,7 @@ import {
   Youtube,
   Zap,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   authApi,
@@ -229,6 +229,57 @@ function getFighterImage(url) {
   return url;
 }
 
+function hasRealPhoto(url) {
+  return Boolean(url) && !url.includes("thispersondoesnotexist.com") && !url.includes("fighter-portrait.png") && !url.includes("fightid-logo");
+}
+
+function initialsFromName(name = "") {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "FB";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const AVATAR_PALETTE = [
+  ["#e5202d", "#6f0910"],
+  ["#3b82f6", "#0b2a4a"],
+  ["#f3b433", "#7a4a00"],
+  ["#12b6a0", "#0a4a44"],
+  ["#7c5cff", "#241670"],
+  ["#f0653f", "#6f2110"],
+  ["#e0457a", "#5a0f33"],
+];
+function paletteFor(name = "") {
+  let h = 0;
+  const value = String(name);
+  for (let i = 0; i < value.length; i += 1) h = (h * 31 + value.charCodeAt(i)) % 9973;
+  return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
+}
+
+// Avatar renders a real photo when available, otherwise a deterministic
+// gradient monogram (SVG so it scales perfectly to any container size).
+function Avatar({ name, photoUrl, className = "", monogram = true }) {
+  const id = useId().replace(/:/g, "");
+  if (hasRealPhoto(photoUrl)) {
+    return <img src={photoUrl} alt={name || ""} className={`h-full w-full object-cover ${className}`} loading="lazy" />;
+  }
+  const [c1, c2] = paletteFor(name);
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" className={`h-full w-full ${className}`} role="img" aria-label={name || "Fighter"}>
+      <defs>
+        <linearGradient id={`av-${id}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={c1} />
+          <stop offset="100%" stopColor={c2} />
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" fill={`url(#av-${id})`} />
+      <text x="50" y="50" dy="0.35em" textAnchor="middle" fontFamily="Oswald, Inter, sans-serif" fontSize="38" fontWeight="700" fill="rgba(255,255,255,0.92)" letterSpacing="1">
+        {initialsFromName(name)}
+      </text>
+    </svg>
+  );
+}
+
 function applyPageTranslations(language) {
   const targetLanguage = ["az", "en", "tr", "ru"].includes(language) ? language : "az";
   const reverse = new Map();
@@ -361,6 +412,7 @@ function normalizeCardFighter(fighter, index = 0) {
     federation: fighter.verifiedByFederation?.name || null,
     gym: fighter.gym || "Independent",
     image: getFighterImage(fighter.profilePhotoUrl),
+    photoUrl: fighter.profilePhotoUrl || "",
   };
 }
 
@@ -559,44 +611,66 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
     "w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-500 focus:border-blood focus:ring-2 focus:ring-blood/30";
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/80 px-4 py-8 backdrop-blur-md">
-      <div className="w-full max-w-md animate-fade-up overflow-hidden rounded-3xl border border-white/10 bg-coal shadow-panel">
-        <div className="relative overflow-hidden border-b border-white/10 px-6 py-6">
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-blood/20 blur-3xl" />
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <LogoMark size={40} />
-              <div>
-                <h2 className="font-display text-2xl font-bold uppercase leading-none text-white">FightBase</h2>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Döyüşçü hesabı</p>
-              </div>
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/80 px-4 py-6 backdrop-blur-md">
+      <div className="grid w-full max-w-4xl animate-fade-up overflow-hidden rounded-3xl border border-white/10 bg-coal shadow-panel lg:grid-cols-[1.05fr_1fr]">
+        {/* Brand panel */}
+        <div className="relative hidden overflow-hidden bg-gradient-to-br from-[#1c0507] via-coal to-coal p-8 lg:flex lg:flex-col">
+          <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-blood/25 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-56 w-56 rounded-full bg-gold/10 blur-3xl" />
+          <span className="pointer-events-none absolute -bottom-8 -right-3 select-none font-display text-[9rem] font-bold uppercase leading-none text-stroke opacity-40">FB</span>
+          <div className="relative flex items-center gap-3">
+            <LogoMark size={44} />
+            <span className="font-display text-2xl font-bold uppercase text-white">FightBase</span>
+          </div>
+          <div className="relative mt-auto pt-16">
+            <h3 className="font-display text-4xl font-bold uppercase leading-[0.95] text-white">Döyüşçü<br />kimliyini qur</h3>
+            <p className="mt-4 max-w-xs text-sm leading-6 text-zinc-400">Təsdiqli rekord, çəki reytinqləri və real uyğunlaşdırma — hamısı bir platformada.</p>
+            <div className="mt-7 grid gap-3">
+              {[[ShieldCheck, "Təsdiqli döyüş rekordları"], [Gauge, "Çəki üzrə reytinqlər"], [Swords, "Çağırış və uyğunlaşdırma"]].map(([Icon, label]) => (
+                <div key={label} className="flex items-center gap-3 text-sm font-semibold text-zinc-300">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-blood/30 bg-blood/10 text-blood"><Icon size={16} /></span>
+                  {label}
+                </div>
+              ))}
             </div>
+          </div>
+        </div>
+
+        {/* Form panel */}
+        <div className="flex max-h-[92vh] flex-col">
+          <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+            <div className="flex items-center gap-3 lg:hidden">
+              <LogoMark size={36} />
+              <span className="font-display text-xl font-bold uppercase text-white">FightBase</span>
+            </div>
+            <h2 className="hidden font-display text-xl font-bold uppercase text-white lg:block">
+              {resetMode ? "Parolu yenilə" : pendingVerification ? "Email təsdiqi" : tab === "login" ? "Xoş gəldin" : "Hesab yarat"}
+            </h2>
             <button onClick={onClose} className="rounded-lg border border-white/12 p-2 text-white transition hover:bg-white/10" aria-label="Close auth modal">
               <X size={18} />
             </button>
           </div>
-        </div>
 
-        {!resetMode && !pendingVerification && (
-          <div className="grid grid-cols-2 gap-1 p-1.5">
-            {["login", "register"].map((item) => (
-              <button
-                key={item}
-                onClick={() => {
-                  setTab(item);
-                  setError("");
-                }}
-                className={`rounded-xl px-4 py-3 text-sm font-black uppercase tracking-[0.14em] transition ${
-                  tab === item ? "bg-blood text-white shadow-red" : "text-zinc-400 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                {item === "login" ? "Giriş" : "Qeydiyyat"}
-              </button>
-            ))}
-          </div>
-        )}
+          {!resetMode && !pendingVerification && (
+            <div className="mx-6 mt-5 grid grid-cols-2 gap-1 rounded-xl border border-white/10 bg-black/30 p-1">
+              {["login", "register"].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => {
+                    setTab(item);
+                    setError("");
+                  }}
+                  className={`rounded-lg px-4 py-2.5 text-sm font-black uppercase tracking-[0.12em] transition ${
+                    tab === item ? "bg-blood text-white shadow-red" : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  {item === "login" ? "Giriş" : "Qeydiyyat"}
+                </button>
+              ))}
+            </div>
+          )}
 
-        <div className="max-h-[70vh] overflow-y-auto px-6 pb-6 pt-2">
+          <div className="flex-1 overflow-y-auto px-6 pb-6 pt-5">
           {error && (
             <div className="mb-5 rounded-xl border border-blood/40 bg-blood/15 px-4 py-3 text-sm font-semibold text-red-100">{error}</div>
           )}
@@ -666,6 +740,7 @@ function AuthModal({ initialTab = "login", onClose, onSuccess }) {
               <PrimaryButton disabled={loading}>{loading ? "Hesab yaradılır…" : "Qeydiyyatdan keç"}</PrimaryButton>
             </form>
           )}
+          </div>
         </div>
       </div>
     </div>
@@ -1057,7 +1132,7 @@ function FighterCard({ fighter, onOpen }) {
     >
       <div className="relative flex gap-4 p-4">
         <div className="relative h-32 w-28 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black">
-          <img src={fighter.image} alt={fighter.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <Avatar name={fighter.name} photoUrl={fighter.photoUrl} className="transition duration-500 group-hover:scale-105" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           <span className="absolute left-2 top-2 rounded-md bg-black/70 px-1.5 py-0.5 font-mono text-xs font-bold text-white backdrop-blur">#{fighter.rank}</span>
         </div>
@@ -1198,7 +1273,7 @@ function LandingPage({ setPage, openProfile }) {
                   <button key={fighter.id} onClick={() => openProfile?.(fighter.id)} className="grid w-full grid-cols-[2.5rem_1fr_auto] items-center gap-3 py-3 text-left transition hover:bg-white/[0.03]">
                     <div className={`text-center font-display text-2xl font-bold ${index === 0 ? "text-gold" : index === 1 ? "text-zinc-300" : index === 2 ? "text-amber-700" : "text-zinc-600"}`}>{fighter.rank || index + 1}</div>
                     <div className="min-w-0 flex items-center gap-3">
-                      <img src={fighter.image} alt="" className="h-10 w-10 shrink-0 rounded-lg border border-white/10 object-cover" />
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10"><Avatar name={fighter.name} photoUrl={fighter.photoUrl} /></div>
                       <div className="min-w-0">
                         <div className="truncate text-sm font-bold text-white">{fighter.name}</div>
                         <div className="mt-0.5 truncate font-mono text-[11px] font-bold uppercase tracking-wide text-zinc-500">{flagEmoji(fighter.countryCode)} {fighter.record}</div>
@@ -1578,7 +1653,7 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
       <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
         <aside className="self-start rounded-2xl border border-white/10 bg-surface p-5">
           <Chip tone="red">Döyüşçü profili</Chip>
-          <img src={getFighterImage(profile?.profilePhotoUrl)} alt={form.fullName} className="mt-5 h-72 w-full rounded-xl border border-white/10 object-cover" />
+          <div className="mt-5 h-72 w-full overflow-hidden rounded-xl border border-white/10"><Avatar name={form.fullName} photoUrl={profile?.profilePhotoUrl} /></div>
           <label className="mt-4 block rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm font-bold text-zinc-200">
             Profil şəkli
             <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} className="mt-3 block w-full text-sm text-zinc-400 file:mr-4 file:rounded-lg file:border-0 file:bg-blood file:px-4 file:py-2 file:font-black file:text-white" />
@@ -1658,7 +1733,6 @@ function HeadToHead() {
         setActiveSlot("left");
       }
       setQuery("");
-      setFighters([]);
     } finally {
       setLoadingPick("");
     }
@@ -1700,7 +1774,7 @@ function HeadToHead() {
         {fighter ? (
           <div className="relative mt-4">
             <div className="mx-auto h-40 w-40 overflow-hidden rounded-2xl border border-white/10 bg-black sm:h-48 sm:w-48">
-              <img src={getFighterImage(fighter.profilePhotoUrl)} alt={fighter.fullName} className="h-full w-full object-cover" />
+              <Avatar name={fighter.fullName} photoUrl={fighter.profilePhotoUrl} />
             </div>
             <h2 className="mt-4 text-center font-display text-2xl font-bold uppercase leading-tight text-white sm:text-3xl">{fighter.fullName}</h2>
             <p className="mt-1 text-center font-mono text-sm text-zinc-400">{recordFromStats(fighter.stats)} · {formatWeightClass(fighter.weightClass)}</p>
@@ -1736,7 +1810,7 @@ function HeadToHead() {
         <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
           {fighters.map((fighter) => (
             <button key={fighter.id} disabled={loadingPick === fighter.id} onClick={() => selectFighter(fighter.id)} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-left text-white transition hover:bg-white/10 disabled:opacity-60">
-              <img src={getFighterImage(fighter.profilePhotoUrl)} alt="" className="h-10 w-10 shrink-0 rounded-lg border border-white/10 object-cover" />
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10"><Avatar name={fighter.fullName} photoUrl={fighter.profilePhotoUrl} /></div>
               <span className="min-w-0">
                 <span className="block truncate font-bold">{fighter.fullName}</span>
                 <span className="mt-0.5 block truncate font-mono text-xs text-zinc-500">{formatWeightClass(fighter.weightClass)} · {fighter.country}</span>
@@ -1974,7 +2048,7 @@ function FighterProfilePage({ fighterId, openProfile }) {
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0">
-          <img src={getFighterImage(profile.profilePhotoUrl)} alt="" className="h-full w-full scale-110 object-cover opacity-20 blur-2xl saturate-150" />
+          <Avatar name={profile.fullName} photoUrl={profile.profilePhotoUrl} className="scale-110 opacity-20 blur-2xl saturate-150" />
           <div className="absolute inset-0 bg-gradient-to-b from-ink/60 via-ink/85 to-ink" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_10%,rgba(229,32,45,0.22),transparent_45%)]" />
         </div>
@@ -2008,7 +2082,7 @@ function FighterProfilePage({ fighterId, openProfile }) {
 
           <aside className="grid gap-4 self-end">
             <div className="mx-auto w-full max-w-[340px] overflow-hidden rounded-3xl border border-white/10 bg-surface shadow-panel">
-              <img src={getFighterImage(profile.profilePhotoUrl)} alt={profile.fullName} className="h-[360px] w-full object-cover" />
+              <div className="h-[360px] w-full"><Avatar name={profile.fullName} photoUrl={profile.profilePhotoUrl} /></div>
               <div className="grid grid-cols-3 divide-x divide-white/10 border-t border-white/10 bg-black/30">
                 <div className="px-2 py-3 text-center"><div className="font-mono text-lg font-bold text-white">{profile.points || 0}</div><div className="text-[9px] font-black uppercase tracking-wide text-zinc-600">Xal</div></div>
                 <div className="px-2 py-3 text-center"><div className="font-mono text-lg font-bold text-white">#{countryRank}</div><div className="text-[9px] font-black uppercase tracking-wide text-zinc-600">Ölkə</div></div>
@@ -2215,7 +2289,7 @@ function RankingsPage({ openProfile }) {
                 {isFirst && <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-gold to-transparent" />}
                 <div className={`mx-auto grid h-9 w-9 place-items-center rounded-full font-display text-lg font-bold ${place === 1 ? "bg-gold text-black" : place === 2 ? "bg-zinc-300 text-black" : "bg-amber-700 text-white"}`}>{place}</div>
                 <div className="mx-auto mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black" style={{ height: isFirst ? 120 : 90, width: isFirst ? 120 : 90 }}>
-                  <img src={fighter.image} alt={fighter.name} className="h-full w-full object-cover transition group-hover:scale-105" />
+                  <Avatar name={fighter.name} photoUrl={fighter.photoUrl} className="transition group-hover:scale-105" />
                 </div>
                 {place === 1 && <Crown size={20} className="mx-auto mt-3 text-gold" />}
                 <h3 className="mt-2 truncate font-display text-lg font-bold uppercase text-white sm:text-xl">{fighter.name}</h3>
@@ -2233,7 +2307,7 @@ function RankingsPage({ openProfile }) {
             <button key={fighter.id} onClick={() => openProfile(fighter.id)} className="group grid w-full grid-cols-[3rem_1fr_auto] items-center gap-4 border-b border-white/8 px-4 py-3.5 text-left transition last:border-0 hover:bg-white/[0.03]">
               <div className="text-center font-display text-2xl font-bold text-zinc-600 group-hover:text-white">{fighter.rank}</div>
               <div className="flex min-w-0 items-center gap-3">
-                <img src={fighter.image} alt="" className="h-11 w-11 shrink-0 rounded-xl border border-white/10 object-cover" />
+                <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-white/10"><Avatar name={fighter.name} photoUrl={fighter.photoUrl} /></div>
                 <div className="min-w-0">
                   <div className="truncate font-display text-lg font-bold uppercase leading-none text-white group-hover:text-red-100">{fighter.name}</div>
                   <div className="mt-1 truncate font-mono text-[11px] font-bold uppercase tracking-wide text-zinc-500">{flagEmoji(fighter.countryCode)} {fighter.countryCode} · {compactGymName(fighter.gym)}</div>

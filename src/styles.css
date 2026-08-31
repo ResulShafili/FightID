@@ -1,8 +1,20 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&family=Sora:wght@700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --accent: #e5202d;
+  --accent-soft: rgba(229, 32, 45, 0.16);
+  --ink: #08080b;
+  --surface: #131319;
+  --elevated: #1b1b22;
+  --line: rgba(255, 255, 255, 0.09);
+  --text: #f4f4f5;
+  --muted: #a0a0ac;
+  --faint: #6c6c78;
+}
 
 * {
   box-sizing: border-box;
@@ -11,65 +23,51 @@
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
+  background: var(--ink);
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  background: #f6f4f1;
-  color: #111217;
+  background: var(--ink);
+  color: var(--text);
   overflow-x: hidden;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
+/* Ambient atmosphere: fine grid + red/gold glows + film grain */
 body::before {
-  background:
-    linear-gradient(rgba(17, 18, 23, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(17, 18, 23, 0.035) 1px, transparent 1px),
-    radial-gradient(circle at 18% 16%, rgba(225, 29, 46, 0.075), transparent 30%),
-    radial-gradient(circle at 84% 24%, rgba(17, 18, 23, 0.055), transparent 26%),
-    linear-gradient(180deg, rgba(246, 244, 241, 0.96), rgba(255, 255, 255, 0.98));
-  background-size: 48px 48px, 48px 48px, auto, auto, auto;
   content: "";
-  inset: 0;
-  opacity: 1;
-  pointer-events: none;
   position: fixed;
+  inset: 0;
   z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% -5%, rgba(229, 32, 45, 0.18), transparent 34%),
+    radial-gradient(circle at 92% 8%, rgba(243, 180, 51, 0.08), transparent 30%),
+    radial-gradient(circle at 50% 120%, rgba(229, 32, 45, 0.1), transparent 45%),
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: auto, auto, auto, 54px 54px, 54px 54px;
 }
 
 body::after {
-  background-image: url("/assets/fightid-logo.svg"), url("/assets/fightid-logo.svg"), url("/assets/fightid-logo.svg");
-  background-position: left -120px top 128px, right -150px top 44vh, left 8vw bottom -180px;
-  background-repeat: no-repeat;
-  background-size: 360px 360px, 430px 430px, 520px 520px;
   content: "";
-  filter: grayscale(1);
-  inset: 0;
-  opacity: 0.035;
-  pointer-events: none;
   position: fixed;
+  inset: 0;
   z-index: 0;
-}
-
-body.fightid-home::before {
-  background:
-    linear-gradient(rgba(17, 18, 23, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(17, 18, 23, 0.035) 1px, transparent 1px),
-    radial-gradient(circle at 18% 16%, rgba(225, 29, 46, 0.075), transparent 30%),
-    radial-gradient(circle at 84% 24%, rgba(17, 18, 23, 0.055), transparent 26%),
-    linear-gradient(180deg, rgba(246, 244, 241, 0.96), rgba(255, 255, 255, 0.98));
-  background-size: 48px 48px, 48px 48px, auto, auto, auto;
-  opacity: 1;
-}
-
-body.fightid-home::after {
-  opacity: 0.035;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 #root {
-  overflow-x: hidden;
   position: relative;
   z-index: 1;
+  overflow-x: hidden;
 }
 
 button {
@@ -77,107 +75,98 @@ button {
 }
 
 ::selection {
-  background: #e11d2e;
-  color: white;
+  background: var(--accent);
+  color: #fff;
 }
 
 .font-display {
-  font-family: "Oswald", "Sora", "Inter", sans-serif;
-  letter-spacing: 0;
+  font-family: "Oswald", "Inter", sans-serif;
+  letter-spacing: 0.01em;
 }
 
-.sports-panel {
-  background: #f7f7f7;
-  color: #111217;
+.font-mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
 }
 
-.sports-panel .font-display {
-  color: #08090b;
+/* Utility helpers used across the app */
+.text-stroke {
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.16);
+  color: transparent;
 }
 
+.diagonal-clip {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+.card-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.card-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.06) 48%, transparent 62%);
+  transform: translateX(-120%);
+  transition: transform 0.7s ease;
+  pointer-events: none;
+}
+.card-sheen:hover::before {
+  transform: translateX(120%);
+}
+
+.corner-red,
+.corner-blue {
+  position: relative;
+}
+.corner-red::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(229, 32, 45, 0.22), transparent 60%);
+  pointer-events: none;
+}
+.corner-blue::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(56, 132, 255, 0.22), transparent 60%);
+  pointer-events: none;
+}
+
+/* Scrollbars */
 ::-webkit-scrollbar {
   height: 10px;
   width: 10px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #eee9e1;
+  background: #0c0c10;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a33;
+  border-radius: 999px;
+  border: 2px solid #0c0c10;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a45;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #c8c0b6;
-  border-radius: 999px;
+/* Comfort: reduce motion */
+html[data-fightid-reduce-motion="true"] *,
+html[data-fightid-reduce-motion="true"] *::before,
+html[data-fightid-reduce-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-fightid-compact="true"] {
+  font-size: 14px;
 }
 
 @media (max-width: 640px) {
-  body:not(.fightid-home) main {
-    padding-left: 0.875rem !important;
-    padding-right: 0.875rem !important;
-    padding-top: 5.75rem !important;
-  }
-
-  body:not(.fightid-home) main h1 {
-    font-size: 2rem !important;
-    line-height: 1.04 !important;
-    margin-top: 0.75rem !important;
-  }
-
-  body:not(.fightid-home) main h2 {
-    font-size: 1.35rem !important;
-    line-height: 1.12 !important;
-  }
-
-  body:not(.fightid-home) main h3 {
-    font-size: 1.1rem !important;
-    line-height: 1.18 !important;
-  }
-
-  body:not(.fightid-home) main p {
-    line-height: 1.55 !important;
-  }
-
-  body:not(.fightid-home) main :where(.mt-10, .mt-8, .mt-6, .mt-5) {
-    margin-top: 1rem !important;
-  }
-
-  body:not(.fightid-home) main :where(.gap-5, .gap-4) {
-    gap: 0.75rem !important;
-  }
-
-  body:not(.fightid-home) main :where(.p-8, .p-6, .p-5) {
-    padding: 1rem !important;
-  }
-
-  body:not(.fightid-home) main :where(.px-6, .px-5) {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  body:not(.fightid-home) main :where(.py-5, .py-4) {
-    padding-bottom: 0.85rem !important;
-    padding-top: 0.85rem !important;
-  }
-
-  body:not(.fightid-home) main :where(.h-\[410px\], .h-64, .h-52, .h-48) {
-    height: 9rem !important;
-  }
-
-  body:not(.fightid-home) main .text-4xl {
-    font-size: 1.85rem !important;
-    line-height: 1.08 !important;
-  }
-
-  body:not(.fightid-home) main .text-3xl {
-    font-size: 1.5rem !important;
-    line-height: 1.12 !important;
-  }
-
-  body:not(.fightid-home) main .text-2xl {
-    font-size: 1.2rem !important;
-    line-height: 1.18 !important;
-  }
-
-  body:not(.fightid-home) main .tracking-\[0\.16em\] {
-    letter-spacing: 0.1em !important;
+  main h1 {
+    line-height: 1.02 !important;
   }
 }

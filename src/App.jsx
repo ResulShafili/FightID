@@ -153,8 +153,8 @@ const translations = {
     noNotifications: "Hələ bildiriş yoxdur.",
     compactMode: "Yığcam görünüş",
     compactModeDesc: "Sıx döyüşçü məlumatları üçün daha dar aralıqlar.",
-    reduceMotion: "Animasiya azalt",
-    reduceMotionDesc: "Animasiya və hover hərəkətlərini minimuma endir.",
+    reduceMotion: "Animasiyanı azalt",
+    reduceMotionDesc: "Animasiya və keçid effektlərini minimuma endir.",
   },
   en: {
     settings: "Settings",
@@ -229,6 +229,8 @@ const phraseTranslations = {
   Compare: { az: "Müqayisə", tr: "Karşılaştır", ru: "Сравнить" },
   "Fight Board": { az: "Döyüş lövhəsi", tr: "Dövüş panosu", ru: "Доска боев" },
   Tournaments: { az: "Turnirlər", tr: "Turnuvalar", ru: "Турниры" },
+  Challenges: { az: "Çağırışlar", tr: "Meydan okumalar", ru: "Вызовы" },
+  Federation: { az: "Federasiya", tr: "Federasyon", ru: "Федерация" },
 };
 const weightClassOptions = ["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"];
 const BADGE_META = {
@@ -1058,7 +1060,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
           <LogoMark size={40} />
           <span className="text-left">
             <span className="block font-display text-xl font-bold uppercase leading-none tracking-wide text-white">FightBase</span>
-            <span className="block text-[10px] font-bold uppercase tracking-[0.26em] text-zinc-500 max-[420px]:hidden">Verified fight records</span>
+            <span className="block text-[10px] font-bold uppercase tracking-[0.26em] text-zinc-500 max-[420px]:hidden">Təsdiqlənmiş döyüş rekordları</span>
           </span>
         </button>
 
@@ -1272,7 +1274,7 @@ function LandingPage({ setPage, openProfile }) {
     };
   }, []);
 
-  const tickerItems = ["Verified fight records", "Weight-class rankings", "Head-to-head compare", "Amateur-first profiles", "Federation review", "National champions", "Gym network", "Challenge system"];
+  const tickerItems = ["Təsdiqlənmiş rekordlar", "Çəki reytinqləri", "Üzbəüz müqayisə", "Həvəskar profillər", "Federasiya yoxlaması", "Milli çempionlar", "Zal şəbəkəsi", "Çağırış sistemi"];
 
   return (
     <main>
@@ -1281,11 +1283,11 @@ function LandingPage({ setPage, openProfile }) {
         <span className="pointer-events-none absolute left-1/2 top-[14%] -z-0 -translate-x-1/2 select-none whitespace-nowrap font-display text-[22vw] font-bold uppercase leading-none text-stroke opacity-[0.5]">Fight</span>
         <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-28 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:pb-20 lg:pt-28">
           <div className="animate-fade-up">
-            <Chip tone="red" icon={ShieldCheck}>Verified MMA fighter platform</Chip>
+            <Chip tone="red" icon={ShieldCheck}>Təsdiqlənmiş MMA döyüşçü platforması</Chip>
             <h1 className="mt-6 font-display text-6xl font-bold uppercase leading-[0.92] text-white sm:text-7xl xl:text-8xl">
               Döyüş
               <br />
-              rekord
+              rekordları
               <br />
               <span className="relative inline-block text-blood">
                 bazası
@@ -1293,11 +1295,11 @@ function LandingPage({ setPage, openProfile }) {
               </span>
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-8 text-zinc-400">
-              FightBase ciddi döyüş idmanı bazasıdır: təsdiqli döyüşçü profilləri, axtarıla bilən həvəskar rekordları, çəki reytinqləri, zal bağlantıları və real uyğunlaşdırma üçün təmiz kəşf alətləri.
+              FightBase peşəkar döyüş idmanı bazasıdır: təsdiqlənmiş döyüşçü profilləri, axtarıla bilən həvəskar rekordları, çəki reytinqləri, zal əlaqələri və real uyğunlaşdırma üçün sadə axtarış alətləri.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <button onClick={() => setPage("Fighters")} className="group inline-flex items-center justify-center gap-2 rounded-xl bg-blood px-7 py-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-red transition hover:brightness-110">
-                Bazadan axtar
+                Bazada axtar
                 <ArrowRight size={18} className="transition group-hover:translate-x-1" />
               </button>
               <button onClick={() => setPage("Rankings")} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-7 py-4 text-sm font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/10">
@@ -1329,7 +1331,7 @@ function LandingPage({ setPage, openProfile }) {
                     <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blood opacity-75" /><span className="relative inline-flex h-2 w-2 rounded-full bg-blood" /></span>
                     Canlı reytinq
                   </div>
-                  <h2 className="mt-2 font-display text-xl font-bold uppercase text-white">Ən yüksək döyüşçülər</h2>
+                  <h2 className="mt-2 font-display text-xl font-bold uppercase text-white">Lider döyüşçülər</h2>
                 </div>
                 <button onClick={() => setPage("Rankings")} className="rounded-lg border border-white/12 px-3 py-2 text-xs font-black uppercase tracking-wide text-white transition hover:bg-white/10">Tam cədvəl</button>
               </div>
@@ -1375,14 +1377,14 @@ function LandingPage({ setPage, openProfile }) {
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
         <div className="mb-10 max-w-2xl">
           <Kicker icon={Zap}>Nə üçün FightBase</Kicker>
-          <h2 className="mt-4 font-display text-4xl font-bold uppercase text-white sm:text-5xl">Bir platforma, bütün döyüş idmanı</h2>
+          <h2 className="mt-4 font-display text-4xl font-bold uppercase text-white sm:text-5xl">Bir platformada bütün döyüş idmanı</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
-            [ShieldCheck, "Təsdiqli rekordlar", "Döyüşçü kimlikləri, zallar, ölkələr və döyüş tarixçələri bir ictimai bazada."],
-            [Activity, "Həvəskar mərkəzli", "Gənc döyüşçülərə böyük promouşenlərə çatmadan təmiz profil səhifəsi."],
-            [Gauge, "Çəkili reytinqlər", "Rəqib reytinqi, aktivlik və status həftəlik liderlik cədvəlinə təsir edir."],
-            [Globe2, "Yerli kəşf", "Döyüşçüləri ölkə, zal, çəki, reytinq və aktivliyə görə tap."],
+            [ShieldCheck, "Təsdiqlənmiş rekordlar", "Döyüşçü profilləri, zallar, ölkələr və döyüş tarixçələri vahid açıq bazada toplanır."],
+            [Activity, "Həvəskar yönümlü", "Gənc döyüşçülərə böyük təşkilatlara çatmadan səliqəli profil səhifəsi verir."],
+            [Gauge, "Ədalətli reytinq", "Rəqibin gücü, aktivlik və status həftəlik reytinq cədvəlinə təsir edir."],
+            [Globe2, "Asan axtarış", "Döyüşçüləri ölkə, zal, çəki, reytinq və aktivliyə görə tap."],
           ].map(([Icon, title, text], i) => (
             <div key={title} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-surface/70 p-6 transition hover:-translate-y-1 hover:border-blood/40">
               <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blood/10 blur-2xl transition group-hover:bg-blood/20" />
@@ -1430,7 +1432,7 @@ function LandingPage({ setPage, openProfile }) {
           <div className="relative max-w-2xl">
             <Kicker icon={ShieldCheck}>Öz kimliyini qur</Kicker>
             <h2 className="mt-4 font-display text-4xl font-bold uppercase leading-[0.95] text-white sm:text-6xl">Döyüşçü profilini bu gün yarat</h2>
-            <p className="mt-4 max-w-xl text-base leading-7 text-zinc-300">Rekordunu qeyd et, reytinqlərdə yüksəl və uyğun rəqiblərə çağırış göndər — hamısı təsdiqli, təmiz bir bazada.</p>
+            <p className="mt-4 max-w-xl text-base leading-7 text-zinc-300">Rekordunu qeyd et, reytinqlərdə yüksəl və uyğun rəqiblərə çağırış göndər — hamısı təsdiqlənmiş, etibarlı bir bazada.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button onClick={() => setPage("Fighters")} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-7 py-4 text-sm font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/10">
                 <Users size={18} /> Döyüşçülərə bax
@@ -1509,7 +1511,7 @@ function FightersPage({ openProfile }) {
         kicker="Canlı döyüşçü bazası"
         kickerIcon={Users}
         title="Döyüşçü Bazası"
-        subtitle="Rekordları, zalları, ölkələri, xalları və profil statusunu bir yığcam döyüş idmanı bazasında axtar."
+        subtitle="Döyüşçüləri rekord, zal, ölkə, xal və profil statusuna görə vahid bazada axtar."
       />
 
       {totalFighters < 20 && (
@@ -1730,7 +1732,7 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
             <Field label="Instagram URL"><input value={form.instagramUrl} onChange={(e) => updateField("instagramUrl", e.target.value)} className={inputClass} placeholder="https://instagram.com/…" /></Field>
             <Field label="YouTube URL"><input value={form.youtubeUrl} onChange={(e) => updateField("youtubeUrl", e.target.value)} className={inputClass} placeholder="https://youtube.com/…" /></Field>
             <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-400 sm:col-span-2">
-              Cover şəkil linki
+              Örtük şəkli linki
               <input value={form.coverPhotoUrl} onChange={(e) => updateField("coverPhotoUrl", e.target.value)} className={inputClass} placeholder="https://…" />
             </label>
             <div className="sm:col-span-2">
@@ -2689,8 +2691,8 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
             <div className="mt-8 grid max-w-xl grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur">
               {[
                 [record.wins || 0, "Qələbə", "text-emerald-400"],
-                [record.losses || 0, "Məğlub", "text-blood"],
-                [record.draws || 0, "Heçə", "text-zinc-400"],
+                [record.losses || 0, "Məğlubiyyət", "text-blood"],
+                [record.draws || 0, "Heç-heçə", "text-zinc-400"],
               ].map(([value, label, tone]) => (
                 <div key={label} className="border-r border-white/10 px-5 py-5 text-center last:border-0">
                   <div className={`font-display text-5xl font-bold leading-none ${tone}`}>{value}</div>
@@ -2999,7 +3001,7 @@ function Footer({ setPage }) {
             <LogoMark size={44} />
             <span className="font-display text-2xl font-bold uppercase text-white">FightBase</span>
           </button>
-          <p className="mt-4 max-w-sm text-sm leading-6 text-zinc-500">Döyüşçülər, zallar və döyüş idmanı izləyiciləri üçün təsdiqli rekord bazası.</p>
+          <p className="mt-4 max-w-sm text-sm leading-6 text-zinc-500">Döyüşçülər, zallar və döyüş idmanı azarkeşləri üçün təsdiqlənmiş rekord bazası.</p>
         </div>
         <div>
           <div className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Baza</div>
@@ -3019,7 +3021,7 @@ function Footer({ setPage }) {
         </div>
       </div>
       <div className="border-t border-white/8 px-4 py-6 text-center text-xs font-semibold uppercase tracking-[0.16em] text-zinc-600 sm:px-6">
-        © {new Date().getFullYear()} FightBase — Verified MMA record database
+        © {new Date().getFullYear()} FightBase — Təsdiqlənmiş MMA rekordları bazası
       </div>
     </footer>
   );

@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Clock,
   Crown,
+  Dumbbell,
   Filter,
   Flag,
   Flame,
@@ -57,6 +58,7 @@ import {
   seekApi,
   setAccessToken,
   tournamentApi,
+  trainingApi,
   verificationApi,
 } from "./lib/api";
 import { createFightIdSocket } from "./lib/socket";
@@ -104,6 +106,18 @@ const pathToPage = (pathname) => {
 const RULE_SET_LABELS = { MMA: "MMA", GRAPPLING: "Grappling", BOXING: "Boks", MUAY_THAI: "Muay Thai" };
 function formatRuleSet(value = "") {
   return RULE_SET_LABELS[value] || formatResult(value);
+}
+const TRAINING_TYPE_LABELS = {
+  STRIKING: "Zərbə texnikası",
+  GRAPPLING: "Qreplinq",
+  CONDITIONING: "Fiziki hazırlıq",
+  SPARRING: "Sparrinq",
+  DRILLING: "Təkrar məşq",
+  RECOVERY: "Bərpa",
+  OTHER: "Digər",
+};
+function formatTrainingType(value = "") {
+  return TRAINING_TYPE_LABELS[value] || formatResult(value);
 }
 const CHALLENGE_STATUS_META = {
   PENDING: { label: "Gözləyir", tone: "gold" },
@@ -392,9 +406,14 @@ function formatResult(value = "") {
     .join("/");
 }
 
+// Browsers ship poor "az" date data (it renders as "2026 M08 31"), so the
+// Azerbaijani month names are applied by hand.
+const AZ_MONTHS_SHORT = ["Yan", "Fev", "Mar", "Apr", "May", "İyn", "İyl", "Avq", "Sen", "Okt", "Noy", "Dek"];
 function formatDate(value) {
-  if (!value) return "TBD";
-  return new Intl.DateTimeFormat("en", { month: "short", day: "2-digit", year: "numeric" }).format(new Date(value));
+  if (!value) return "Təyin edilməyib";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Təyin edilməyib";
+  return `${String(date.getDate()).padStart(2, "0")} ${AZ_MONTHS_SHORT[date.getMonth()]} ${date.getFullYear()}`;
 }
 
 function getStatus(fighter) {
@@ -417,12 +436,17 @@ function compactGymName(gym = "") {
   return value.length > 18 ? `${value.slice(0, 18)}…` : value;
 }
 
+const FIGHT_RESULT_LABELS = { WIN: "Qələbə", LOSS: "Məğlub", DRAW: "Heç-heçə", NO_CONTEST: "Nəticəsiz" };
+const FIGHT_METHOD_LABELS = { KO_TKO: "KO/TKO", SUBMISSION: "Sabmişn", DECISION: "Hakim qərarı", DQ: "Diskvalifikasiya", OTHER: "Digər" };
+const formatFightResult = (value = "") => FIGHT_RESULT_LABELS[value] || formatResult(value);
+const formatFightMethod = (value = "") => FIGHT_METHOD_LABELS[value] || formatResult(value);
+
 function methodsFromStats(stats) {
   const methods = stats?.methods || {};
   return [
-    { label: "KO/TKO", value: methods.KO_TKO || 0, tone: "blood" },
-    { label: "Submission", value: methods.SUBMISSION || 0, tone: "gold" },
-    { label: "Decision", value: methods.DECISION || 0, tone: "muted" },
+    { label: FIGHT_METHOD_LABELS.KO_TKO, value: methods.KO_TKO || 0, tone: "blood" },
+    { label: FIGHT_METHOD_LABELS.SUBMISSION, value: methods.SUBMISSION || 0, tone: "gold" },
+    { label: FIGHT_METHOD_LABELS.DECISION, value: methods.DECISION || 0, tone: "muted" },
   ];
 }
 
@@ -1594,6 +1618,7 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
     country: profile?.country || "AZ",
     weightClass: profile?.weightClass || "LIGHTWEIGHT",
     gym: profile?.gym || "",
+    startedTrainingYear: profile?.startedTrainingYear ? String(profile.startedTrainingYear) : "",
     bio: profile?.bio || "",
     instagramUrl: profile?.instagramUrl || "",
     youtubeUrl: profile?.youtubeUrl || "",
@@ -1613,6 +1638,7 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
       country: profile.country || "AZ",
       weightClass: profile.weightClass || "LIGHTWEIGHT",
       gym: profile.gym || "",
+      startedTrainingYear: profile.startedTrainingYear ? String(profile.startedTrainingYear) : "",
       bio: profile.bio || "",
       instagramUrl: profile.instagramUrl || "",
       youtubeUrl: profile.youtubeUrl || "",
@@ -1648,6 +1674,7 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
         country: (form.country || "AZ").toUpperCase(),
         weightClass: form.weightClass || "LIGHTWEIGHT",
         gym: form.gym || null,
+        startedTrainingYear: form.startedTrainingYear ? Number(form.startedTrainingYear) : null,
         bio: form.bio || null,
         instagramUrl: form.instagramUrl || null,
         youtubeUrl: form.youtubeUrl || null,
@@ -1726,6 +1753,17 @@ function MyProfilePage({ user, onLoginClick, onUserUpdate, openProfile }) {
               </select>
             </Field>
             <Field label="Zal / klub"><input value={form.gym} onChange={(e) => updateField("gym", e.target.value)} className={inputClass} placeholder="Zal / klub adı" /></Field>
+            <Field label="Neçənci ildən məşq edir">
+              <input
+                type="number"
+                min={1950}
+                max={new Date().getFullYear()}
+                value={form.startedTrainingYear}
+                onChange={(e) => updateField("startedTrainingYear", e.target.value)}
+                className={inputClass}
+                placeholder="Məsələn 2015"
+              />
+            </Field>
             <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-400 sm:col-span-2">
               Bioqrafiya
               <textarea value={form.bio} onChange={(e) => updateField("bio", e.target.value)} className={`${inputClass} min-h-28 resize-y`} placeholder="Qısa döyüşçü bioqrafiyası" />
@@ -2609,6 +2647,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const [shareCopied, setShareCopied] = useState(false);
   const [showChallenge, setShowChallenge] = useState(false);
   const [challengeSent, setChallengeSent] = useState(false);
+  const [training, setTraining] = useState(null);
   const [badges, setBadges] = useState([]);
   const [nationalChampion, setNationalChampion] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2643,6 +2682,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   useEffect(() => {
     if (!profile) return;
     badgeApi.forFighter(profile.id).then(setBadges).catch(() => setBadges([]));
+    trainingApi.forFighter(profile.id).then(setTraining).catch(() => setTraining(null));
     leaderboardApi.isChampion(profile.id).then(setNationalChampion).catch(() => setNationalChampion(null));
   }, [profile]);
 
@@ -2654,6 +2694,18 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
   const status = getStatus(profile);
   const record = profile.stats?.record || {};
   const fightHistory = profile.fights || [];
+  const upcoming = (profile.upcomingFights || []).filter((fight) => new Date(fight.scheduledAt) >= new Date());
+  const trainingLogs = training?.data || [];
+  // Derived from the returned logs rather than the API's calendar-month summary,
+  // which reads as empty for the first days of a new month.
+  const recentTraining = trainingLogs.filter((log) => Date.now() - new Date(log.date) <= 30 * 86400000);
+  const trainingCounts = recentTraining.reduce((acc, log) => ({ ...acc, [log.type]: (acc[log.type] || 0) + 1 }), {});
+  const trainingSummary = {
+    sessions: recentTraining.length,
+    hours: Math.round((recentTraining.reduce((sum, log) => sum + (log.durationMins || 0), 0) / 60) * 10) / 10,
+    topType: Object.entries(trainingCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null,
+  };
+  const experienceYears = profile.startedTrainingYear ? new Date().getFullYear() - profile.startedTrainingYear : null;
   const earnedBadges = Object.keys(BADGE_META).filter((type) => badges.find((b) => b.type === type)).length;
 
   const shareProfile = async () => {
@@ -2748,6 +2800,50 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
               ))}
             </div>
 
+            {upcoming.length > 0 && (
+              <div className="rounded-2xl border border-blood/30 bg-gradient-to-br from-blood/[0.09] via-surface to-surface p-5 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="font-display text-2xl font-bold uppercase text-white">Gələcək döyüşlər</h2>
+                    <p className="mt-1 text-sm text-zinc-500">Təsdiqlənmiş və planlanmış qarşılaşmalar.</p>
+                  </div>
+                  <CalendarDays className="text-blood" />
+                </div>
+                <div className="mt-5 grid gap-3">
+                  {upcoming.map((fight, index) => {
+                    const days = Math.max(0, Math.ceil((new Date(fight.scheduledAt) - Date.now()) / 86400000));
+                    return (
+                      <div key={fight.id} className="grid gap-4 rounded-xl border border-white/10 bg-black/25 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10">
+                            <Avatar name={fight.opponentName} photoUrl={fight.opponentPhotoUrl} />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {index === 0 && <Chip tone="red">Növbəti</Chip>}
+                              <span className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-500">{fight.eventName}</span>
+                            </div>
+                            <button onClick={() => fight.opponentId && openProfile(fight.opponentId)} className="mt-1 block truncate font-display text-xl font-bold uppercase text-white transition hover:text-red-100">
+                              vs {fight.opponentName}
+                            </button>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] font-bold uppercase tracking-wide text-zinc-500">
+                              <span className="inline-flex items-center gap-1"><MapPin size={12} className="text-blood" /> {fight.location}</span>
+                              <span>{formatRuleSet(fight.ruleSet)}</span>
+                              <span>{formatWeightClass(fight.weightClass)}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-left sm:text-right">
+                          <div className="font-display text-lg font-bold text-white">{formatDate(fight.scheduledAt)}</div>
+                          <div className="mt-0.5 font-mono text-[11px] font-bold uppercase tracking-wide text-blood">{days} gün qalıb</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-2xl border border-white/10 bg-surface p-5 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -2780,8 +2876,8 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
                           <td className="px-5 py-4 font-mono text-zinc-400">{formatDate(fight.fightDate)}</td>
                           <td className="px-5 py-4 font-bold text-white">{fight.opponentName}</td>
                           <td className="px-5 py-4">{fight.eventName}</td>
-                          <td className="px-5 py-4"><span className={`rounded-md px-2 py-1 text-xs font-black uppercase ${fight.result === "WIN" ? "bg-emerald-500/15 text-emerald-300" : fight.result === "LOSS" ? "bg-blood/15 text-red-200" : "bg-white/10 text-zinc-300"}`}>{formatResult(fight.result)}</span></td>
-                          <td className="px-5 py-4">{formatResult(fight.method)}</td>
+                          <td className="px-5 py-4"><span className={`rounded-md px-2 py-1 text-xs font-black uppercase ${fight.result === "WIN" ? "bg-emerald-500/15 text-emerald-300" : fight.result === "LOSS" ? "bg-blood/15 text-red-200" : "bg-white/10 text-zinc-300"}`}>{formatFightResult(fight.result)}</span></td>
+                          <td className="px-5 py-4">{formatFightMethod(fight.method)}</td>
                           <td className="px-5 py-4 font-mono">{fight.round}</td>
                           <td className="px-5 py-4 font-mono">{fight.fightTime}</td>
                         </tr>
@@ -2791,6 +2887,48 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
                 </table>
               </div>
             </div>
+
+            {trainingLogs.length > 0 && (
+              <div className="rounded-2xl border border-white/10 bg-surface p-5 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="font-display text-2xl font-bold uppercase text-white">Məşq aktivliyi</h2>
+                    <p className="mt-1 text-sm text-zinc-500">Döyüşçünün qeyd etdiyi son məşq seansları.</p>
+                  </div>
+                  <Dumbbell className="text-blood" />
+                </div>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-white/8 bg-black/25 p-4">
+                    <div className="font-display text-2xl font-bold text-white">{trainingSummary.sessions}</div>
+                    <div className="mt-1 text-[11px] font-black uppercase tracking-[0.12em] text-zinc-500">Son 30 gün seans</div>
+                  </div>
+                  <div className="rounded-xl border border-white/8 bg-black/25 p-4">
+                    <div className="font-display text-2xl font-bold text-white">{trainingSummary.hours} saat</div>
+                    <div className="mt-1 text-[11px] font-black uppercase tracking-[0.12em] text-zinc-500">Ümumi vaxt</div>
+                  </div>
+                  <div className="rounded-xl border border-white/8 bg-black/25 p-4">
+                    <div className="truncate font-display text-2xl font-bold text-white">{trainingSummary.topType ? formatTrainingType(trainingSummary.topType) : "—"}</div>
+                    <div className="mt-1 text-[11px] font-black uppercase tracking-[0.12em] text-zinc-500">Ən çox məşq</div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-2">
+                  {trainingLogs.slice(0, 6).map((log) => (
+                    <div key={log.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-bold text-white">{formatTrainingType(log.type)}</div>
+                        {log.note && <div className="mt-0.5 truncate text-xs text-zinc-500">{log.note}</div>}
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className="font-mono text-sm font-bold text-white">{log.durationMins} dəq</div>
+                        <div className="font-mono text-[11px] font-bold uppercase tracking-wide text-zinc-600">{formatDate(log.date)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="rounded-2xl border border-white/10 bg-surface p-5 sm:p-6">
               <div className="flex items-center justify-between">
@@ -2818,6 +2956,12 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
               <div className="mt-5 grid gap-3 text-sm font-semibold text-zinc-300">
                 <span className="inline-flex items-center gap-2"><Flag size={16} className="text-blood" /> {flagEmoji(profile.country)} {countryNames[profile.country] || profile.country}</span>
                 <span className="inline-flex items-center gap-2"><Target size={16} className="text-blood" /> {profile.gym || "Müstəqil"}</span>
+                {profile.startedTrainingYear && (
+                  <span className="inline-flex items-center gap-2">
+                    <Dumbbell size={16} className="text-blood" />
+                    {profile.startedTrainingYear}-dən məşq edir{experienceYears > 0 ? ` · ${experienceYears} il təcrübə` : ""}
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-2"><Trophy size={16} className="text-blood" /> {earnedBadges} nişan qazanılıb</span>
               </div>
             </div>

@@ -235,6 +235,7 @@ async function main() {
             weightClass: fighter.weightClass,
             gym: fighter.gym,
             gymId: gyms[index % gyms.length].id,
+            startedTrainingYear: new Date(fighter.dateOfBirth).getFullYear() + 16,
             bio: `${fighter.fullName} is an Azerbaijani ${fighter.weightClass.toLowerCase().replace("_", " ")} fighter representing ${fighter.gym}.`,
             profilePhotoUrl,
             coverPhotoUrl,

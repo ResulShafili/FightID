@@ -22,6 +22,7 @@ export const updateProfileSchema = z.object({
   country: z.string().min(2).max(2).toUpperCase().optional(),
   weightClass: weightClassSchema.optional(),
   gym: z.string().max(120).nullable().optional(),
+  startedTrainingYear: z.coerce.number().int().min(1950).max(new Date().getFullYear()).nullable().optional(),
   bio: z.string().max(1000).nullable().optional(),
   instagramUrl: optionalUrlSchema.nullable().optional(),
   youtubeUrl: optionalUrlSchema.nullable().optional(),

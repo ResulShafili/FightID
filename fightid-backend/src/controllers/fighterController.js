@@ -78,7 +78,31 @@ export const listFighters = asyncHandler(async (req, res) => {
   res.json({ data: fighters.map((fighter) => ({ ...fighter, ...statsForFights(fighter.fights), cornerCount: fighter.cornerMen.length })), pagination: { page, limit, total } });
 });
 
+// An accepted challenge whose date has not passed is a known upcoming fight.
+const upcomingFromChallenges = (fighter) =>
+  [...fighter.sentChallenges, ...fighter.receivedChallenges]
+    .map((challenge) => {
+      const opponent = challenge.senderId === fighter.id ? challenge.receiver : challenge.sender;
+      return {
+        id: challenge.id,
+        opponentId: opponent?.id || null,
+        opponentName: opponent?.fullName || "TBD",
+        opponentPhotoUrl: opponent?.profilePhotoUrl || null,
+        eventName: challenge.location,
+        scheduledAt: challenge.proposedDateFrom,
+        location: challenge.location,
+        weightClass: challenge.weightClass,
+        ruleSet: challenge.ruleSet,
+      };
+    })
+    .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+
 export const getFighter = asyncHandler(async (req, res) => {
+  const acceptedUpcoming = {
+    where: { status: "ACCEPTED", proposedDateTo: { gte: new Date() } },
+    include: { sender: true, receiver: true },
+  };
+
   const fighter = await prisma.fighterProfile.findUnique({
     where: { id: req.params.id },
     include: {
@@ -86,12 +110,20 @@ export const getFighter = asyncHandler(async (req, res) => {
       fights: { orderBy: { fightDate: "desc" } },
       badges: true,
       fighterCard: true,
+      sentChallenges: acceptedUpcoming,
+      receivedChallenges: acceptedUpcoming,
     },
   });
 
   if (!fighter) throw new ApiError(404, "Fighter not found");
 
-  res.json({ ...fighter, ...statsForFights(fighter.fights), cornerCount: fighter.cornerMen.length });
+  const { sentChallenges, receivedChallenges, ...rest } = fighter;
+  res.json({
+    ...rest,
+    ...statsForFights(fighter.fights),
+    upcomingFights: upcomingFromChallenges(fighter),
+    cornerCount: fighter.cornerMen.length,
+  });
 });
 
 export const updateMe = asyncHandler(async (req, res) => {

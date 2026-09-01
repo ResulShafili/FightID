@@ -5,51 +5,84 @@
  * controllers) so every public page renders exactly as it would against a live
  * API. Only public GET endpoints are covered: auth and any mutation still hit
  * the real backend and fail honestly when it is down.
+ *
+ * Every name here is deliberately generic ("Test Döyüşçü 1") so sample records
+ * can never be mistaken for a real person, gym or event.
  */
 
-const FEDERATION = { id: "demo-fed-1", name: "Azərbaycan MMA Federasiyası", country: "AZ" };
+const FEDERATION = { id: "demo-fed-1", name: "Test Federasiya", country: "AZ" };
 
 const GYM_SEEDS = [
-  { id: "demo-gym-1", name: "Bakı Combat Club", city: "Bakı", country: "AZ", description: "Bakının elit MMA zalı: pro və həvəskar döyüşçülər üçün tam hazırlıq bazası." },
-  { id: "demo-gym-2", name: "Xəzər MMA", city: "Bakı", country: "AZ", description: "Xəzər bölgəsinin qreplinq və zərbə texnikası üzrə ixtisaslaşmış komandası." },
-  { id: "demo-gym-3", name: "Neftçi Fight Team", city: "Bakı", country: "AZ", description: "Yüksək tempdə çalışan, gənc döyüşçü yetişdirən döyüş düşərgəsi." },
+  { id: "demo-gym-1", name: "Test Zal 1", city: "Test Şəhər", country: "AZ", description: "Nümunə məlumat: pro və həvəskar döyüşçülər üçün tam hazırlıq bazası." },
+  { id: "demo-gym-2", name: "Test Zal 2", city: "Test Şəhər", country: "AZ", description: "Nümunə məlumat: qreplinq və zərbə texnikası üzrə ixtisaslaşmış komanda." },
+  { id: "demo-gym-3", name: "Test Zal 3", city: "Test Şəhər", country: "AZ", description: "Nümunə məlumat: gənc döyüşçü yetişdirən döyüş düşərgəsi." },
 ];
 
-// [fullName, nickname, weightClass, gymIndex, isVerifiedPro, points, country]
+// [weightClass, gymIndex, isVerifiedPro, points, startedTrainingYear, hasNickname]
 const FIGHTER_SEEDS = [
-  ["Rəşad Məmmədov", "Qartal", "LIGHTWEIGHT", 0, true, 1420, "AZ"],
-  ["Tural Həsənov", "Xəzər", "WELTERWEIGHT", 1, true, 1360, "AZ"],
-  ["Elnur Quliyev", "Şimşək", "MIDDLEWEIGHT", 2, false, 980, "AZ"],
-  ["Kamran Əliyev", "Daş Yumruq", "LIGHTWEIGHT", 0, true, 1285, "AZ"],
-  ["Nicat Hüseynov", "Aslan", "WELTERWEIGHT", 1, false, 910, "AZ"],
-  ["Müşfiq Babayev", "Səssiz", "MIDDLEWEIGHT", 2, true, 1510, "AZ"],
-  ["Tərlan İsmayılov", "Qara Kəmər", "LIGHTWEIGHT", 0, false, 870, "AZ"],
-  ["Orxan Nəcəfov", "Kaspi", "WELTERWEIGHT", 1, true, 1335, "AZ"],
-  ["Bəhruz Əhmədov", "Polad", "MIDDLEWEIGHT", 2, false, 760, "AZ"],
-  ["Fərid Rzayev", "Alov", "LIGHTWEIGHT", 0, true, 1395, "AZ"],
+  ["LIGHTWEIGHT", 0, true, 1420, 2012, true],
+  ["WELTERWEIGHT", 1, true, 1360, 2013, true],
+  ["MIDDLEWEIGHT", 2, false, 980, 2018, false],
+  ["LIGHTWEIGHT", 0, true, 1285, 2014, true],
+  ["WELTERWEIGHT", 1, false, 910, 2019, false],
+  ["MIDDLEWEIGHT", 2, true, 1510, 2010, true],
+  ["LIGHTWEIGHT", 0, false, 870, 2020, false],
+  ["WELTERWEIGHT", 1, true, 1335, 2011, true],
+  ["MIDDLEWEIGHT", 2, false, 760, 2021, false],
+  ["LIGHTWEIGHT", 0, true, 1395, 2015, true],
 ];
 
 // [fighterIndex, opponentIndex, event, date, result, method, round, time, isVerified]
 const FIGHT_SEEDS = [
-  [0, 3, "Baku Grand Prix 2024", "2024-03-16", "WIN", "DECISION", 3, "5:00", true],
-  [0, 6, "Caspian Cage Night 12", "2024-06-22", "WIN", "KO_TKO", 2, "3:18", true],
-  [0, 9, "Azerbaijan Fight Series", "2025-02-08", "LOSS", "SUBMISSION", 2, "4:02", true],
-  [1, 4, "Baku Warriors 9", "2024-02-10", "WIN", "KO_TKO", 1, "2:41", true],
-  [1, 7, "Caspian Combat League 18", "2024-09-14", "DRAW", "DECISION", 3, "5:00", true],
-  [1, 4, "FightBase Showcase Baku", "2025-04-19", "WIN", "DECISION", 3, "5:00", true],
-  [2, 5, "Neftçi Fight Open", "2024-01-28", "LOSS", "DECISION", 3, "5:00", true],
-  [2, 8, "Baku Amateur Cup", "2024-05-25", "WIN", "SUBMISSION", 2, "3:55", true],
-  [3, 6, "Baku Combat Night", "2023-11-11", "WIN", "SUBMISSION", 1, "4:44", true],
-  [3, 9, "Caspian Cage Night 15", "2024-10-05", "LOSS", "DECISION", 3, "5:00", true],
-  [4, 7, "Xəzər MMA Open", "2024-04-13", "LOSS", "KO_TKO", 2, "1:59", true],
-  [4, 1, "FightBase Showcase Baku", "2025-04-19", "LOSS", "DECISION", 3, "5:00", true],
-  [5, 8, "Neftçi Fight League", "2024-07-20", "WIN", "KO_TKO", 2, "2:26", true],
-  [5, 2, "Caspian Trials", "2025-01-18", "WIN", "KO_TKO", 1, "4:12", true],
-  [6, 0, "Caspian Cage Night 12", "2024-06-22", "LOSS", "KO_TKO", 2, "3:18", true],
-  [6, 3, "Baku Combat Night", "2023-11-11", "LOSS", "SUBMISSION", 1, "4:44", true],
-  [7, 1, "Caspian Combat League 18", "2024-09-14", "DRAW", "DECISION", 3, "5:00", true],
-  [8, 2, "Baku Amateur Cup", "2024-05-25", "LOSS", "SUBMISSION", 2, "3:55", true],
-  [9, 0, "Azerbaijan Fight Series", "2025-02-08", "WIN", "SUBMISSION", 2, "4:02", true],
+  [0, 3, "Test Tədbir 1", "2024-03-16", "WIN", "DECISION", 3, "5:00", true],
+  [0, 6, "Test Tədbir 2", "2024-06-22", "WIN", "KO_TKO", 2, "3:18", true],
+  [0, 9, "Test Tədbir 3", "2025-02-08", "LOSS", "SUBMISSION", 2, "4:02", true],
+  [1, 4, "Test Tədbir 4", "2024-02-10", "WIN", "KO_TKO", 1, "2:41", true],
+  [1, 7, "Test Tədbir 5", "2024-09-14", "DRAW", "DECISION", 3, "5:00", true],
+  [1, 4, "Test Tədbir 6", "2025-04-19", "WIN", "DECISION", 3, "5:00", true],
+  [2, 5, "Test Tədbir 7", "2024-01-28", "LOSS", "DECISION", 3, "5:00", true],
+  [2, 8, "Test Tədbir 8", "2024-05-25", "WIN", "SUBMISSION", 2, "3:55", true],
+  [3, 6, "Test Tədbir 9", "2023-11-11", "WIN", "SUBMISSION", 1, "4:44", true],
+  [3, 9, "Test Tədbir 10", "2024-10-05", "LOSS", "DECISION", 3, "5:00", true],
+  [4, 7, "Test Tədbir 11", "2024-04-13", "LOSS", "KO_TKO", 2, "1:59", true],
+  [4, 1, "Test Tədbir 6", "2025-04-19", "LOSS", "DECISION", 3, "5:00", true],
+  [5, 8, "Test Tədbir 12", "2024-07-20", "WIN", "KO_TKO", 2, "2:26", true],
+  [5, 2, "Test Tədbir 13", "2025-01-18", "WIN", "KO_TKO", 1, "4:12", true],
+  [6, 0, "Test Tədbir 2", "2024-06-22", "LOSS", "KO_TKO", 2, "3:18", true],
+  [6, 3, "Test Tədbir 9", "2023-11-11", "LOSS", "SUBMISSION", 1, "4:44", true],
+  [7, 1, "Test Tədbir 5", "2024-09-14", "DRAW", "DECISION", 3, "5:00", true],
+  [8, 2, "Test Tədbir 8", "2024-05-25", "LOSS", "SUBMISSION", 2, "3:55", true],
+  [9, 0, "Test Tədbir 3", "2025-02-08", "WIN", "SUBMISSION", 2, "4:02", true],
+];
+
+// [fighterIndex, opponentIndex, daysFromNow, event, ruleSet]
+const UPCOMING_SEEDS = [
+  [0, 9, 34, "Test Tədbir 14", "MMA"],
+  [0, 3, 96, "Test Tədbir 15", "MMA"],
+  [1, 7, 27, "Test Tədbir 16", "MMA"],
+  [5, 2, 48, "Test Tədbir 17", "GRAPPLING"],
+  [9, 0, 34, "Test Tədbir 14", "MMA"],
+  [3, 0, 96, "Test Tədbir 15", "MMA"],
+  [7, 1, 27, "Test Tədbir 16", "MMA"],
+  [2, 5, 48, "Test Tədbir 17", "GRAPPLING"],
+];
+
+// [fighterIndex, type, durationMins, daysAgo, note]
+const TRAINING_SEEDS = [
+  [0, "SPARRING", 75, 1, "Beş texniki raund."],
+  [0, "STRIKING", 90, 3, "Pad işi və qəfəsdən çıxış."],
+  [0, "CONDITIONING", 45, 5, "İnterval qaçış və dairəvi məşq."],
+  [0, "GRAPPLING", 80, 8, "Arxa nəzarət raundları."],
+  [0, "DRILLING", 60, 12, "Aşağı təkan cəhdləri."],
+  [0, "RECOVERY", 30, 15, "Hərəkətlilik və uzanma."],
+  [1, "STRIKING", 85, 2, "Klinç zərbələri."],
+  [1, "SPARRING", 70, 6, "Üç raund tam temp."],
+  [1, "CONDITIONING", 50, 9, "Ağırlıq və partlayıcı güc."],
+  [5, "GRAPPLING", 95, 2, "Sabmişn zəncirləri."],
+  [5, "STRIKING", 60, 4, "Sayğac zərbələri."],
+  [5, "SPARRING", 80, 7, "Ağır çəki partnyoru ilə."],
+  [9, "DRILLING", 65, 3, "Ayaq üstə müdafiə."],
+  [9, "CONDITIONING", 40, 6, "Sprint seriyaları."],
 ];
 
 const BADGE_SEEDS = {
@@ -61,28 +94,35 @@ const BADGE_SEEDS = {
   9: ["FIRST_WIN", "FIRST_SUBMISSION", "POINTS_1000"],
 };
 
+const dayMs = 24 * 60 * 60 * 1000;
+const shiftDays = (days) => new Date(Date.now() + days * dayMs).toISOString();
+
 const gyms = GYM_SEEDS.map((gym) => ({ ...gym, logoUrl: null, websiteUrl: null, createdAt: "2024-01-05T00:00:00.000Z" }));
 
-const fighters = FIGHTER_SEEDS.map(([fullName, nickname, weightClass, gymIndex, isVerifiedPro, points, country], index) => ({
-  id: `demo-fighter-${index + 1}`,
-  userId: `demo-user-${index + 1}`,
-  fullName,
-  nickname,
-  country,
-  weightClass,
-  gym: gyms[gymIndex].name,
-  gymId: gyms[gymIndex].id,
-  bio: `${nickname} ləqəbli ${fullName}, ${gyms[gymIndex].name} komandasının ${isVerifiedPro ? "peşəkar" : "həvəskar"} döyüşçüsüdür.`,
-  profilePhotoUrl: null,
-  coverPhotoUrl: null,
-  instagramUrl: index % 3 === 0 ? "https://instagram.com/fightbase" : null,
-  youtubeUrl: index % 4 === 0 ? "https://youtube.com/@fightbase" : null,
-  isVerifiedPro,
-  verifiedByFederation: isVerifiedPro ? FEDERATION : null,
-  points,
-  seekingSparring: index === 0 || index === 5,
-  user: { role: isVerifiedPro ? "PRO" : "AMATEUR" },
-}));
+const fighters = FIGHTER_SEEDS.map(([weightClass, gymIndex, isVerifiedPro, points, startedTrainingYear, hasNickname], index) => {
+  const number = index + 1;
+  return {
+    id: `demo-fighter-${number}`,
+    userId: `demo-user-${number}`,
+    fullName: `Test Döyüşçü ${number}`,
+    nickname: hasNickname ? `Test Ləqəb ${number}` : null,
+    country: "AZ",
+    weightClass,
+    gym: gyms[gymIndex].name,
+    gymId: gyms[gymIndex].id,
+    bio: `Nümunə profil: ${gyms[gymIndex].name} komandasının ${isVerifiedPro ? "peşəkar" : "həvəskar"} döyüşçüsü. Bu məlumat yalnız nümayiş üçündür.`,
+    profilePhotoUrl: null,
+    coverPhotoUrl: null,
+    instagramUrl: index % 3 === 0 ? "https://instagram.com/fightbase" : null,
+    youtubeUrl: index % 4 === 0 ? "https://youtube.com/@fightbase" : null,
+    startedTrainingYear,
+    isVerifiedPro,
+    verifiedByFederation: isVerifiedPro ? FEDERATION : null,
+    points,
+    seekingSparring: index === 0 || index === 5,
+    user: { role: isVerifiedPro ? "PRO" : "AMATEUR" },
+  };
+});
 
 const fights = FIGHT_SEEDS.map(([fighterIndex, opponentIndex, eventName, fightDate, result, method, round, fightTime, isVerified], index) => ({
   id: `demo-fight-${index + 1}`,
@@ -96,6 +136,28 @@ const fights = FIGHT_SEEDS.map(([fighterIndex, opponentIndex, eventName, fightDa
   round,
   fightTime,
   isVerified,
+}));
+
+const upcomingFights = UPCOMING_SEEDS.map(([fighterIndex, opponentIndex, daysFromNow, eventName, ruleSet], index) => ({
+  id: `demo-upcoming-${index + 1}`,
+  fighterId: fighters[fighterIndex].id,
+  opponentId: fighters[opponentIndex].id,
+  opponentName: fighters[opponentIndex].fullName,
+  opponentPhotoUrl: fighters[opponentIndex].profilePhotoUrl,
+  eventName,
+  scheduledAt: shiftDays(daysFromNow),
+  location: "Test Şəhər",
+  weightClass: fighters[fighterIndex].weightClass,
+  ruleSet,
+}));
+
+const trainingLogs = TRAINING_SEEDS.map(([fighterIndex, type, durationMins, daysAgo, note], index) => ({
+  id: `demo-training-${index + 1}`,
+  fighterId: fighters[fighterIndex].id,
+  type,
+  durationMins,
+  note,
+  date: shiftDays(-daysAgo),
 }));
 
 function statsFor(fighterId) {
@@ -120,6 +182,9 @@ function fullFighter(fighter) {
     fights: fights
       .filter((fight) => fight.fighterId === fighter.id)
       .sort((a, b) => new Date(b.fightDate) - new Date(a.fightDate)),
+    upcomingFights: upcomingFights
+      .filter((fight) => fight.fighterId === fighter.id)
+      .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt)),
   };
 }
 
@@ -127,7 +192,7 @@ const fightersWithStats = fighters.map(fullFighter);
 
 const tournament = {
   id: "demo-tournament-1",
-  name: "Bakı Yüngül Çəki Qran Prisi",
+  name: "Test Turnir 1",
   weightClass: "LIGHTWEIGHT",
   ruleSet: "MMA",
   status: "ACTIVE",
@@ -140,8 +205,8 @@ const tournament = {
 };
 
 const fightSeeks = [
-  { id: "demo-seek-1", fighter: fighters[0], fighterId: fighters[0].id, weightClass: "LIGHTWEIGHT", ruleSet: "MMA", location: "Bakı", dateFrom: "2026-06-01T00:00:00.000Z", dateTo: "2026-06-30T00:00:00.000Z", message: "Reytinqli yüngül çəki rəqibi axtarıram. Üç raund, pro qaydalar.", isActive: true },
-  { id: "demo-seek-2", fighter: fighters[5], fighterId: fighters[5].id, weightClass: "MIDDLEWEIGHT", ruleSet: "GRAPPLING", location: "Bakı", dateFrom: "2026-07-01T00:00:00.000Z", dateTo: "2026-07-15T00:00:00.000Z", message: "Yalnız sabmişn qaydaları ilə super döyüş təklif edirəm.", isActive: true },
+  { id: "demo-seek-1", fighter: fighters[0], fighterId: fighters[0].id, weightClass: "LIGHTWEIGHT", ruleSet: "MMA", location: "Test Şəhər", dateFrom: shiftDays(30), dateTo: shiftDays(60), message: "Nümunə elan: reytinqli yüngül çəki rəqibi axtarıram.", isActive: true },
+  { id: "demo-seek-2", fighter: fighters[5], fighterId: fighters[5].id, weightClass: "MIDDLEWEIGHT", ruleSet: "GRAPPLING", location: "Test Şəhər", dateFrom: shiftDays(45), dateTo: shiftDays(75), message: "Nümunə elan: yalnız sabmişn qaydaları ilə super döyüş.", isActive: true },
 ];
 
 function gymWithTotals(gym) {
@@ -203,6 +268,28 @@ const championIds = new Set(
     .map((entry) => entry.fighter.id),
 );
 
+function trainingSummaryFor(fighterId) {
+  const logs = trainingLogs
+    .filter((log) => log.fighterId === fighterId)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const month = logs.filter((log) => new Date(log.date) >= monthStart);
+  const counts = month.reduce((acc, log) => ({ ...acc, [log.type]: (acc[log.type] || 0) + 1 }), {});
+
+  return {
+    data: logs,
+    summary: {
+      totalSessionsThisMonth: month.length,
+      totalHoursThisMonth: month.reduce((sum, log) => sum + log.durationMins, 0) / 60,
+      mostCommonType: Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || null,
+      counts,
+    },
+  };
+}
+
 /**
  * Maps an API path to demo data. Returns undefined when the path has no demo
  * equivalent, so the caller can surface the real backend failure instead.
@@ -235,6 +322,10 @@ export function resolveDemoResponse(path, method = "GET") {
       return { ...fighter, rank: weightBoard.find((item) => item.id === fighter.id)?.rank };
     }
     return undefined;
+  }
+
+  if (segments[0] === "training" && segments[1] === "fighter") {
+    return fighters.some((item) => item.id === segments[2]) ? trainingSummaryFor(segments[2]) : undefined;
   }
 
   if (segments[0] === "gyms") {

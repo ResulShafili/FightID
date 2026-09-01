@@ -183,6 +183,7 @@ model FighterProfile {
   country                String
   weightClass            WeightClass
   gym                    String?
+  startedTrainingYear    Int?
   bio                    String?
   profilePhotoUrl        String?
   coverPhotoUrl          String?

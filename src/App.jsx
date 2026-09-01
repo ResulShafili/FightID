@@ -51,6 +51,7 @@ import {
   challengeApi,
   fighterApi,
   gymApi,
+  isDemoMode,
   leaderboardApi,
   notificationApi,
   seekApi,
@@ -1916,7 +1917,7 @@ function FightSeekBoard({ user }) {
               <Chip tone="red" icon={Target}>Axtarır</Chip>
             </div>
             <h3 className="mt-4 font-display text-2xl font-bold uppercase text-white">{item.fighter.fullName}</h3>
-            <p className="mt-2 font-mono text-sm text-zinc-400">{formatWeightClass(item.weightClass)} · {formatResult(item.ruleSet)} · {item.location}</p>
+            <p className="mt-2 font-mono text-sm text-zinc-400">{formatWeightClass(item.weightClass)} · {formatRuleSet(item.ruleSet)} · {item.location}</p>
             <p className="mt-3 text-sm leading-6 text-zinc-500">{item.message}</p>
           </div>
         ))}
@@ -3045,6 +3046,7 @@ export default function App() {
   });
   const [authModal, setAuthModal] = useState(null);
   const [toast, setToast] = useState(null);
+  const [demoMode, setDemoMode] = useState(isDemoMode);
   const [settings, setSettings] = useState(loadStoredSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const t = translations[settings.language] || translations.az;
@@ -3150,6 +3152,12 @@ export default function App() {
     return () => window.removeEventListener("auth:logout", handleForcedLogout);
   }, [navigate]);
 
+  useEffect(() => {
+    const handleDemoEnabled = () => setDemoMode(true);
+    window.addEventListener("demo:enabled", handleDemoEnabled);
+    return () => window.removeEventListener("demo:enabled", handleDemoEnabled);
+  }, []);
+
   const openProfile = (fighterId) => navigate(fighterId ? `/fighters/${fighterId}` : "/fighters");
   const openAuth = (tab) => setAuthModal(tab);
   const closeAuth = () => setAuthModal(null);
@@ -3220,6 +3228,12 @@ export default function App() {
         <div className="fixed bottom-5 right-5 z-[120] flex items-center gap-3 rounded-xl border border-blood/40 bg-coal px-5 py-4 font-bold text-white shadow-panel">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-blood/15 text-blood"><Bell size={16} /></span>
           {toast}
+        </div>
+      )}
+      {demoMode && (
+        <div className="fixed bottom-4 left-4 z-[115] inline-flex items-center gap-2 rounded-full border border-gold/40 bg-coal/95 px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-amber-200 shadow-panel backdrop-blur">
+          <span className="h-2 w-2 animate-pulse-red rounded-full bg-gold" />
+          Nümunə məlumat
         </div>
       )}
     </div>

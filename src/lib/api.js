@@ -1,8 +1,26 @@
+import { resolveDemoResponse } from "./demoData";
+
 const API_URL = (import.meta.env.VITE_API_URL || "https://fightid-production.up.railway.app/api").replace(/\/$/, "");
 const accessTokenStorageKey = "fightidAccessToken";
 const refreshTokenStorageKey = "fightidRefreshToken";
 
 let accessToken = localStorage.getItem(accessTokenStorageKey);
+let demoMode = false;
+
+export const isDemoMode = () => demoMode;
+
+// Serves bundled sample data when the backend cannot answer, so public pages
+// stay populated instead of collapsing into empty states. Only read-only
+// endpoints have a demo equivalent; everything else still fails for real.
+const serveDemo = (path, method) => {
+  const data = resolveDemoResponse(path, method);
+  if (data === undefined) return undefined;
+  if (!demoMode) {
+    demoMode = true;
+    window.dispatchEvent(new Event("demo:enabled"));
+  }
+  return data;
+};
 
 export const setAccessToken = (token) => {
   accessToken = token;
@@ -29,6 +47,8 @@ export const apiRequest = async (path, options = {}, retry = true) => {
       },
     });
   } catch (error) {
+    const demo = serveDemo(path, options.method || "GET");
+    if (demo !== undefined) return demo;
     if (error.name === "AbortError") {
       throw new Error("Request timed out. Please check the backend deployment and try again.");
     }
@@ -61,6 +81,12 @@ export const apiRequest = async (path, options = {}, retry = true) => {
   }
 
   if (!response.ok) {
+    // A missing or crashed deployment (Railway answers 404 for an unknown app)
+    // is an infrastructure failure, not a real "not found" for this resource.
+    if (response.status >= 500 || response.status === 404) {
+      const demo = serveDemo(path, options.method || "GET");
+      if (demo !== undefined) return demo;
+    }
     const error = await response.json().catch(() => ({ message: "Request failed" }));
     throw new Error(error.message || "Request failed");
   }

@@ -202,7 +202,16 @@ export const leaderboardApi = {
 export const adminApi = {
   stats: () => apiRequest("/admin/stats"),
   fighters: (params = {}) => apiRequest(`/admin/fighters${toQueryString(params)}`),
+  fights: (params = {}) => apiRequest(`/admin/fights${toQueryString(params)}`),
   updateRole: (fighterId, role) => apiRequest(`/admin/fighters/${fighterId}/role`, { method: "PUT", body: JSON.stringify({ role }) }),
+  deleteFight: (fightId) => apiRequest(`/admin/fights/${fightId}`, { method: "DELETE" }),
+};
+
+export const fightApi = {
+  forFighter: (fighterId) => apiRequest(`/fights/fighter/${fighterId}`),
+  create: (payload) => apiRequest("/fights", { method: "POST", body: JSON.stringify(payload) }),
+  verify: (id) => apiRequest(`/fights/${id}/verify`, { method: "PUT" }),
+  remove: (id) => apiRequest(`/fights/${id}`, { method: "DELETE" }),
 };
 
 export const verificationApi = {

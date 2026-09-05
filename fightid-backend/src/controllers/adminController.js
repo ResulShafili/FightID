@@ -57,6 +57,28 @@ export const updateFighterRole = asyncHandler(async (req, res) => {
   res.json({ ...updated, user });
 });
 
+// Fights across all fighters, so reviewers can work an unverified queue.
+// Without this there is no way to reach PUT /fights/:id/verify.
+export const adminFights = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
+  const where = req.query.isVerified === undefined ? {} : { isVerified: req.query.isVerified === "true" };
+
+  const [fights, total] = await Promise.all([
+    prisma.fight.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: [{ isVerified: "asc" }, { fightDate: "desc" }],
+      include: { fighter: { select: { id: true, fullName: true, profilePhotoUrl: true, weightClass: true, country: true } } },
+    }),
+    prisma.fight.count({ where }),
+  ]);
+
+  res.json({ data: fights, pagination: { page, limit, total } });
+});
+
 export const adminDeleteFight = asyncHandler(async (req, res) => {
   await prisma.fight.delete({ where: { id: req.params.id } });
   res.status(204).send();

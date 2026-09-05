@@ -40,18 +40,18 @@ const FIGHT_SEEDS = [
   [1, 4, "Test Tədbir 4", "2024-02-10", "WIN", "KO_TKO", 1, "2:41", true],
   [1, 7, "Test Tədbir 5", "2024-09-14", "DRAW", "DECISION", 3, "5:00", true],
   [1, 4, "Test Tədbir 6", "2025-04-19", "WIN", "DECISION", 3, "5:00", true],
-  [2, 5, "Test Tədbir 7", "2024-01-28", "LOSS", "DECISION", 3, "5:00", true],
+  [2, 5, "Test Tədbir 7", "2024-01-28", "LOSS", "DECISION", 3, "5:00", false],
   [2, 8, "Test Tədbir 8", "2024-05-25", "WIN", "SUBMISSION", 2, "3:55", true],
   [3, 6, "Test Tədbir 9", "2023-11-11", "WIN", "SUBMISSION", 1, "4:44", true],
   [3, 9, "Test Tədbir 10", "2024-10-05", "LOSS", "DECISION", 3, "5:00", true],
   [4, 7, "Test Tədbir 11", "2024-04-13", "LOSS", "KO_TKO", 2, "1:59", true],
   [4, 1, "Test Tədbir 6", "2025-04-19", "LOSS", "DECISION", 3, "5:00", true],
   [5, 8, "Test Tədbir 12", "2024-07-20", "WIN", "KO_TKO", 2, "2:26", true],
-  [5, 2, "Test Tədbir 13", "2025-01-18", "WIN", "KO_TKO", 1, "4:12", true],
+  [5, 2, "Test Tədbir 13", "2025-01-18", "WIN", "KO_TKO", 1, "4:12", false],
   [6, 0, "Test Tədbir 2", "2024-06-22", "LOSS", "KO_TKO", 2, "3:18", true],
   [6, 3, "Test Tədbir 9", "2023-11-11", "LOSS", "SUBMISSION", 1, "4:44", true],
   [7, 1, "Test Tədbir 5", "2024-09-14", "DRAW", "DECISION", 3, "5:00", true],
-  [8, 2, "Test Tədbir 8", "2024-05-25", "LOSS", "SUBMISSION", 2, "3:55", true],
+  [8, 2, "Test Tədbir 8", "2024-05-25", "LOSS", "SUBMISSION", 2, "3:55", false],
   [9, 0, "Test Tədbir 3", "2025-02-08", "WIN", "SUBMISSION", 2, "4:02", true],
 ];
 
@@ -368,6 +368,58 @@ export function resolveDemoResponse(path, method = "GET") {
 
   if (segments[0] === "fightseek") {
     return { data: fightSeeks, pagination: { page: 1, limit, total: fightSeeks.length } };
+  }
+
+  if (segments[0] === "admin") {
+    if (segments[1] === "stats") {
+      return {
+        totalFighters: fighters.length,
+        proCount: fighters.filter((fighter) => fighter.isVerifiedPro).length,
+        fightsLogged: fights.length,
+        activeChallenges: 3,
+      };
+    }
+    if (segments[1] === "fighters") {
+      const matches = filterFighters(params);
+      const page = Number(params.get("page")) || 1;
+      return {
+        data: matches.slice((page - 1) * limit, page * limit).map((fighter) => ({ ...fighter, createdAt: "2025-02-01T00:00:00.000Z" })),
+        pagination: { page, limit, total: matches.length },
+      };
+    }
+    if (segments[1] === "fights") {
+      const isVerified = params.get("isVerified");
+      const page = Number(params.get("page")) || 1;
+      const matches = fights
+        .filter((fight) => (isVerified === null ? true : fight.isVerified === (isVerified === "true")))
+        .map((fight) => ({ ...fight, fighter: fighters.find((item) => item.id === fight.fighterId) }));
+      return {
+        data: matches.slice((page - 1) * limit, page * limit),
+        pagination: { page, limit, total: matches.length },
+      };
+    }
+    return undefined;
+  }
+
+  if (segments[0] === "verification" && segments[1] === "pending") {
+    return [
+      {
+        id: "demo-verification-1",
+        fighterId: fighters[2].id,
+        fighter: fighters[2],
+        federation: FEDERATION,
+        documentUrl: "https://example.com/nümunə-sənəd.pdf",
+        createdAt: shiftDays(-6),
+      },
+      {
+        id: "demo-verification-2",
+        fighterId: fighters[6].id,
+        fighter: fighters[6],
+        federation: FEDERATION,
+        documentUrl: "https://example.com/nümunə-sənəd-2.pdf",
+        createdAt: shiftDays(-2),
+      },
+    ];
   }
 
   return undefined;

@@ -61,6 +61,26 @@ import {
   trainingApi,
   verificationApi,
 } from "./lib/api";
+import AdminPanel from "./AdminPanel";
+import { Avatar } from "./components/Avatar";
+import {
+  CHALLENGE_STATUS_META,
+  RULE_SET_LABELS,
+  compactGymName,
+  countryNames,
+  flagEmoji,
+  formatDate,
+  formatFightMethod,
+  formatFightResult,
+  formatResult,
+  formatRuleSet,
+  formatTrainingType,
+  formatWeightClass,
+  getStatus,
+  recordFromStats,
+  statusLabel,
+  weightClassOptions,
+} from "./lib/format";
 import { createFightIdSocket } from "./lib/socket";
 
 const navGroups = [
@@ -84,7 +104,7 @@ const pagePaths = {
   Challenges: "/challenges",
   Gyms: "/gyms",
   "National Champions": "/national-champions",
-  Federation: "/federation",
+  Federation: "/admin",
   "My Profile": "/profile",
   "Fighter Profile": "/fighters",
 };
@@ -99,33 +119,9 @@ const pathToPage = (pathname) => {
   if (pathname.startsWith("/challenges")) return "Challenges";
   if (pathname.startsWith("/gyms")) return "Gyms";
   if (pathname.startsWith("/national-champions")) return "National Champions";
-  if (pathname.startsWith("/federation")) return "Federation";
+  if (pathname.startsWith("/admin")) return "Federation";
   if (pathname.startsWith("/profile")) return "My Profile";
   return "";
-};
-const RULE_SET_LABELS = { MMA: "MMA", GRAPPLING: "Grappling", BOXING: "Boks", MUAY_THAI: "Muay Thai" };
-function formatRuleSet(value = "") {
-  return RULE_SET_LABELS[value] || formatResult(value);
-}
-const TRAINING_TYPE_LABELS = {
-  STRIKING: "Zərbə texnikası",
-  GRAPPLING: "Qreplinq",
-  CONDITIONING: "Fiziki hazırlıq",
-  SPARRING: "Sparrinq",
-  DRILLING: "Təkrar məşq",
-  RECOVERY: "Bərpa",
-  OTHER: "Digər",
-};
-function formatTrainingType(value = "") {
-  return TRAINING_TYPE_LABELS[value] || formatResult(value);
-}
-const CHALLENGE_STATUS_META = {
-  PENDING: { label: "Gözləyir", tone: "gold" },
-  ACCEPTED: { label: "Qəbul edilib", tone: "emerald" },
-  DECLINED: { label: "Rədd edilib", tone: "red" },
-  COUNTERED: { label: "Qarşı təklif", tone: "blue" },
-  CANCELLED: { label: "Ləğv edilib", tone: "muted" },
-  COMPLETED: { label: "Tamamlanıb", tone: "muted" },
 };
 const fightIdLogo = "/assets/fightid-logo.svg";
 const refreshTokenStorageKey = "fightidRefreshToken";
@@ -247,7 +243,6 @@ const phraseTranslations = {
   Challenges: { az: "Çağırışlar", tr: "Meydan okumalar", ru: "Вызовы" },
   Federation: { az: "Federasiya", tr: "Federasyon", ru: "Федерация" },
 };
-const weightClassOptions = ["STRAWWEIGHT", "FLYWEIGHT", "BANTAMWEIGHT", "FEATHERWEIGHT", "LIGHTWEIGHT", "WELTERWEIGHT", "MIDDLEWEIGHT", "LIGHT_HEAVYWEIGHT", "HEAVYWEIGHT"];
 const BADGE_META = {
   FIRST_WIN: { label: "First Blood", emoji: "🩸", desc: "Won their first fight" },
   FIRST_KO: { label: "Lights Out", emoji: "💡", desc: "First KO/TKO victory" },
@@ -272,56 +267,6 @@ function getFighterImage(url) {
   return url;
 }
 
-function hasRealPhoto(url) {
-  return Boolean(url) && !url.includes("thispersondoesnotexist.com") && !url.includes("fighter-portrait.png") && !url.includes("fightid-logo");
-}
-
-function initialsFromName(name = "") {
-  const parts = String(name).trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "FB";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-const AVATAR_PALETTE = [
-  ["#e5202d", "#6f0910"],
-  ["#3b82f6", "#0b2a4a"],
-  ["#f3b433", "#7a4a00"],
-  ["#12b6a0", "#0a4a44"],
-  ["#7c5cff", "#241670"],
-  ["#f0653f", "#6f2110"],
-  ["#e0457a", "#5a0f33"],
-];
-function paletteFor(name = "") {
-  let h = 0;
-  const value = String(name);
-  for (let i = 0; i < value.length; i += 1) h = (h * 31 + value.charCodeAt(i)) % 9973;
-  return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
-}
-
-// Avatar renders a real photo when available, otherwise a deterministic
-// gradient monogram (SVG so it scales perfectly to any container size).
-function Avatar({ name, photoUrl, className = "", monogram = true }) {
-  const id = useId().replace(/:/g, "");
-  if (hasRealPhoto(photoUrl)) {
-    return <img src={photoUrl} alt={name || ""} className={`h-full w-full object-cover ${className}`} loading="lazy" />;
-  }
-  const [c1, c2] = paletteFor(name);
-  return (
-    <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" className={`h-full w-full ${className}`} role="img" aria-label={name || "Fighter"}>
-      <defs>
-        <linearGradient id={`av-${id}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={c1} />
-          <stop offset="100%" stopColor={c2} />
-        </linearGradient>
-      </defs>
-      <rect width="100" height="100" fill={`url(#av-${id})`} />
-      <text x="50" y="50" dy="0.35em" textAnchor="middle" fontFamily="Oswald, Inter, sans-serif" fontSize="38" fontWeight="700" fill="rgba(255,255,255,0.92)" letterSpacing="1">
-        {initialsFromName(name)}
-      </text>
-    </svg>
-  );
-}
 
 function applyPageTranslations(language) {
   const targetLanguage = ["az", "en", "tr", "ru"].includes(language) ? language : "az";
@@ -367,79 +312,6 @@ function applyPageTranslations(language) {
   });
 }
 
-const countryNames = {
-  AZ: "Azerbaijan",
-  BR: "Brazil",
-  US: "United States",
-  BG: "Bulgaria",
-  PL: "Poland",
-  TR: "Turkey",
-  GE: "Georgia",
-  MA: "Morocco",
-};
-
-function formatWeightClass(value = "") {
-  const labels = {
-    STRAWWEIGHT: "Salma çəki",
-    FLYWEIGHT: "Milçək çəki",
-    BANTAMWEIGHT: "Xoruz çəki",
-    FEATHERWEIGHT: "Lələk çəki",
-    LIGHTWEIGHT: "Yüngül çəki",
-    WELTERWEIGHT: "Yarımorta çəki",
-    MIDDLEWEIGHT: "Orta çəki",
-    LIGHT_HEAVYWEIGHT: "Yarımağır çəki",
-    HEAVYWEIGHT: "Ağır çəki",
-  };
-  if (labels[value]) return labels[value];
-  return value
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function formatResult(value = "") {
-  return value
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("/");
-}
-
-// Browsers ship poor "az" date data (it renders as "2026 M08 31"), so the
-// Azerbaijani month names are applied by hand.
-const AZ_MONTHS_SHORT = ["Yan", "Fev", "Mar", "Apr", "May", "İyn", "İyl", "Avq", "Sen", "Okt", "Noy", "Dek"];
-function formatDate(value) {
-  if (!value) return "Təyin edilməyib";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Təyin edilməyib";
-  return `${String(date.getDate()).padStart(2, "0")} ${AZ_MONTHS_SHORT[date.getMonth()]} ${date.getFullYear()}`;
-}
-
-function getStatus(fighter) {
-  return fighter.isVerifiedPro || fighter.user?.role === "PRO" ? "Pro" : "Amateur";
-}
-
-function recordFromStats(stats) {
-  const record = stats?.record || {};
-  return `${record.wins || 0}-${record.losses || 0}-${record.draws || 0}`;
-}
-
-function flagEmoji(code = "") {
-  const normalized = String(code || "").trim().toUpperCase();
-  if (normalized.length !== 2) return normalized;
-  return normalized.replace(/./g, (char) => String.fromCodePoint(char.charCodeAt(0) + 127397));
-}
-
-function compactGymName(gym = "") {
-  const value = gym || "Independent";
-  return value.length > 18 ? `${value.slice(0, 18)}…` : value;
-}
-
-const FIGHT_RESULT_LABELS = { WIN: "Qələbə", LOSS: "Məğlub", DRAW: "Heç-heçə", NO_CONTEST: "Nəticəsiz" };
-const FIGHT_METHOD_LABELS = { KO_TKO: "KO/TKO", SUBMISSION: "Sabmişn", DECISION: "Hakim qərarı", DQ: "Diskvalifikasiya", OTHER: "Digər" };
-const formatFightResult = (value = "") => FIGHT_RESULT_LABELS[value] || formatResult(value);
-const formatFightMethod = (value = "") => FIGHT_METHOD_LABELS[value] || formatResult(value);
 
 function methodsFromStats(stats) {
   const methods = stats?.methods || {};
@@ -462,6 +334,7 @@ function normalizeCardFighter(fighter, index = 0) {
     points: fighter.points || 0,
     rank: fighter.rank || index + 1,
     status: getStatus(fighter),
+    statusLabel: statusLabel(fighter),
     federation: fighter.verifiedByFederation?.name || null,
     gym: fighter.gym || "Independent",
     image: getFighterImage(fighter.profilePhotoUrl),
@@ -1128,7 +1001,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
           })}
           {["ADMIN", "FEDERATION_REP"].includes(user?.role) && (
             <button onClick={() => setPage("Federation")} className={`relative rounded-lg px-3 py-2 text-sm font-bold uppercase tracking-[0.1em] transition ${page === "Federation" ? "text-white" : "text-zinc-400 hover:text-white"}`}>
-              Federation
+              Admin panel
               {page === "Federation" && <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-blood" />}
             </button>
           )}
@@ -1198,7 +1071,7 @@ function AppHeader({ page, setPage, user, settings, t, onSettingsClick, onLoginC
             </div>
           ))}
           {["ADMIN", "FEDERATION_REP"].includes(user?.role) && (
-            <button onClick={() => { setPage("Federation"); setOpen(false); }} className={`block w-full rounded-xl px-4 py-3 text-left text-sm font-bold uppercase tracking-wide ${page === "Federation" ? "bg-blood/15 text-white" : "text-zinc-300 hover:bg-white/[0.05]"}`}>Federation</button>
+            <button onClick={() => { setPage("Federation"); setOpen(false); }} className={`block w-full rounded-xl px-4 py-3 text-left text-sm font-bold uppercase tracking-wide ${page === "Federation" ? "bg-blood/15 text-white" : "text-zinc-300 hover:bg-white/[0.05]"}`}>Admin panel</button>
           )}
           <div className="mt-3 grid gap-2 border-t border-white/10 pt-4">
             {user ? (
@@ -1233,7 +1106,7 @@ function FighterCard({ fighter, onOpen }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <Chip tone={isPro ? "red" : "default"}>{fighter.status}</Chip>
+            <Chip tone={isPro ? "red" : "default"}>{fighter.statusLabel}</Chip>
             <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-zinc-500">{flagEmoji(fighter.countryCode)} {fighter.countryCode}</span>
           </div>
           <h3 className="mt-2.5 truncate font-display text-2xl font-bold uppercase leading-none text-white transition group-hover:text-red-100">{fighter.name}</h3>
@@ -1837,7 +1710,7 @@ function HeadToHead() {
     { label: "Submission", l: left.stats?.methods?.SUBMISSION || 0, r: right.stats?.methods?.SUBMISSION || 0, compare: true },
     { label: "Decision", l: left.stats?.methods?.DECISION || 0, r: right.stats?.methods?.DECISION || 0, compare: true },
     { label: "Çəki dərəcəsi", l: formatWeightClass(left.weightClass), r: formatWeightClass(right.weightClass) },
-    { label: "Status", l: getStatus(left), r: getStatus(right) },
+    { label: "Status", l: statusLabel(left), r: statusLabel(right) },
     { label: "Ölkə", l: `${flagEmoji(left.country)} ${left.country}`, r: `${flagEmoji(right.country)} ${right.country}` },
   ] : [];
 
@@ -2421,185 +2294,6 @@ function ChallengesPage({ user, onLoginClick, openProfile }) {
   );
 }
 
-function FederationPanel({ user, onLoginClick, openProfile }) {
-  const [stats, setStats] = useState(null);
-  const [requests, setRequests] = useState([]);
-  const [fighters, setFighters] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [actionLoading, setActionLoading] = useState("");
-  const [note, setNote] = useState("");
-  const canReview = ["ADMIN", "FEDERATION_REP"].includes(user?.role);
-  const isAdmin = user?.role === "ADMIN";
-
-  const loadPanel = () => {
-    setLoading(true);
-    setError("");
-    Promise.all([adminApi.stats(), verificationApi.pending(), adminApi.fighters({ limit: 8 })])
-      .then(([statsResult, pendingResult, fightersResult]) => {
-        setStats(statsResult);
-        setRequests(pendingResult || []);
-        setFighters(fightersResult.data || []);
-      })
-      .catch((caught) => setError(caught.message))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    if (canReview) loadPanel();
-    else setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canReview]);
-
-  const reviewRequest = async (requestId, decision) => {
-    setActionLoading(requestId);
-    setError("");
-    try {
-      if (decision === "approve") await verificationApi.approve(requestId, note);
-      else await verificationApi.reject(requestId, note || "Kifayət qədər təsdiqlənmiş sənəd yoxdur.");
-      setNote("");
-      loadPanel();
-    } catch (caught) {
-      setError(caught.message);
-    } finally {
-      setActionLoading("");
-    }
-  };
-
-  const updateRole = async (fighterId, role) => {
-    setActionLoading(fighterId);
-    setError("");
-    try {
-      await adminApi.updateRole(fighterId, role);
-      loadPanel();
-    } catch (caught) {
-      setError(caught.message);
-    } finally {
-      setActionLoading("");
-    }
-  };
-
-  if (!user) {
-    return (
-      <PageShell>
-        <Panel className="p-8">
-          <Chip tone="red" icon={ShieldQuestion}>Federasiya</Chip>
-          <h1 className="mt-5 font-display text-4xl font-bold uppercase text-white">Giriş tələb olunur</h1>
-          <p className="mt-3 max-w-xl text-zinc-400">Federasiya alətləri yalnız admin və federasiya nümayəndələri üçündür.</p>
-          <button onClick={onLoginClick} className="mt-6 rounded-xl bg-blood px-5 py-3 font-black text-white shadow-red">Giriş</button>
-        </Panel>
-      </PageShell>
-    );
-  }
-
-  if (!canReview) {
-    return (
-      <PageShell>
-        <Panel className="p-8">
-          <Chip tone="red" icon={ShieldQuestion}>Federasiya</Chip>
-          <h1 className="mt-5 font-display text-4xl font-bold uppercase text-white">Giriş məhduddur</h1>
-          <p className="mt-3 max-w-xl text-zinc-400">Bu panel yalnız ADMIN və FEDERATION_REP hesabları üçün aktivdir.</p>
-        </Panel>
-      </PageShell>
-    );
-  }
-
-  return (
-    <PageShell>
-      <PageHeader
-        kicker="Federasiya idarəetməsi"
-        kickerIcon={ShieldCheck}
-        title="Federasiya paneli"
-        subtitle="Pro müraciətlərini yoxla, platforma vəziyyətini izlə və döyüşçü statuslarını idarə et."
-        right={<button onClick={loadPanel} className="rounded-xl border border-white/12 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10">Yenilə</button>}
-      />
-
-      {loading && <div className="mt-8"><LoadingPanel label="Federasiya məlumatları yüklənir" /></div>}
-      {error && <div className="mt-8"><ErrorPanel message={error} action={{ label: "Yenidən yoxla", onClick: loadPanel }} /></div>}
-
-      {!loading && !error && (
-        <>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              ["Döyüşçülər", stats?.totalFighters || 0, Users],
-              ["Prolar", stats?.proCount || 0, ShieldCheck],
-              ["Döyüşlər", stats?.fightsLogged || 0, Activity],
-              ["Aktiv çağırışlar", stats?.activeChallenges || 0, Swords],
-            ].map(([label, value, Icon]) => (
-              <div key={label} className="rounded-2xl border border-white/10 bg-surface p-5">
-                <Icon size={16} className="text-blood" />
-                <div className="mt-3 font-display text-3xl font-bold text-white">{value}</div>
-                <div className="mt-1 text-[11px] font-black uppercase tracking-[0.14em] text-zinc-500">{label}</div>
-              </div>
-            ))}
-          </div>
-
-          <section className="mt-8 rounded-2xl border border-white/10 bg-surface p-5 sm:p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="font-display text-2xl font-bold uppercase text-white">Gözləyən Pro təsdiqləri</h2>
-                <p className="mt-1 text-sm text-zinc-500">{requests.length} müraciət yoxlama gözləyir.</p>
-              </div>
-              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Yoxlama qeydi (istəyə bağlı)" className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-blood sm:max-w-md" />
-            </div>
-            <div className="mt-5 grid gap-3">
-              {requests.length === 0 && <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">Gözləyən Pro təsdiq müraciəti yoxdur.</div>}
-              {requests.map((request) => (
-                <div key={request.id} className="grid gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4 lg:grid-cols-[1fr_auto] lg:items-center">
-                  <div>
-                    <button onClick={() => openProfile(request.fighterId)} className="font-display text-xl font-bold uppercase text-white transition hover:text-red-100">{request.fighter?.fullName || "Döyüşçü"}</button>
-                    <div className="mt-1 text-sm text-zinc-500">{request.federation?.name} · göndərildi {formatDate(request.createdAt)}</div>
-                    {request.documentUrl && <a href={request.documentUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-blood transition hover:text-white">Sənədi aç <ArrowUpRight size={14} /></a>}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "approve")} className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:brightness-110 disabled:opacity-60">Təsdiqlə</button>
-                    <button disabled={actionLoading === request.id} onClick={() => reviewRequest(request.id, "reject")} className="rounded-xl bg-blood px-4 py-3 text-sm font-black text-white transition hover:brightness-110 disabled:opacity-60">Rədd et</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-surface">
-            <div className="border-b border-white/10 p-5">
-              <h2 className="font-display text-2xl font-bold uppercase text-white">Son döyüşçülər</h2>
-              <p className="mt-1 text-sm text-zinc-500">Federasiya yoxlaması üçün sürətli status icmalı.</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[780px] text-left text-sm">
-                <thead className="bg-black/30 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
-                  <tr>{["Döyüşçü", "Rol", "Ölkə", "Çəki", "Xal", "Admin əməliyyatı"].map((head) => <th key={head} className="px-5 py-4 font-black">{head}</th>)}</tr>
-                </thead>
-                <tbody className="divide-y divide-white/8">
-                  {fighters.map((fighter) => (
-                    <tr key={fighter.id} className="text-zinc-300 transition hover:bg-white/[0.02]">
-                      <td className="px-5 py-4"><button onClick={() => openProfile(fighter.id)} className="font-bold text-white transition hover:text-red-100">{fighter.fullName}</button></td>
-                      <td className="px-5 py-4"><Chip tone={fighter.isVerifiedPro ? "red" : "default"}>{fighter.user?.role || "AMATEUR"}</Chip></td>
-                      <td className="px-5 py-4">{flagEmoji(fighter.country)} {fighter.country}</td>
-                      <td className="px-5 py-4">{formatWeightClass(fighter.weightClass)}</td>
-                      <td className="px-5 py-4 font-mono font-bold text-white">{fighter.points}</td>
-                      <td className="px-5 py-4">
-                        {isAdmin ? (
-                          <div className="flex gap-2">
-                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "PRO")} className="rounded-lg border border-white/12 px-3 py-2 text-xs font-black text-white transition hover:bg-white/10 disabled:opacity-60">Pro et</button>
-                            <button disabled={actionLoading === fighter.id} onClick={() => updateRole(fighter.id, "AMATEUR")} className="rounded-lg border border-white/12 px-3 py-2 text-xs font-black text-white transition hover:bg-white/10 disabled:opacity-60">Həvəskar et</button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-zinc-600">Yalnız admin</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </>
-      )}
-    </PageShell>
-  );
-}
-
 function NationalChampions({ openProfile }) {
   const [data, setData] = useState({});
   const [weight, setWeight] = useState("LIGHTWEIGHT");
@@ -2732,7 +2426,7 @@ function FighterProfilePage({ fighterId, openProfile, user, onLoginRequired }) {
             <div className="flex flex-wrap gap-2">
               <Chip tone={status === "Pro" ? "red" : "default"}>{formatWeightClass(profile.weightClass)}</Chip>
               <Chip tone="ghost">#{weightRank} çəki reytinqi</Chip>
-              <Chip tone={status === "Pro" ? "gold" : "ghost"} icon={status === "Pro" ? ShieldCheck : undefined}>{status}</Chip>
+              <Chip tone={status === "Pro" ? "gold" : "ghost"} icon={status === "Pro" ? ShieldCheck : undefined}>{statusLabel(profile)}</Chip>
             </div>
             <h1 className="mt-6 font-display text-6xl font-bold uppercase leading-[0.9] text-white sm:text-7xl xl:text-8xl">{profile.fullName}</h1>
             {profile.nickname && <p className="mt-3 font-display text-2xl font-medium italic text-zinc-400">“{profile.nickname}”</p>}
@@ -3178,6 +2872,8 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const page = pathToPage(location.pathname);
+  // The admin panel ships its own shell, so the public header/footer are hidden there.
+  const isAdminArea = location.pathname.startsWith("/admin");
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem(userStorageKey);
     if (!stored) return null;
@@ -3329,16 +3025,18 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden">
-      <AppHeader
-        page={page}
-        setPage={navigatePage}
-        user={user}
-        settings={settings}
-        t={t}
-        onSettingsClick={() => setSettingsOpen(true)}
-        onLoginClick={() => openAuth("login")}
-        onRegisterClick={() => openAuth("register")}
-      />
+      {!isAdminArea && (
+        <AppHeader
+          page={page}
+          setPage={navigatePage}
+          user={user}
+          settings={settings}
+          t={t}
+          onSettingsClick={() => setSettingsOpen(true)}
+          onLoginClick={() => openAuth("login")}
+          onRegisterClick={() => openAuth("register")}
+        />
+      )}
       <div className="flex-1">
         <Routes>
           <Route path="/" element={<LandingPage setPage={navigatePage} openProfile={openProfile} />} />
@@ -3361,11 +3059,11 @@ export default function App() {
           <Route path="/fight-board" element={<FightSeekBoard user={user} onLoginClick={() => openAuth("login")} />} />
           <Route path="/challenges" element={<ChallengesPage user={user} onLoginClick={() => openAuth("login")} openProfile={openProfile} />} />
           <Route path="/national-champions" element={<NationalChampions openProfile={openProfile} />} />
-          <Route path="/federation" element={<FederationPanel user={user} onLoginClick={() => openAuth("login")} openProfile={openProfile} />} />
+          <Route path="/admin/*" element={<AdminPanel user={user} onLoginClick={() => openAuth("login")} onLogout={handleLogout} />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
-      <Footer setPage={navigatePage} />
+      {!isAdminArea && <Footer setPage={navigatePage} />}
       {authModal && <AuthModal initialTab={authModal} onClose={closeAuth} onSuccess={handleAuthSuccess} />}
       <SettingsPanel open={settingsOpen} settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} t={t} user={user} onLogout={handleLogout} />
       {toast && (
@@ -3375,7 +3073,7 @@ export default function App() {
         </div>
       )}
       {demoMode && (
-        <div className="fixed bottom-4 left-4 z-[115] inline-flex items-center gap-2 rounded-full border border-gold/40 bg-coal/95 px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-amber-200 shadow-panel backdrop-blur">
+        <div className={`fixed bottom-4 left-4 z-[115] inline-flex items-center gap-2 rounded-full border border-gold/40 bg-coal/95 px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-amber-200 shadow-panel backdrop-blur ${isAdminArea ? "lg:left-[264px]" : ""}`}>
           <span className="h-2 w-2 animate-pulse-red rounded-full bg-gold" />
           Nümunə məlumat
         </div>
